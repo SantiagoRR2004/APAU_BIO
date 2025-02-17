@@ -1,1 +1,6 @@
 black
+tensorflow
+matplotlib
+numpy
+torch
+torchvision
