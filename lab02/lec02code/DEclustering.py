@@ -4,6 +4,7 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 
+
 class ClusteringDE:
     """
     Differential Evolution (DE) for K-means-like clustering:
@@ -12,18 +13,18 @@ class ClusteringDE:
 
     def __init__(
         self,
-        data=None,                # If None, generate random 2D blobs
-        k=3,                     # Number of clusters
-        dim=2,                   # Data dimensionality
+        data=None,  # If None, generate random 2D blobs
+        k=3,  # Number of clusters
+        dim=2,  # Data dimensionality
         pop_size=50,
         lower_bound=-10,
         upper_bound=10,
         max_generations=50,
-        F=0.5,                   # Mutation factor
-        CR=0.9,                  # Crossover probability
-        patience=10,             # Early stopping patience
-        min_delta=1e-3,          # Minimum improvement in SSE
-        seed=None
+        F=0.5,  # Mutation factor
+        CR=0.9,  # Crossover probability
+        patience=10,  # Early stopping patience
+        min_delta=1e-3,  # Minimum improvement in SSE
+        seed=None,
     ):
         """
         :param data: (N x dim) array of data points; if None, we generate random 2D blobs for demonstration.
@@ -59,14 +60,14 @@ class ClusteringDE:
         # Data handling
         if data is None:
             self.data = self._generate_gaussian_blobs(
-                num_points_per_blob=60,
-                centers=[(0, 0), (5, 5), (0, 5)],
-                std=1.0
+                num_points_per_blob=60, centers=[(0, 0), (5, 5), (0, 5)], std=1.0
             )
         else:
             self.data = np.array(data)
             if self.data.shape[1] != dim:
-                raise ValueError(f"Data dimension ({self.data.shape[1]}) does not match 'dim' ({dim}).")
+                raise ValueError(
+                    f"Data dimension ({self.data.shape[1]}) does not match 'dim' ({dim})."
+                )
 
         # Initialize population
         self.population = self._create_initial_population()
@@ -76,13 +77,17 @@ class ClusteringDE:
     # ------------------------------------------------------------
     # (1) Generate Synthetic Data (Optional)
     # ------------------------------------------------------------
-    def _generate_gaussian_blobs(self, num_points_per_blob=60, centers=[(0,0), (5,5)], std=1.0):
+    def _generate_gaussian_blobs(
+        self, num_points_per_blob=60, centers=[(0, 0), (5, 5)], std=1.0
+    ):
         """
         Generate synthetic 2D data from multiple Gaussian blobs.
         """
         all_points = []
         for cx, cy in centers:
-            blob = np.random.normal(loc=(cx, cy), scale=std, size=(num_points_per_blob, 2))
+            blob = np.random.normal(
+                loc=(cx, cy), scale=std, size=(num_points_per_blob, 2)
+            )
             all_points.append(blob)
         data = np.vstack(all_points)
         return data
@@ -98,9 +103,7 @@ class ClusteringDE:
         population = []
         for _ in range(self.pop_size):
             ind = np.random.uniform(
-                low=self.lower_bound,
-                high=self.upper_bound,
-                size=self.params_per_ind
+                low=self.lower_bound, high=self.upper_bound, size=self.params_per_ind
             )
             population.append(ind)
         return population
@@ -168,13 +171,13 @@ class ClusteringDE:
     # (5) Main DE Loop
     # ------------------------------------------------------------
     def run(self):
-        best_sse = float('inf')
+        best_sse = float("inf")
         no_improve_count = 0
 
         # track best global
         global_best_ind = None
-        global_best_fit = -float('inf')
-        global_best_sse = float('inf')
+        global_best_fit = -float("inf")
+        global_best_sse = float("inf")
 
         for gen in range(self.max_generations):
             for i in range(self.pop_size):
@@ -261,7 +264,9 @@ class ClusteringDE:
             cluster_pts = points[cluster_assignments == c_idx]
             ax.scatter(cluster_pts[:, 0], cluster_pts[:, 1], s=30, alpha=0.6)
 
-        ax.scatter(centers[:, 0], centers[:, 1], c='red', marker='X', s=150, edgecolor='k')
+        ax.scatter(
+            centers[:, 0], centers[:, 1], c="red", marker="X", s=150, edgecolor="k"
+        )
         ax.set_title("Differential Evolution Clustering (2D)")
         plt.show()
 
@@ -272,7 +277,7 @@ if __name__ == "__main__":
 
     # Example usage: clustering 3 groups in 2D
     de_clustering = ClusteringDE(
-        data=None,          # or provide your own (N x 2) data
+        data=None,  # or provide your own (N x 2) data
         k=3,
         dim=2,
         pop_size=50,
@@ -283,7 +288,7 @@ if __name__ == "__main__":
         CR=0.9,
         patience=8,
         min_delta=1e-2,
-        seed=42
+        seed=42,
     )
 
     best_solution = de_clustering.run()

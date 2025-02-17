@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from prettytable import PrettyTable
 
+
 class QuadraticFittingGA:
     """
     Genetic Algorithm for fitting a quadratic function y = a x^2 + b x + c.
@@ -23,10 +24,10 @@ class QuadraticFittingGA:
         mutation_rate=0.05,
         patience=10,
         min_delta=0.001,
-        target_a=1,         # Target function's 'a'
-        target_b=0,         # Target function's 'b'
-        target_c=0,         # Target function's 'c'
-        elitism=True
+        target_a=1,  # Target function's 'a'
+        target_b=0,  # Target function's 'b'
+        target_c=0,  # Target function's 'c'
+        elitism=True,
     ):
         """
         :param use_binary_representation: If True, we use binary-coded. Otherwise, real-coded representation.
@@ -43,8 +44,8 @@ class QuadraticFittingGA:
         """
 
         self.use_binary = use_binary_representation
-        self.chrom_length = chrom_length   # per parameter if using binary
-        self.params_per_ind = 3           # (a, b, c)
+        self.chrom_length = chrom_length  # per parameter if using binary
+        self.params_per_ind = 3  # (a, b, c)
         self.pop_size = pop_size
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
@@ -85,7 +86,7 @@ class QuadraticFittingGA:
         chunk_size = self.chrom_length
         real_values = []
         for i in range(self.params_per_ind):
-            chunk = bitstring[i*chunk_size : (i+1)*chunk_size]
+            chunk = bitstring[i * chunk_size : (i + 1) * chunk_size]
             val = self._bits_to_float(chunk)
             real_values.append(val)
         return tuple(real_values)
@@ -134,7 +135,7 @@ class QuadraticFittingGA:
             real_vals = (
                 random.uniform(self.lower_bound, self.upper_bound),
                 random.uniform(self.lower_bound, self.upper_bound),
-                random.uniform(self.lower_bound, self.upper_bound)
+                random.uniform(self.lower_bound, self.upper_bound),
             )
             return self.encode_real_to_binary(real_vals)
         else:
@@ -142,7 +143,7 @@ class QuadraticFittingGA:
             return (
                 random.uniform(self.lower_bound, self.upper_bound),
                 random.uniform(self.lower_bound, self.upper_bound),
-                random.uniform(self.lower_bound, self.upper_bound)
+                random.uniform(self.lower_bound, self.upper_bound),
             )
 
     # ------------------------------------------------------------
@@ -163,15 +164,15 @@ class QuadraticFittingGA:
 
         a, b, c = real_params
         if a <= 0:
-            return -float('inf')  # severely penalize downward-facing
+            return -float("inf")  # severely penalize downward-facing
 
         # Vertex of parabola
-        vertex_x = -b / (2*a) if abs(a) > 1e-12 else 0
-        vertex_y = a*(vertex_x**2) + b*vertex_x + c
+        vertex_x = -b / (2 * a) if abs(a) > 1e-12 else 0
+        vertex_y = a * (vertex_x**2) + b * vertex_x + c
 
         # Evaluate curvature measure
-        y_left  = a*(-1)**2 + b*(-1) + c
-        y_right = a*( 1)**2 + b*( 1) + c
+        y_left = a * (-1) ** 2 + b * (-1) + c
+        y_right = a * (1) ** 2 + b * (1) + c
         curviness = abs(y_left - vertex_y) + abs(y_right - vertex_y)
 
         return -curviness  # negative => want to minimize curviness
@@ -212,15 +213,15 @@ class QuadraticFittingGA:
         If real-coded, do the 'alpha' blend crossover.
         """
         if self.use_binary:
-            point = random.randint(1, len(p1)-1)
+            point = random.randint(1, len(p1) - 1)
             c1 = p1[:point] + p2[point:]
             c2 = p2[:point] + p1[point:]
             return c1, c2
         else:
             # Real-coded crossover with random alpha
             alpha = random.random()
-            child1 = tuple(alpha*x1 + (1-alpha)*x2 for x1,x2 in zip(p1,p2))
-            child2 = tuple(alpha*x2 + (1-alpha)*x1 for x1,x2 in zip(p1,p2))
+            child1 = tuple(alpha * x1 + (1 - alpha) * x2 for x1, x2 in zip(p1, p2))
+            child2 = tuple(alpha * x2 + (1 - alpha) * x1 for x1, x2 in zip(p1, p2))
             return child1, child2
 
     # ------------------------------------------------------------
@@ -232,7 +233,7 @@ class QuadraticFittingGA:
         If binary-coded, do bit-flip mutation with probability = self.mutation_rate * (1 - generation/max_gens)
         If real-coded, do random small perturbation
         """
-        adaptive_rate = self.mutation_rate * (1.0 - float(generation)/max_gens)
+        adaptive_rate = self.mutation_rate * (1.0 - float(generation) / max_gens)
 
         if self.use_binary:
             ind_list = list(individual)
@@ -249,7 +250,9 @@ class QuadraticFittingGA:
                     shift = random.uniform(-1, 1)
                     ind_list[i] += shift
                     # enforce bounds
-                    ind_list[i] = max(min(ind_list[i], self.upper_bound), self.lower_bound)
+                    ind_list[i] = max(
+                        min(ind_list[i], self.upper_bound), self.lower_bound
+                    )
             return tuple(ind_list)
 
     # ------------------------------------------------------------
@@ -261,14 +264,14 @@ class QuadraticFittingGA:
         Compare individual's parabola to the target function (self.target_a, self.target_b, self.target_c)
         """
         if self.use_binary:
-            a,b,c = self.decode_binary_to_real(individual)
+            a, b, c = self.decode_binary_to_real(individual)
         else:
-            a,b,c = individual
+            a, b, c = individual
 
         x_vals = np.linspace(self.lower_bound, self.upper_bound, n_points)
-        pred_y = a*(x_vals**2) + b*x_vals + c
-        tgt_y  = self.target_a*(x_vals**2) + self.target_b*x_vals + self.target_c
-        mse = np.mean((pred_y - tgt_y)**2)
+        pred_y = a * (x_vals**2) + b * x_vals + c
+        tgt_y = self.target_a * (x_vals**2) + self.target_b * x_vals + self.target_c
+        mse = np.mean((pred_y - tgt_y) ** 2)
         return mse
 
     def plot_evolution(self, best_performers, best_solution):
@@ -278,19 +281,21 @@ class QuadraticFittingGA:
         fig, ax = plt.subplots()
         # plot target
         x_vals = np.linspace(self.lower_bound, self.upper_bound, 400)
-        target_y = self.target_a*x_vals**2 + self.target_b*x_vals + self.target_c
-        ax.plot(x_vals, target_y, 'k', label="Target", linewidth=2)
+        target_y = self.target_a * x_vals**2 + self.target_b * x_vals + self.target_c
+        ax.plot(x_vals, target_y, "k", label="Target", linewidth=2)
 
         # step through generations
-        step = max(1, len(best_performers)//5)
-        colors = plt.cm.viridis(np.linspace(0,1,len(best_performers[::step])))
-        for idx,(ind,fit) in enumerate(best_performers[::step]):
+        step = max(1, len(best_performers) // 5)
+        colors = plt.cm.viridis(np.linspace(0, 1, len(best_performers[::step])))
+        for idx, (ind, fit) in enumerate(best_performers[::step]):
             if self.use_binary:
-                a,b,c = self.decode_binary_to_real(ind)
+                a, b, c = self.decode_binary_to_real(ind)
             else:
-                a,b,c = ind
-            y_vals = a*x_vals**2 + b*x_vals + c
-            ax.plot(x_vals, y_vals, color=colors[idx], label=f"Gen {idx*step} fit={fit:.2f}")
+                a, b, c = ind
+            y_vals = a * x_vals**2 + b * x_vals + c
+            ax.plot(
+                x_vals, y_vals, color=colors[idx], label=f"Gen {idx*step} fit={fit:.2f}"
+            )
 
         # final best in red dotted
         """
@@ -306,17 +311,14 @@ class QuadraticFittingGA:
         else:
             a_b, b_b, c_b = best_solution
 
-
-
-        best_y = a_b*x_vals**2 + b_b*x_vals + c_b
-        ax.plot(x_vals, best_y, 'r--', label="Best Final", linewidth=2)
+        best_y = a_b * x_vals**2 + b_b * x_vals + c_b
+        ax.plot(x_vals, best_y, "r--", label="Best Final", linewidth=2)
 
         ax.set_xlabel("x")
         ax.set_ylabel("y")
         ax.set_title("GA Evolution of Quadratic Solutions")
         ax.legend()
         plt.show()
-
 
     # ------------------------------------------------------------
     # (8) GA Main Loop (with Global Best Tracking)
@@ -329,17 +331,24 @@ class QuadraticFittingGA:
 
         # We'll keep a "global best" to avoid losing good solutions
         global_best = None
-        global_best_fit = -float('inf')   # because we are maximizing fitness
-        global_best_mse = float('inf')
+        global_best_fit = -float("inf")  # because we are maximizing fitness
+        global_best_mse = float("inf")
 
-        best_mse = float('inf')
+        best_mse = float("inf")
         no_improvement_counter = 0
 
         # for table
         try:
             from prettytable import PrettyTable
+
             table = PrettyTable()
-            table.field_names = ["Gen", "Representation", "Fitness", "MSE", "params(a,b,c)"]
+            table.field_names = [
+                "Gen",
+                "Representation",
+                "Fitness",
+                "MSE",
+                "params(a,b,c)",
+            ]
         except ImportError:
             table = None
 
@@ -382,11 +391,15 @@ class QuadraticFittingGA:
                     real_params = self.decode_binary_to_real(best_ind)
                 else:
                     real_params = best_ind
-                table.add_row([gen,
-                            "binary" if self.use_binary else "real",
-                            round(best_fit,3),
-                            round(current_mse,5),
-                            f"{round(real_params[0],3)}, {round(real_params[1],3)}, {round(real_params[2],3)}"])
+                table.add_row(
+                    [
+                        gen,
+                        "binary" if self.use_binary else "real",
+                        round(best_fit, 3),
+                        round(current_mse, 5),
+                        f"{round(real_params[0],3)}, {round(real_params[1],3)}, {round(real_params[2],3)}",
+                    ]
+                )
 
             # selection
             selected = self.tournament_selection(population, fitnesses)
@@ -395,7 +408,7 @@ class QuadraticFittingGA:
             new_pop = []
             for i in range(0, len(selected), 2):
                 p1 = selected[i]
-                p2 = selected[(i+1) % len(selected)]
+                p2 = selected[(i + 1) % len(selected)]
                 c1, c2 = self.crossover(p1, p2)
                 c1 = self.mutation(c1, gen, self.generations)
                 c2 = self.mutation(c2, gen, self.generations)
@@ -406,7 +419,7 @@ class QuadraticFittingGA:
             if self.elitism:
                 new_pop[0] = best_ind
 
-            population = new_pop[:self.pop_size]
+            population = new_pop[: self.pop_size]
 
         # After we finish all generations (or early stopping):
         if table is not None:
@@ -441,16 +454,13 @@ class QuadraticFittingGA:
 
         return truly_best
 
-    
 
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
 
     print("GA code")
-    real_mode=True
+    real_mode = True
 
-
-    
     if real_mode:
 
         print("# 1) Real-coded version")
@@ -464,10 +474,10 @@ if __name__ == "__main__":
             mutation_rate=0.05,
             patience=10,
             min_delta=1e-3,
-            target_a=1,        # target function = x^2
+            target_a=1,  # target function = x^2
             target_b=0,
             target_c=0,
-            elitism=True
+            elitism=True,
         )
         best_sol_real = ga_real.run()
 
@@ -475,7 +485,7 @@ if __name__ == "__main__":
         print("# 2) Binary-coded version")
         ga_binary = QuadraticFittingGA(
             use_binary_representation=True,
-            chrom_length=10,   # each param has 10 bits, total 30 bits
+            chrom_length=10,  # each param has 10 bits, total 30 bits
             pop_size=60,
             lower_bound=-10,
             upper_bound=10,
@@ -483,9 +493,9 @@ if __name__ == "__main__":
             mutation_rate=0.02,
             patience=8,
             min_delta=1e-3,
-            target_a=1,        # target function = x^2
+            target_a=1,  # target function = x^2
             target_b=0,
             target_c=0,
-            elitism=True
+            elitism=True,
         )
         best_sol_binary = ga_binary.run()

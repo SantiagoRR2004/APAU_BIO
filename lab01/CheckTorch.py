@@ -4,18 +4,19 @@ from torchvision import datasets, transforms
 import sys
 
 if torch.cuda.is_available():
-    device = torch.device('cuda:0')
+    device = torch.device("cuda:0")
     print("GPU available:", torch.cuda.get_device_name(0))
 else:
     print("ERROR: no GPU available")
     sys.exit(0)
 
-custom_transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Lambda(lambda x: x.view(-1))
-])
+custom_transform = transforms.Compose(
+    [transforms.ToTensor(), transforms.Lambda(lambda x: x.view(-1))]
+)
 
-mnist_dataset = datasets.MNIST(root='/tmp/data', download=True, transform = custom_transform)
+mnist_dataset = datasets.MNIST(
+    root="/tmp/data", download=True, transform=custom_transform
+)
 print("Length of dataset:", len(mnist_dataset))
 print("Length of first vector in dataset: ", mnist_dataset[0][0].shape)
 print("Label of first vector in dataset: ", mnist_dataset[0][1])
@@ -27,23 +28,23 @@ print("Length of Test Dataset: ", len(val_data))
 
 batch_size = 128
 
-train_loader = DataLoader(train_data, batch_size, shuffle = True, num_workers=2)
-val_loader = DataLoader(val_data, len(val_data) , shuffle = False, num_workers=2)
+train_loader = DataLoader(train_data, batch_size, shuffle=True, num_workers=2)
+val_loader = DataLoader(val_data, len(val_data), shuffle=False, num_workers=2)
 
 net = torch.nn.Sequential(
-      torch.nn.Linear(784, 512),
-      torch.nn.ReLU(),
-      torch.nn.Linear(512, 512),
-      torch.nn.ReLU(),
-      torch.nn.Linear(512, 10),
-      torch.nn.Softmax(dim=1)
-      ).to(device)
+    torch.nn.Linear(784, 512),
+    torch.nn.ReLU(),
+    torch.nn.Linear(512, 512),
+    torch.nn.ReLU(),
+    torch.nn.Linear(512, 10),
+    torch.nn.Softmax(dim=1),
+).to(device)
 
 print(net)
 
 num_epochs = 10
 
-optimizer = torch.optim.RMSprop(net.parameters(), lr = 0.001)
+optimizer = torch.optim.RMSprop(net.parameters(), lr=0.001)
 criterion = torch.nn.CrossEntropyLoss()
 
 for epoch in range(num_epochs):
@@ -84,6 +85,9 @@ for epoch in range(num_epochs):
     accuracy = correct_predictions / total_samples
     accuracy_val = correct_predictions_val / total_samples_val
     average_loss = total_loss / len(train_loader)
-    
 
-    print("Epoch {:02d}: loss {:.4f} - accuracy {:.4f} - validation accuracy {:.4f}".format(epoch+1, average_loss, accuracy, accuracy_val))
+    print(
+        "Epoch {:02d}: loss {:.4f} - accuracy {:.4f} - validation accuracy {:.4f}".format(
+            epoch + 1, average_loss, accuracy, accuracy_val
+        )
+    )

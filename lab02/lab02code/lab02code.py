@@ -1,6 +1,7 @@
 import random
 import numpy as np
 
+
 class GeneticAlgorithm:
     """
     Un marco genérico de Algoritmo Genético.
@@ -14,7 +15,7 @@ class GeneticAlgorithm:
         mutation_rate=0.1,
         patience=10,
         min_delta=1e-3,
-        seed=None
+        seed=None,
     ):
         """
         :param pop_size: tamaño de la población
@@ -70,6 +71,7 @@ class GeneticAlgorithm:
         """
         # TODO: implementar o permitir que lo hagan los estudiantes
         pass
+
 
 ### `machine_learning_task.py` (Esqueleto de Tarea de ML Especializada)
 

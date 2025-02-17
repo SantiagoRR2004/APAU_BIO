@@ -4,6 +4,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class QuadraticFittingDE:
     """
     Differential Evolution for fitting a quadratic function y = a x^2 + b x + c,
@@ -19,14 +20,14 @@ class QuadraticFittingDE:
         lower_bound=-50,
         upper_bound=50,
         generations=50,
-        F=0.8,                # DE differential weight
-        CR=0.9,               # Crossover probability
+        F=0.8,  # DE differential weight
+        CR=0.9,  # Crossover probability
         mutation_strategy="rand/1/bin",
         patience=10,
         min_delta=1e-3,
-        target_a=1,           # target function y = a*x^2 + b*x + c
+        target_a=1,  # target function y = a*x^2 + b*x + c
         target_b=0,
-        target_c=0
+        target_c=0,
     ):
         """
         :param pop_size: population size
@@ -67,7 +68,7 @@ class QuadraticFittingDE:
             a = random.uniform(self.lower_bound, self.upper_bound)
             b = random.uniform(self.lower_bound, self.upper_bound)
             c = random.uniform(self.lower_bound, self.upper_bound)
-            pop.append((a,b,c))
+            pop.append((a, b, c))
         return pop
 
     # ----------------------------------------------------------------
@@ -78,18 +79,18 @@ class QuadraticFittingDE:
         If 'a' <= 0, penalize heavily. Then measure 'curviness'.
         Negative of curviness => higher fitness means flatter top near x=-1,1.
 
-        This is not strictly the MSE to the target function. 
+        This is not strictly the MSE to the target function.
         But we can still use MSE as a separate measure for early stopping/plotting.
         """
-        (a,b,c) = individual
+        (a, b, c) = individual
         if a <= 0:
-            return -float('inf')  # penalize downward parabolas
+            return -float("inf")  # penalize downward parabolas
 
         # Vertex
-        vertex_x = -b/(2*a) if abs(a) > 1e-12 else 0
-        vertex_y = a*(vertex_x**2) + b*vertex_x + c
-        y_left  = a*(-1)**2 + b*(-1) + c
-        y_right = a*(1)**2 + b*(1) + c
+        vertex_x = -b / (2 * a) if abs(a) > 1e-12 else 0
+        vertex_y = a * (vertex_x**2) + b * vertex_x + c
+        y_left = a * (-1) ** 2 + b * (-1) + c
+        y_right = a * (1) ** 2 + b * (1) + c
 
         curviness = abs(y_left - vertex_y) + abs(y_right - vertex_y)
         return -curviness  # we want smaller curviness => higher fitness
@@ -102,11 +103,11 @@ class QuadraticFittingDE:
         Compare individual's parabola to target (target_a, target_b, target_c).
         We'll do this for early stopping or final checks.
         """
-        (a,b,c) = individual
+        (a, b, c) = individual
         x_vals = np.linspace(self.lower_bound, self.upper_bound, n_points)
-        pred_y = a*(x_vals**2) + b*x_vals + c
-        tgt_y = self.target_a*(x_vals**2) + self.target_b*x_vals + self.target_c
-        mse = np.mean((pred_y - tgt_y)**2)
+        pred_y = a * (x_vals**2) + b * x_vals + c
+        tgt_y = self.target_a * (x_vals**2) + self.target_b * x_vals + self.target_c
+        mse = np.mean((pred_y - tgt_y) ** 2)
         return mse
 
     # ----------------------------------------------------------------
@@ -129,7 +130,7 @@ class QuadraticFittingDE:
         # v_i = x_r1 + F*(x_r2 - x_r3)
         v = []
         for i in range(3):  # 3 params: a,b,c
-            mutated_val = x_r1[i] + self.F*(x_r2[i] - x_r3[i])
+            mutated_val = x_r1[i] + self.F * (x_r2[i] - x_r3[i])
             # keep in bounds
             mutated_val = max(min(mutated_val, self.upper_bound), self.lower_bound)
             v.append(mutated_val)
@@ -157,15 +158,16 @@ class QuadraticFittingDE:
         best_performers = []
 
         global_best = None
-        global_best_fit = -float('inf')
-        global_best_mse = float('inf')
+        global_best_fit = -float("inf")
+        global_best_mse = float("inf")
 
-        best_mse_so_far = float('inf')
+        best_mse_so_far = float("inf")
         no_improvement_counter = 0
 
         # try to log via prettytable
         try:
             from prettytable import PrettyTable
+
             table = PrettyTable()
             table.field_names = ["Gen", "Best_Fit", "MSE", "(a,b,c)"]
         except ImportError:
@@ -223,13 +225,15 @@ class QuadraticFittingDE:
 
             # table row
             if table is not None:
-                a,b,c = best_ind
-                table.add_row([
-                    gen,
-                    f"{best_fit:.4f}",
-                    f"{current_mse:.4f}",
-                    f"({a:.3f}, {b:.3f}, {c:.3f})"
-                ])
+                a, b, c = best_ind
+                table.add_row(
+                    [
+                        gen,
+                        f"{best_fit:.4f}",
+                        f"{current_mse:.4f}",
+                        f"({a:.3f}, {b:.3f}, {c:.3f})",
+                    ]
+                )
 
         # done
         if table is not None:
@@ -265,22 +269,24 @@ class QuadraticFittingDE:
         best_solution is the final global best.
         """
         x_vals = np.linspace(self.lower_bound, self.upper_bound, 400)
-        target_y = self.target_a*x_vals**2 + self.target_b*x_vals + self.target_c
+        target_y = self.target_a * x_vals**2 + self.target_b * x_vals + self.target_c
 
         fig, ax = plt.subplots()
-        ax.plot(x_vals, target_y, 'k', label="Target", linewidth=2)
+        ax.plot(x_vals, target_y, "k", label="Target", linewidth=2)
 
-        step = max(1, len(best_performers)//5)
-        colors = plt.cm.viridis(np.linspace(0,1,len(best_performers[::step])))
+        step = max(1, len(best_performers) // 5)
+        colors = plt.cm.viridis(np.linspace(0, 1, len(best_performers[::step])))
         for idx, (ind, fit) in enumerate(best_performers[::step]):
-            a,b,c = ind
-            y_vals = a*(x_vals**2) + b*x_vals + c
-            ax.plot(x_vals, y_vals, color=colors[idx], label=f"Gen {idx*step} fit={fit:.2f}")
+            a, b, c = ind
+            y_vals = a * (x_vals**2) + b * x_vals + c
+            ax.plot(
+                x_vals, y_vals, color=colors[idx], label=f"Gen {idx*step} fit={fit:.2f}"
+            )
 
         # final best in red dotted
         a_b, b_b, c_b = best_solution
-        final_y = a_b*(x_vals**2) + b_b*x_vals + c_b
-        ax.plot(x_vals, final_y, 'r--', label="Best Final", linewidth=2)
+        final_y = a_b * (x_vals**2) + b_b * x_vals + c_b
+        ax.plot(x_vals, final_y, "r--", label="Best Final", linewidth=2)
 
         ax.set_xlabel("x")
         ax.set_ylabel("y")
@@ -304,7 +310,7 @@ if __name__ == "__main__":
         min_delta=1e-3,
         target_a=1,  # target = x^2
         target_b=0,
-        target_c=0
+        target_c=0,
     )
     best_sol = de.run()
     print("DE best solution:", best_sol)

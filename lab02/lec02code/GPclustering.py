@@ -5,6 +5,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 # ---------------------------
 #  GP Node Classes
 # ---------------------------
@@ -17,9 +18,11 @@ class GPNode:
     We assume each node returns a vector of length (k*dim).
     """
 
-    def __init__(self, is_function=False, func=None, children=None, terminal_value=None):
+    def __init__(
+        self, is_function=False, func=None, children=None, terminal_value=None
+    ):
         self.is_function = is_function  # True if function node, False if terminal
-        self.func = func                # e.g. "add", "sub", "avg" if function
+        self.func = func  # e.g. "add", "sub", "avg" if function
         self.children = children if children else []
         self.terminal_value = terminal_value  # if terminal, a vector in R^(k*dim)
 
@@ -37,7 +40,9 @@ class GPNode:
             child_vals = [child.evaluate() for child in self.children]
             # we assume binary functions here for simplicity
             if len(child_vals) != 2:
-                raise ValueError("This simple example assumes 2 children for function nodes.")
+                raise ValueError(
+                    "This simple example assumes 2 children for function nodes."
+                )
 
             v1, v2 = child_vals
             if self.func == "add":
@@ -45,7 +50,7 @@ class GPNode:
             elif self.func == "sub":
                 return v1 - v2
             elif self.func == "avg":
-                return 0.5*(v1 + v2)
+                return 0.5 * (v1 + v2)
             elif self.func == "mul":
                 # element-wise multiplication
                 return v1 * v2
@@ -62,11 +67,11 @@ class ClusteringGP:
 
     def __init__(
         self,
-        data=None,         # If None, we'll generate random 2D data
-        k=3,               # number of clusters
-        dim=2,             # dimension of data
+        data=None,  # If None, we'll generate random 2D data
+        k=3,  # number of clusters
+        dim=2,  # dimension of data
         pop_size=30,
-        max_depth=4,       # max tree depth for new subtrees
+        max_depth=4,  # max tree depth for new subtrees
         lower_bound=-10,
         upper_bound=10,
         generations=30,
@@ -74,7 +79,7 @@ class ClusteringGP:
         mutation_rate=0.3,
         patience=5,
         min_delta=1e-3,
-        seed=None
+        seed=None,
     ):
         """
         :param data: (N x dim) data array; if None, generate 2D blobs
@@ -112,9 +117,7 @@ class ClusteringGP:
         # Prepare or generate data
         if data is None:
             self.data = self._generate_gaussian_blobs(
-                num_points_per_blob=60,
-                centers=[(0, 0), (5, 5), (0, 5)],
-                std=1.0
+                num_points_per_blob=60, centers=[(0, 0), (5, 5), (0, 5)], std=1.0
             )
         else:
             self.data = np.array(data)
@@ -123,7 +126,7 @@ class ClusteringGP:
 
         # Build function set for internal nodes
         # For simplicity, we'll use 2-arity operators
-        self.function_set = ["add", "sub", "avg", "mul"]  
+        self.function_set = ["add", "sub", "avg", "mul"]
 
         # Create initial population
         self.population = [self._random_tree(depth=2) for _ in range(self.pop_size)]
@@ -131,10 +134,14 @@ class ClusteringGP:
     # ------------------------------------------------------------
     # Data generation (optional)
     # ------------------------------------------------------------
-    def _generate_gaussian_blobs(self, num_points_per_blob=60, centers=[(0,0), (5,5)], std=1.0):
+    def _generate_gaussian_blobs(
+        self, num_points_per_blob=60, centers=[(0, 0), (5, 5)], std=1.0
+    ):
         all_points = []
         for cx, cy in centers:
-            blob = np.random.normal(loc=(cx, cy), scale=std, size=(num_points_per_blob, 2))
+            blob = np.random.normal(
+                loc=(cx, cy), scale=std, size=(num_points_per_blob, 2)
+            )
             all_points.append(blob)
         data = np.vstack(all_points)
         return data
@@ -154,14 +161,18 @@ class ClusteringGP:
             func = random.choice(self.function_set)
             left_child = self._random_tree(depth + 1)
             right_child = self._random_tree(depth + 1)
-            node = GPNode(is_function=True, func=func, children=[left_child, right_child])
+            node = GPNode(
+                is_function=True, func=func, children=[left_child, right_child]
+            )
             return node
 
     def _random_terminal_node(self):
         """
         Create a terminal node that stores a random vector in R^(k*dim).
         """
-        vec = np.random.uniform(self.lower_bound, self.upper_bound, size=self.vector_size)
+        vec = np.random.uniform(
+            self.lower_bound, self.upper_bound, size=self.vector_size
+        )
         return GPNode(is_function=False, terminal_value=vec)
 
     def _subtree_mutation(self, node, current_depth=0):
@@ -173,8 +184,12 @@ class ClusteringGP:
             return self._random_tree(depth=current_depth)
         else:
             if node.is_function:
-                node.children[0] = self._subtree_mutation(node.children[0], current_depth+1)
-                node.children[1] = self._subtree_mutation(node.children[1], current_depth+1)
+                node.children[0] = self._subtree_mutation(
+                    node.children[0], current_depth + 1
+                )
+                node.children[1] = self._subtree_mutation(
+                    node.children[1], current_depth + 1
+                )
             return node
 
     # ------------------------------------------------------------
@@ -196,7 +211,10 @@ class ClusteringGP:
         # swap them (shallow)
         node1.is_function, node2.is_function = node2.is_function, node1.is_function
         node1.func, node2.func = node2.func, node1.func
-        node1.terminal_value, node2.terminal_value = node2.terminal_value, node1.terminal_value
+        node1.terminal_value, node2.terminal_value = (
+            node2.terminal_value,
+            node1.terminal_value,
+        )
         node1.children, node2.children = node2.children, node1.children
 
         return parent1, parent2
@@ -252,7 +270,7 @@ class ClusteringGP:
     # Main GP Loop
     # ------------------------------------------------------------
     def run(self):
-        best_sse = float('inf')
+        best_sse = float("inf")
         no_improve_count = 0
 
         # Evaluate initial population
@@ -260,7 +278,7 @@ class ClusteringGP:
 
         # Keep track of global best
         global_best = None
-        global_best_fit = -float('inf')
+        global_best_fit = -float("inf")
 
         for gen in range(self.generations):
             new_population = []
@@ -347,7 +365,7 @@ class ClusteringGP:
         new_node = GPNode(
             is_function=root.is_function,
             func=root.func,
-            terminal_value=None if root.is_function else np.copy(root.terminal_value)
+            terminal_value=None if root.is_function else np.copy(root.terminal_value),
         )
         if root.is_function:
             new_node.children = [self._clone_tree(ch) for ch in root.children]
@@ -371,7 +389,9 @@ class ClusteringGP:
         for c_idx in range(self.k):
             pts = self.data[cluster_assignments == c_idx]
             plt.scatter(pts[:, 0], pts[:, 1], s=20, alpha=0.6)
-        plt.scatter(centers[:, 0], centers[:, 1], c='red', marker='X', s=200, edgecolors='k')
+        plt.scatter(
+            centers[:, 0], centers[:, 1], c="red", marker="X", s=200, edgecolors="k"
+        )
         plt.title("GP-based Clustering (Tree Representation)")
         plt.show()
 
@@ -381,7 +401,7 @@ if __name__ == "__main__":
     print("=== GP for Clustering Demo ===")
 
     gp_cluster = ClusteringGP(
-        data=None,       # generate random 2D blobs
+        data=None,  # generate random 2D blobs
         k=3,
         dim=2,
         pop_size=30,
@@ -393,6 +413,6 @@ if __name__ == "__main__":
         mutation_rate=0.3,
         patience=5,
         min_delta=1e-3,
-        seed=42
+        seed=42,
     )
     best_solution = gp_cluster.run()

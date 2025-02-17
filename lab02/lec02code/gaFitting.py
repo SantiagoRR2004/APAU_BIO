@@ -1,17 +1,21 @@
 import numpy as np
 import random
 
+
 # Objective function (to be maximized)
 def objective_function(x):
     return -(x**2 - 10 * np.cos(2 * np.pi * x) + 10)
+
 
 # Initialize population with real values in the range [-5.12, 5.12]
 def initialize_population(size, bounds):
     return np.random.uniform(bounds[0], bounds[1], size)
 
+
 # Evaluate fitness (objective function value)
 def evaluate_fitness(population):
     return np.array([objective_function(x) for x in population])
+
 
 # Tournament selection
 def tournament_selection(population, fitness, k=3):
@@ -19,18 +23,24 @@ def tournament_selection(population, fitness, k=3):
     best_index = max(selected_indices, key=lambda i: fitness[i])
     return population[best_index]
 
+
 # Simulated Binary Crossover (SBX)
 def simulated_binary_crossover(parent1, parent2, eta=2):
     if np.random.rand() > 0.9:  # Small chance of crossover
         return parent1, parent2
 
     u = np.random.rand()
-    beta = (2 * u) ** (1 / (eta + 1)) if u <= 0.5 else (1 / (2 * (1 - u))) ** (1 / (eta + 1))
+    beta = (
+        (2 * u) ** (1 / (eta + 1))
+        if u <= 0.5
+        else (1 / (2 * (1 - u))) ** (1 / (eta + 1))
+    )
 
     child1 = 0.5 * ((1 + beta) * parent1 + (1 - beta) * parent2)
     child2 = 0.5 * ((1 - beta) * parent1 + (1 + beta) * parent2)
 
     return np.clip(child1, -5.12, 5.12), np.clip(child2, -5.12, 5.12)
+
 
 # Gaussian mutation
 def gaussian_mutation(individual, mutation_rate=0.1, sigma=0.1):
@@ -38,17 +48,23 @@ def gaussian_mutation(individual, mutation_rate=0.1, sigma=0.1):
         return np.clip(individual + np.random.normal(0, sigma), -5.12, 5.12)
     return individual
 
+
 # Replacement strategy: Elitism + Offspring replacement
 def replacement(population, offspring, fitness, elitism_k=2):
     sorted_indices = np.argsort(fitness)[::-1]  # Sort by fitness (descending)
-    elite = [population[i] for i in sorted_indices[:elitism_k]]  # Keep best k individuals
-    new_population = elite + offspring[:len(population) - elitism_k]  # Fill with offspring
+    elite = [
+        population[i] for i in sorted_indices[:elitism_k]
+    ]  # Keep best k individuals
+    new_population = (
+        elite + offspring[: len(population) - elitism_k]
+    )  # Fill with offspring
     return np.array(new_population)
+
 
 # Genetic Algorithm main function
 def genetic_algorithm(pop_size=20, generations=50, mutation_rate=0.1):
     bounds = [-5.12, 5.12]
-    
+
     # Step 1: Initialize population
     population = initialize_population(pop_size, bounds)
 
@@ -76,6 +92,7 @@ def genetic_algorithm(pop_size=20, generations=50, mutation_rate=0.1):
     final_fitness = evaluate_fitness(population)
     best_index = np.argmax(final_fitness)
     return population[best_index], final_fitness[best_index]
+
 
 # Run the Genetic Algorithm
 best_solution, best_fitness = genetic_algorithm()

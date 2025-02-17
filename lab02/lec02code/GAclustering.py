@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from prettytable import PrettyTable
 
+
 class ClusteringGA:
     """
     Genetic Algorithm for clustering data into K clusters.
@@ -15,11 +16,11 @@ class ClusteringGA:
 
     def __init__(
         self,
-        data=None,                     # if None, we'll generate some 2D data
-        k=3,                          # number of clusters
-        dim=2,                        # data dimension
+        data=None,  # if None, we'll generate some 2D data
+        k=3,  # number of clusters
+        dim=2,  # data dimension
         use_binary_representation=False,
-        chrom_length=10,              # bits per coordinate if binary-coded
+        chrom_length=10,  # bits per coordinate if binary-coded
         pop_size=50,
         lower_bound=-10,
         upper_bound=10,
@@ -27,7 +28,7 @@ class ClusteringGA:
         mutation_rate=0.05,
         patience=10,
         min_delta=0.001,
-        elitism=True
+        elitism=True,
     ):
         """
         :param data: N x dim array of points; if None, we generate random 2D blobs.
@@ -45,7 +46,7 @@ class ClusteringGA:
         :param elitism: keep the best individual from current gen into next gen
         """
         self.use_binary = use_binary_representation
-        self.chrom_length = chrom_length  
+        self.chrom_length = chrom_length
         # For K cluster centers, each center has 'dim' coordinates => total = k * dim
         self.k = k
         self.dim = dim
@@ -65,9 +66,7 @@ class ClusteringGA:
             # Generate synthetic data if no data provided (for demonstration)
             # e.g., 3 Gaussian blobs in 2D
             self.data = self._generate_gaussian_blobs(
-                num_points_per_blob=100,
-                centers=[(0, 0), (5, 5), (0, 5)],
-                std=1.0
+                num_points_per_blob=100, centers=[(0, 0), (5, 5), (0, 5)], std=1.0
             )
         else:
             self.data = np.array(data)
@@ -77,13 +76,17 @@ class ClusteringGA:
     # Data Generation (example)
     # ------------------------------------------------------------
 
-    def _generate_gaussian_blobs(self, num_points_per_blob=100, centers=[(0,0), (5,5)], std=1.0):
+    def _generate_gaussian_blobs(
+        self, num_points_per_blob=100, centers=[(0, 0), (5, 5)], std=1.0
+    ):
         """
         Generate synthetic 2D data by sampling from multiple Gaussian blobs.
         """
         all_points = []
         for cx, cy in centers:
-            blob = np.random.normal(loc=(cx, cy), scale=std, size=(num_points_per_blob, 2))
+            blob = np.random.normal(
+                loc=(cx, cy), scale=std, size=(num_points_per_blob, 2)
+            )
             all_points.append(blob)
         data = np.vstack(all_points)
         return data
@@ -112,7 +115,7 @@ class ClusteringGA:
         real_values = []
         for i in range(self.params_per_ind):
             start = i * chunk_size
-            end   = (i+1) * chunk_size
+            end = (i + 1) * chunk_size
             chunk = bitstring[start:end]
             val = self._bits_to_float(chunk)
             real_values.append(val)
@@ -239,14 +242,14 @@ class ClusteringGA:
         If real-coded, do a simple blend with random alpha.
         """
         if self.use_binary:
-            point = random.randint(1, len(p1)-1)
+            point = random.randint(1, len(p1) - 1)
             c1 = p1[:point] + p2[point:]
             c2 = p2[:point] + p1[point:]
             return c1, c2
         else:
             alpha = random.random()
-            child1 = tuple(alpha*x1 + (1-alpha)*x2 for x1,x2 in zip(p1,p2))
-            child2 = tuple(alpha*x2 + (1-alpha)*x1 for x1,x2 in zip(p1,p2))
+            child1 = tuple(alpha * x1 + (1 - alpha) * x2 for x1, x2 in zip(p1, p2))
+            child2 = tuple(alpha * x2 + (1 - alpha) * x1 for x1, x2 in zip(p1, p2))
             return child1, child2
 
     # ------------------------------------------------------------
@@ -258,7 +261,7 @@ class ClusteringGA:
         If binary-coded, do bit-flip mutation with probability = self.mutation_rate * (1 - gen/max_gens).
         If real-coded, do a small random perturbation (also adaptively scaled).
         """
-        adaptive_rate = self.mutation_rate * (1.0 - float(generation)/max_gens)
+        adaptive_rate = self.mutation_rate * (1.0 - float(generation) / max_gens)
 
         if self.use_binary:
             ind_list = list(individual)
@@ -273,7 +276,9 @@ class ClusteringGA:
                     shift = random.uniform(-1, 1)  # simple shift
                     ind_list[i] += shift
                     # enforce bounds
-                    ind_list[i] = max(min(ind_list[i], self.upper_bound), self.lower_bound)
+                    ind_list[i] = max(
+                        min(ind_list[i], self.upper_bound), self.lower_bound
+                    )
             return tuple(ind_list)
 
     # ------------------------------------------------------------
@@ -297,7 +302,7 @@ class ClusteringGA:
 
     def plot_clusters(self, best_solution):
         """
-        For 2D data only (dim=2): 
+        For 2D data only (dim=2):
         plot the data colored by assigned cluster, plus the final cluster centers.
         """
         if self.dim != 2:
@@ -323,7 +328,9 @@ class ClusteringGA:
             ax.scatter(cluster_points[:, 0], cluster_points[:, 1], s=20, alpha=0.6)
 
         # Plot centers
-        ax.scatter(centers[:, 0], centers[:, 1], c='red', marker='X', s=200, edgecolors='k')
+        ax.scatter(
+            centers[:, 0], centers[:, 1], c="red", marker="X", s=200, edgecolors="k"
+        )
         ax.set_title("GA Clustering Result (K=%d)" % self.k)
         plt.show()
 
@@ -336,24 +343,31 @@ class ClusteringGA:
 
         # We'll track the best SSE (which we want to minimize) -> or track best fitness = -SSE (maximize).
         global_best = None
-        global_best_fit = -float('inf')
-        global_best_sse = float('inf')
+        global_best_fit = -float("inf")
+        global_best_sse = float("inf")
 
-        best_sse_so_far = float('inf')
+        best_sse_so_far = float("inf")
         no_improvement_counter = 0
 
         # for table
         try:
             from prettytable import PrettyTable
+
             table = PrettyTable()
-            table.field_names = ["Gen", "Representation", "Best Fitness", "Best SSE", "Centers (truncated)"]
+            table.field_names = [
+                "Gen",
+                "Representation",
+                "Best Fitness",
+                "Best SSE",
+                "Centers (truncated)",
+            ]
         except ImportError:
             table = None
 
         for gen in range(self.generations):
             # Evaluate fitness
             fitnesses = [self.fitness_function(ind) for ind in population]
-            
+
             # Identify best of this generation
             best_idx = np.argmax(fitnesses)
             best_ind = population[best_idx]
@@ -384,14 +398,18 @@ class ClusteringGA:
                 else:
                     real_params = best_ind
                 # Show only first few center coords to avoid giant columns
-                truncated_str = ", ".join([f"{x:.2f}" for x in real_params[:6]]) + " ..."
-                table.add_row([
-                    gen,
-                    "binary" if self.use_binary else "real",
-                    f"{best_fit:.3f}",
-                    f"{current_sse:.3f}",
-                    truncated_str
-                ])
+                truncated_str = (
+                    ", ".join([f"{x:.2f}" for x in real_params[:6]]) + " ..."
+                )
+                table.add_row(
+                    [
+                        gen,
+                        "binary" if self.use_binary else "real",
+                        f"{best_fit:.3f}",
+                        f"{current_sse:.3f}",
+                        truncated_str,
+                    ]
+                )
 
             # Selection
             selected = self.tournament_selection(population, fitnesses)
@@ -400,7 +418,7 @@ class ClusteringGA:
             new_pop = []
             for i in range(0, len(selected), 2):
                 p1 = selected[i]
-                p2 = selected[(i+1) % len(selected)]
+                p2 = selected[(i + 1) % len(selected)]
                 c1, c2 = self.crossover(p1, p2)
                 c1 = self.mutation(c1, gen, self.generations)
                 c2 = self.mutation(c2, gen, self.generations)
@@ -411,7 +429,7 @@ class ClusteringGA:
             if self.elitism and len(new_pop) > 0:
                 new_pop[0] = best_ind
 
-            population = new_pop[:self.pop_size]
+            population = new_pop[: self.pop_size]
 
         if table is not None:
             print(table)
@@ -459,11 +477,11 @@ if __name__ == "__main__":
 
     # Example usage for 2D data, real-coded representation
     ga_cluster = ClusteringGA(
-        data=None,                  # automatically generate 2D blobs
-        k=3,                       # number of clusters
+        data=None,  # automatically generate 2D blobs
+        k=3,  # number of clusters
         dim=2,
         use_binary_representation=False,
-        chrom_length=10,          # unused for real-coded, but keep to match signature
+        chrom_length=10,  # unused for real-coded, but keep to match signature
         pop_size=50,
         lower_bound=-10,
         upper_bound=10,
@@ -471,6 +489,6 @@ if __name__ == "__main__":
         mutation_rate=0.05,
         patience=8,
         min_delta=0.01,
-        elitism=True
+        elitism=True,
     )
     best_solution = ga_cluster.run()
