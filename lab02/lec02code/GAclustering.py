@@ -17,61 +17,25 @@ class ClusteringGA(Clustering.Clustering):
 
     def __init__(
         self,
-        data=None,  # if None, we'll generate some 2D data
-        k=3,  # number of clusters
-        dim=2,  # data dimension
         use_binary_representation=False,
         chrom_length=10,  # bits per coordinate if binary-coded
-        pop_size=50,
-        lower_bound=-10,
-        upper_bound=10,
-        generations=50,
         mutation_rate=0.05,
-        patience=10,
-        min_delta=0.001,
         elitism=True,
+        *args,
+        **kwargs,
     ):
         """
-        :param data: N x dim array of points; if None, we generate random 2D blobs.
-        :param k: number of clusters
-        :param dim: data dimensionality
         :param use_binary_representation: If True, use binary-coded representation; otherwise real-coded.
         :param chrom_length: length of each coordinate in bits (used only if binary-coded).
-        :param pop_size: population size
-        :param lower_bound: minimum coordinate for cluster centers
-        :param upper_bound: maximum coordinate for cluster centers
-        :param generations: max number of generations
         :param mutation_rate: base mutation probability
-        :param patience: early stopping if no SSE improvement
-        :param min_delta: SSE improvement threshold for early stopping
         :param elitism: keep the best individual from current gen into next gen
         """
+        super().__init__(*args, **kwargs)
+
         self.use_binary = use_binary_representation
         self.chrom_length = chrom_length
-        # For K cluster centers, each center has 'dim' coordinates => total = k * dim
-        self.k = k
-        self.dim = dim
-        self.params_per_ind = self.k * self.dim
-
-        self.pop_size = pop_size
-        self.lower_bound = lower_bound
-        self.upper_bound = upper_bound
-        self.generations = generations
         self.mutation_rate = mutation_rate
-        self.patience = patience
-        self.min_delta = min_delta
         self.elitism = elitism
-
-        # Prepare or generate data
-        if data is None:
-            # Generate synthetic data if no data provided (for demonstration)
-            # e.g., 3 Gaussian blobs in 2D
-            self.data = self._generate_gaussian_blobs(
-                num_points_per_blob=100, centers=[(0, 0), (5, 5), (0, 5)], std=1.0
-            )
-        else:
-            self.data = np.array(data)
-            # optionally: check self.data.shape[1] == dim, etc.
 
     # ------------------------------------------------------------
     # (1) GA Representation
@@ -155,7 +119,7 @@ class ClusteringGA(Clustering.Clustering):
             # real-coded
             return tuple(
                 random.uniform(self.lower_bound, self.upper_bound)
-                for _ in range(self.params_per_ind)
+                for _ in range(self.vector_size)
             )
 
     # ------------------------------------------------------------
@@ -346,7 +310,7 @@ class ClusteringGA(Clustering.Clustering):
         except ImportError:
             table = None
 
-        for gen in range(self.generations):
+        for gen in range(self.max_generations):
             # Evaluate fitness
             fitnesses = [self.fitness_function(ind) for ind in population]
 
@@ -402,8 +366,8 @@ class ClusteringGA(Clustering.Clustering):
                 p1 = selected[i]
                 p2 = selected[(i + 1) % len(selected)]
                 c1, c2 = self.crossover(p1, p2)
-                c1 = self.mutation(c1, gen, self.generations)
-                c2 = self.mutation(c2, gen, self.generations)
+                c1 = self.mutation(c1, gen, self.max_generations)
+                c2 = self.mutation(c2, gen, self.max_generations)
                 new_pop.append(c1)
                 new_pop.append(c2)
 
@@ -467,7 +431,7 @@ if __name__ == "__main__":
         pop_size=50,
         lower_bound=-10,
         upper_bound=10,
-        generations=50,
+        max_generations=50,
         mutation_rate=0.05,
         patience=8,
         min_delta=0.01,

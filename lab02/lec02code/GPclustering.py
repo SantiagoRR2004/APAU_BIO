@@ -68,62 +68,22 @@ class ClusteringGP(Clustering.Clustering):
 
     def __init__(
         self,
-        data=None,  # If None, we'll generate random 2D data
-        k=3,  # number of clusters
-        dim=2,  # dimension of data
-        pop_size=30,
         max_depth=4,  # max tree depth for new subtrees
-        lower_bound=-10,
-        upper_bound=10,
-        generations=30,
         crossover_rate=0.9,
         mutation_rate=0.3,
-        patience=5,
-        min_delta=1e-3,
-        seed=None,
+        *args,
+        **kwargs,
     ):
         """
-        :param data: (N x dim) data array; if None, generate 2D blobs
-        :param k: number of clusters
-        :param dim: dimension of data
-        :param pop_size: population size
         :param max_depth: maximum depth for newly generated subtrees
-        :param lower_bound: bounding for random cluster vectors
-        :param upper_bound: bounding for random cluster vectors
-        :param generations: number of GP iterations
         :param crossover_rate: probability of subtree crossover
         :param mutation_rate: probability of subtree mutation
-        :param patience: early-stopping patience
-        :param min_delta: SSE improvement threshold for early stopping
-        :param seed: optional random seed
         """
-        if seed is not None:
-            random.seed(seed)
-            np.random.seed(seed)
+        super().__init__(*args, **kwargs)
 
-        self.k = k
-        self.dim = dim
-        self.vector_size = k * dim  # length of the cluster-center vector
-
-        self.pop_size = pop_size
         self.max_depth = max_depth
-        self.lower_bound = lower_bound
-        self.upper_bound = upper_bound
-        self.generations = generations
         self.crossover_rate = crossover_rate
         self.mutation_rate = mutation_rate
-        self.patience = patience
-        self.min_delta = min_delta
-
-        # Prepare or generate data
-        if data is None:
-            self.data = self._generate_gaussian_blobs(
-                num_points_per_blob=60, centers=[(0, 0), (5, 5), (0, 5)], std=1.0
-            )
-        else:
-            self.data = np.array(data)
-            if self.data.shape[1] != self.dim:
-                raise ValueError("Data dimension mismatch with 'dim' parameter.")
 
         # Build function set for internal nodes
         # For simplicity, we'll use 2-arity operators
@@ -266,7 +226,7 @@ class ClusteringGP(Clustering.Clustering):
         global_best = None
         global_best_fit = -float("inf")
 
-        for gen in range(self.generations):
+        for gen in range(self.max_generations):
             new_population = []
 
             # Elitism: keep best from current generation
@@ -394,7 +354,7 @@ if __name__ == "__main__":
         max_depth=4,
         lower_bound=-10,
         upper_bound=10,
-        generations=30,
+        max_generations=30,
         crossover_rate=0.9,
         mutation_rate=0.3,
         patience=5,

@@ -14,61 +14,19 @@ class ClusteringDE(Clustering.Clustering):
 
     def __init__(
         self,
-        data=None,  # If None, generate random 2D blobs
-        k=3,  # Number of clusters
-        dim=2,  # Data dimensionality
-        pop_size=50,
-        lower_bound=-10,
-        upper_bound=10,
-        max_generations=50,
         F=0.5,  # Mutation factor
         CR=0.9,  # Crossover probability
-        patience=10,  # Early stopping patience
-        min_delta=1e-3,  # Minimum improvement in SSE
-        seed=None,
+        *args,
+        **kwargs,
     ):
         """
-        :param data: (N x dim) array of data points; if None, we generate random 2D blobs for demonstration.
-        :param k: Number of clusters
-        :param dim: Dimensionality of the data
-        :param pop_size: Number of individuals in the population
-        :param lower_bound: Minimum coordinate for each cluster center
-        :param upper_bound: Maximum coordinate for each cluster center
-        :param max_generations: Max number of DE iterations
         :param F: Differential weight (mutation factor)
         :param CR: Crossover probability in [0,1]
-        :param patience: Early stopping if no SSE improvement for 'patience' consecutive generations
-        :param min_delta: Minimum SSE improvement threshold to reset patience
-        :param seed: Optional random seed
         """
-        if seed is not None:
-            np.random.seed(seed)
-            random.seed(seed)
+        super().__init__(*args, **kwargs)
 
-        self.k = k
-        self.dim = dim
-        self.params_per_ind = k * dim
-
-        self.pop_size = pop_size
-        self.lower_bound = lower_bound
-        self.upper_bound = upper_bound
-        self.max_generations = max_generations
         self.F = F
         self.CR = CR
-        self.patience = patience
-        self.min_delta = min_delta
-
-        # Data handling
-        if data is None:
-            self.data = self._generate_gaussian_blobs(
-                num_points_per_blob=60, centers=[(0, 0), (5, 5), (0, 5)], std=1.0
-            )
-        else:
-            self.data = np.array(data)
-            if self.data.shape[1] != dim:
-                raise ValueError(
-                    f"Data dimension ({self.data.shape[1]}) does not match 'dim' ({dim})."
-                )
 
         # Initialize population
         self.population = self._create_initial_population()
@@ -86,7 +44,7 @@ class ClusteringDE(Clustering.Clustering):
         population = []
         for _ in range(self.pop_size):
             ind = np.random.uniform(
-                low=self.lower_bound, high=self.upper_bound, size=self.params_per_ind
+                low=self.lower_bound, high=self.upper_bound, size=self.vector_size
             )
             population.append(ind)
         return population
@@ -144,8 +102,8 @@ class ClusteringDE(Clustering.Clustering):
         else trial[j] = target_vec[j]
         """
         trial = np.copy(target_vec)
-        rand_index = random.randint(0, self.params_per_ind - 1)
-        for j in range(self.params_per_ind):
+        rand_index = random.randint(0, self.vector_size - 1)
+        for j in range(self.vector_size):
             if random.random() < self.CR or j == rand_index:
                 trial[j] = donor_vec[j]
         return trial
