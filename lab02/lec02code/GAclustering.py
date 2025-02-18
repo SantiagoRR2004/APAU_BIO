@@ -153,16 +153,6 @@ class ClusteringGA(Clustering.Clustering):
         return -sse  # negate to maximize
 
     # ------------------------------------------------------------
-    # (4) Population Initialization
-    # ------------------------------------------------------------
-
-    def create_initial_population(self):
-        population = []
-        for _ in range(self.pop_size):
-            population.append(self.create_individual())
-        return population
-
-    # ------------------------------------------------------------
     # (5) Selection: Tournament
     # ------------------------------------------------------------
 

@@ -90,12 +90,16 @@ class ClusteringGP(Clustering.Clustering):
         self.function_set = ["add", "sub", "avg", "mul"]
 
         # Create initial population
-        self.population = [self._random_tree(depth=2) for _ in range(self.pop_size)]
+        self.population = self.create_initial_population()
 
     # ------------------------------------------------------------
     # Tree Generation & Mutation
     # ------------------------------------------------------------
-    def _random_tree(self, depth=0):
+
+    def create_initial_population(self) -> list:
+        return [self.create_individual(depth=2) for _ in range(self.pop_size)]
+
+    def create_individual(self, depth=0) -> GPNode:
         """
         Randomly create a tree up to 'max_depth'. We'll mix function and terminal nodes.
         """
@@ -105,8 +109,8 @@ class ClusteringGP(Clustering.Clustering):
         else:
             # make a function node
             func = random.choice(self.function_set)
-            left_child = self._random_tree(depth + 1)
-            right_child = self._random_tree(depth + 1)
+            left_child = self.create_individual(depth + 1)
+            right_child = self.create_individual(depth + 1)
             node = GPNode(
                 is_function=True, func=func, children=[left_child, right_child]
             )
@@ -127,7 +131,7 @@ class ClusteringGP(Clustering.Clustering):
         Otherwise recurse into its children if it's a function node.
         """
         if random.random() < self.mutation_rate:
-            return self._random_tree(depth=current_depth)
+            return self.create_individual(depth=current_depth)
         else:
             if node.is_function:
                 node.children[0] = self._subtree_mutation(

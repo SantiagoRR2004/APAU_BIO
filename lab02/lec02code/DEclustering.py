@@ -29,25 +29,17 @@ class ClusteringDE(Clustering.Clustering):
         self.CR = CR
 
         # Initialize population
-        self.population = self._create_initial_population()
+        self.population = self.create_initial_population()
         # Evaluate SSE -> fitness = -SSE for all
         self.fitness_vals = [self._fitness_function(ind) for ind in self.population]
 
     # ------------------------------------------------------------
     # (2) Population Initialization
     # ------------------------------------------------------------
-    def _create_initial_population(self):
-        """
-        Create initial population of size pop_size.
-        Each individual is a NumPy array (k*dim) of center coordinates.
-        """
-        population = []
-        for _ in range(self.pop_size):
-            ind = np.random.uniform(
-                low=self.lower_bound, high=self.upper_bound, size=self.vector_size
-            )
-            population.append(ind)
-        return population
+    def create_individual(self):
+        return np.random.uniform(
+            low=self.lower_bound, high=self.upper_bound, size=self.vector_size
+        )
 
     # ------------------------------------------------------------
     # (3) Fitness Function = -SSE

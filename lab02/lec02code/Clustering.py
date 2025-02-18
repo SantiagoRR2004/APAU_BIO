@@ -84,3 +84,21 @@ class Clustering(ABC):
             all_points.append(blob)
         data = np.vstack(all_points)
         return data
+
+    # ------------------------------------------------------------
+    # (2) Create Individual
+    # ------------------------------------------------------------
+
+    @abstractmethod
+    def create_individual(self):
+        pass
+
+    # ------------------------------------------------------------
+    # (4) Population Initialization
+    # ------------------------------------------------------------
+
+    def create_initial_population(self) -> list:
+        population = []
+        for _ in range(self.pop_size):
+            population.append(self.create_individual())
+        return population
