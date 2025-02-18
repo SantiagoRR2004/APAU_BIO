@@ -67,6 +67,8 @@ class Clustering(ABC):
                     f"Data dimension ({self.data.shape[1]}) does not match 'dim' ({dim})."
                 )
 
+        self.bestSSEByGeneration = []
+
     # ------------------------------------------------------------
     # (1) Generate Synthetic Data (Optional)
     # ------------------------------------------------------------
@@ -102,3 +104,21 @@ class Clustering(ABC):
         for _ in range(self.pop_size):
             population.append(self.create_individual())
         return population
+
+
+if __name__ == "__main__":
+    from DEclustering import ClusteringDE
+    from GPclustering import ClusteringGP
+    from GAclustering import ClusteringGA
+
+    data = ClusteringDE()._generate_gaussian_blobs()
+    seed = 42
+
+    DE = ClusteringDE(data=data, seed=seed)
+    DE.run()
+
+    GP = ClusteringGP(data=data, seed=seed)
+    GP.run()
+
+    GA = ClusteringGA(data=data, seed=seed)
+    GA.run()

@@ -238,6 +238,7 @@ class ClusteringGP(Clustering.Clustering):
             best_ind = self.population[best_idx]
             best_fit = fitnesses[best_idx]
             gen_sse = -best_fit
+            self.bestSSEByGeneration.append(gen_sse)
 
             if gen_sse < best_sse:
                 best_sse = gen_sse

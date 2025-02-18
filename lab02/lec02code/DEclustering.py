@@ -131,6 +131,7 @@ class ClusteringDE(Clustering.Clustering):
             gen_best_fit = self.fitness_vals[gen_best_idx]
             gen_best_ind = self.population[gen_best_idx]
             gen_best_sse = self._calculate_sse(gen_best_ind)
+            self.bestSSEByGeneration.append(gen_best_sse)
 
             # Update global best
             if gen_best_sse < global_best_sse:

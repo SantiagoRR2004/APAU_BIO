@@ -309,6 +309,7 @@ class ClusteringGA(Clustering.Clustering):
             best_ind = population[best_idx]
             best_fit = fitnesses[best_idx]
             current_sse = self.calculate_sse(best_ind)
+            self.bestSSEByGeneration.append(current_sse)
 
             # Update global best
             if current_sse < global_best_sse:
