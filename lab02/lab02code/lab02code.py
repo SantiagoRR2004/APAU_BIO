@@ -42,6 +42,40 @@ class GeneticAlgorithm:
         self.global_best = None
         self.global_best_fit = -float("inf")
 
+    def create_individual(self):
+        """
+        Retorna una solución (individuo) aleatoria.
+        Ejemplos:
+          - Para clustering: lista de k*dim floats aleatorios.
+          - Para clasificación: conjunto de pesos o hiperparámetros.
+          - Para regresión simbólica: estructura de árbol o ecuación linear.
+        """
+        pass
+
+    def fitness_function(self, individual):
+        """
+        Evalúa la calidad del individuo y retorna
+        un valor numérico (cuanto más alto, mejor).
+        Ejemplos:
+          - Clustering: -SSE (SSE negativo)
+          - Clasificación: exactitud en validación
+          - Regresión: -ECM
+        """
+        pass
+
+    def crossover(self, parent1, parent2, crossover_rate):
+        """
+        Retorna dos 'hijos'. Tal vez no hacer nada si random.random() > crossover_rate.
+        """
+        pass
+
+    def mutation(self, individual, mutation_rate):
+        """
+        Muta el individuo in-place o crea uno nuevo.
+        Ejemplos: desplazamiento aleatorio de parámetros, flip de bits, etc.
+        """
+        pass
+
     def run(self, ml_task):
         """
         Bucle principal del GA:
@@ -93,37 +127,3 @@ class MachineLearningTask:
         self.data = data
         self.k = k
         # Posiblemente derivar otros parámetros (p.ej., params_per_ind, etc.)
-
-    def create_individual(self):
-        """
-        Retorna una solución (individuo) aleatoria.
-        Ejemplos:
-          - Para clustering: lista de k*dim floats aleatorios.
-          - Para clasificación: conjunto de pesos o hiperparámetros.
-          - Para regresión simbólica: estructura de árbol o ecuación linear.
-        """
-        pass
-
-    def fitness_function(self, individual):
-        """
-        Evalúa la calidad del individuo y retorna
-        un valor numérico (cuanto más alto, mejor).
-        Ejemplos:
-          - Clustering: -SSE (SSE negativo)
-          - Clasificación: exactitud en validación
-          - Regresión: -ECM
-        """
-        pass
-
-    def crossover(self, parent1, parent2, crossover_rate):
-        """
-        Retorna dos 'hijos'. Tal vez no hacer nada si random.random() > crossover_rate.
-        """
-        pass
-
-    def mutation(self, individual, mutation_rate):
-        """
-        Muta el individuo in-place o crea uno nuevo.
-        Ejemplos: desplazamiento aleatorio de parámetros, flip de bits, etc.
-        """
-        pass
