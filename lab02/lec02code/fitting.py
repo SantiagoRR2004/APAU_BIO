@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import random
 import numpy as np
 import matplotlib.pyplot as plt
+import json
 
 
 class AbstractFitting(ABC):
@@ -20,6 +21,8 @@ class AbstractFitting(ABC):
         self.target_a = target_a
         self.target_b = target_b
         self.target_c = target_c
+        self.data = {"MSEs": []}
+        random.seed(42)
 
     def create_individual(self):
         """
@@ -58,7 +61,7 @@ class AbstractFitting(ABC):
         return -curviness  # we want smaller curviness => higher fitness
 
     @abstractmethod
-    def calculate_mse(self, individual, n_point=100):
+    def calculate_mse(self, individual, n_points=100):
         """
         Compare individual's parabola to the target function (self.target_a, self.target_b, self.target_c)
         """
