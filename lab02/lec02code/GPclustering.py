@@ -4,6 +4,7 @@ import random
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import Clustering
 
 
 # ---------------------------
@@ -58,7 +59,7 @@ class GPNode:
                 raise ValueError(f"Unknown function: {self.func}")
 
 
-class ClusteringGP:
+class ClusteringGP(Clustering.Clustering):
     """
     Genetic Programming for clustering. Each GP individual is a tree that,
     when evaluated, returns a vector of length (k*dim). Interpreted as K centers in 'dim' space.
@@ -130,21 +131,6 @@ class ClusteringGP:
 
         # Create initial population
         self.population = [self._random_tree(depth=2) for _ in range(self.pop_size)]
-
-    # ------------------------------------------------------------
-    # Data generation (optional)
-    # ------------------------------------------------------------
-    def _generate_gaussian_blobs(
-        self, num_points_per_blob=60, centers=[(0, 0), (5, 5)], std=1.0
-    ):
-        all_points = []
-        for cx, cy in centers:
-            blob = np.random.normal(
-                loc=(cx, cy), scale=std, size=(num_points_per_blob, 2)
-            )
-            all_points.append(blob)
-        data = np.vstack(all_points)
-        return data
 
     # ------------------------------------------------------------
     # Tree Generation & Mutation

@@ -3,9 +3,10 @@
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+import Clustering
 
 
-class ClusteringDE:
+class ClusteringDE(Clustering.Clustering):
     """
     Differential Evolution (DE) for K-means-like clustering:
     Minimizes SSE from points to cluster centers.
@@ -73,24 +74,6 @@ class ClusteringDE:
         self.population = self._create_initial_population()
         # Evaluate SSE -> fitness = -SSE for all
         self.fitness_vals = [self._fitness_function(ind) for ind in self.population]
-
-    # ------------------------------------------------------------
-    # (1) Generate Synthetic Data (Optional)
-    # ------------------------------------------------------------
-    def _generate_gaussian_blobs(
-        self, num_points_per_blob=60, centers=[(0, 0), (5, 5)], std=1.0
-    ):
-        """
-        Generate synthetic 2D data from multiple Gaussian blobs.
-        """
-        all_points = []
-        for cx, cy in centers:
-            blob = np.random.normal(
-                loc=(cx, cy), scale=std, size=(num_points_per_blob, 2)
-            )
-            all_points.append(blob)
-        data = np.vstack(all_points)
-        return data
 
     # ------------------------------------------------------------
     # (2) Population Initialization

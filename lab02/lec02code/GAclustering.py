@@ -5,9 +5,10 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 from prettytable import PrettyTable
+import Clustering
 
 
-class ClusteringGA:
+class ClusteringGA(Clustering.Clustering):
     """
     Genetic Algorithm for clustering data into K clusters.
     Can use either real-coded or binary-coded representation
@@ -71,25 +72,6 @@ class ClusteringGA:
         else:
             self.data = np.array(data)
             # optionally: check self.data.shape[1] == dim, etc.
-
-    # ------------------------------------------------------------
-    # Data Generation (example)
-    # ------------------------------------------------------------
-
-    def _generate_gaussian_blobs(
-        self, num_points_per_blob=100, centers=[(0, 0), (5, 5)], std=1.0
-    ):
-        """
-        Generate synthetic 2D data by sampling from multiple Gaussian blobs.
-        """
-        all_points = []
-        for cx, cy in centers:
-            blob = np.random.normal(
-                loc=(cx, cy), scale=std, size=(num_points_per_blob, 2)
-            )
-            all_points.append(blob)
-        data = np.vstack(all_points)
-        return data
 
     # ------------------------------------------------------------
     # (1) GA Representation
