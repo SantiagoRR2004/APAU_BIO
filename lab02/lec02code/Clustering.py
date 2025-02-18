@@ -23,7 +23,7 @@ class Clustering(ABC):
         lower_bound=-10,
         upper_bound=10,
         max_generations=50,
-        patience=10,  # Early stopping patience
+        patience=100,  # Early stopping patience
         min_delta=1e-3,  # Minimum improvement in SSE
         seed=None,
     ):
@@ -122,3 +122,20 @@ if __name__ == "__main__":
 
     GA = ClusteringGA(data=data, seed=seed)
     GA.run()
+
+    print(max(DE.bestSSEByGeneration))
+    print(max(GP.bestSSEByGeneration))
+    print(max(GA.bestSSEByGeneration))
+
+    # Plotting in one single figure, no subplots
+
+    plt.title("Clustering SSE by Generation")
+    plt.xlabel("Generation")
+    plt.ylabel("SSE")
+
+    plt.plot(DE.bestSSEByGeneration, label="Differential Evolution")
+    plt.plot(GP.bestSSEByGeneration, label="Genetic Programming")
+    plt.plot(GA.bestSSEByGeneration, label="Genetic Algorithm")
+
+    plt.legend()
+    plt.show()
