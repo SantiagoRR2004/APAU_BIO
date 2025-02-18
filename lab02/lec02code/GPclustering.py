@@ -303,7 +303,7 @@ class ClusteringGP(Clustering.Clustering):
         print(f"Best Fitness (=-SSE): {truly_best_fit:.4f}")
         print(f"SSE: {best_sse_final:.4f}")
 
-        self.plot_clusters(truly_best)
+        # self.plot_clusters(truly_best)
         return truly_best
 
     # ------------------------------------------------------------

@@ -402,7 +402,7 @@ class ClusteringGA(Clustering.Clustering):
         print(f"Cluster Centers:\n{reshaped_centers}")
 
         # Plot final result in 2D
-        self.plot_clusters(truly_best)
+        # self.plot_clusters(truly_best)
 
         return truly_best
 

@@ -173,7 +173,7 @@ class ClusteringDE(Clustering.Clustering):
         print(f"SSE: {truly_best_sse:.4f}")
         print(f"Cluster centers:\n{truly_best.reshape(self.k, self.dim)}")
 
-        self._plot_clusters(truly_best)
+        # self._plot_clusters(truly_best)
         return truly_best
 
     # ------------------------------------------------------------
