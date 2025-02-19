@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 import pandas as pd
+import os
 
 
 class GeneticAlgorithm:
@@ -300,7 +301,16 @@ class FindHyperparametersClassification:
 
 
 if __name__ == "__main__":
-    df = pd.read_csv("data/schizophrenia_dataset.csv")
+
+    # Get actual folder
+    directory = os.path.dirname(os.path.realpath(__file__))
+
+    # Get dataset path
+    datasetPath = os.path.realpath(
+        os.path.join(os.path.join(directory, "data"), "schizophrenia_dataset.csv")
+    )
+
+    df = pd.read_csv(datasetPath)
     X = df.drop(columns=["MedicationAdherence"])
     y = df["MedicationAdherence"]
 
