@@ -5,3 +5,5 @@ numpy
 torch
 torchvision
 prettytable
+scikit-learn
+pandas
