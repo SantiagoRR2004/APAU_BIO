@@ -241,10 +241,10 @@ class ClusteringGP(Clustering.Clustering):
             if best_fit > global_best_fit:
                 global_best = self._clone_tree(best_ind)
                 global_best_fit = best_fit
-                best_sse = gen_sse
 
             # Early stopping check
             if gen_sse < best_sse - self.min_delta:
+                best_sse = gen_sse
                 no_improve_count = 0
             else:
                 no_improve_count += 1
