@@ -4,6 +4,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import os
+import tqdm
 
 ### `machine_learning_task.py` (Esqueleto de Tarea de ML Especializada)
 
@@ -225,6 +226,9 @@ class GeneticAlgorithm:
 
         table = ml_task.generate_table()
 
+        # Progress bar
+        pbar = tqdm.tqdm(range(self.generations))
+
         for gen in range(self.generations):
             # Evaluar fitness
             fitnesses = []
@@ -246,6 +250,8 @@ class GeneticAlgorithm:
                 no_improvement_counter += 1
 
             if no_improvement_counter >= self.patience:
+                # Close progress bar
+                pbar.close()
                 print(f"Early stopping at generation {gen} due to no improvement.")
                 break
 
@@ -269,6 +275,9 @@ class GeneticAlgorithm:
                 new_pop.append(c2)
 
             population = new_pop[: self.pop_size]
+
+            # Update progress bar
+            pbar.update(1)
 
         # After we finish all generations:
         if table is not None:
