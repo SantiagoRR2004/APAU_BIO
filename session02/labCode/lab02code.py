@@ -1,15 +1,12 @@
 import random
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-import pandas as pd
-import os
 import tqdm
+from abc import ABC, abstractmethod
 
 ### `machine_learning_task.py` (Esqueleto de Tarea de ML Especializada)
 
 
-class FindHyperparametersClassification:
+class MLTask(ABC):
     """
     Esta clase busca los mejores hiperparámetros para una clasificación.
     Esta clase debe contener los datos y definir cómo:
@@ -19,23 +16,8 @@ class FindHyperparametersClassification:
       - mutar los individuos
     """
 
-    def __init__(
-        self,
-        X_train,
-        y_train,
-        X_val,
-        y_val,
-        X_test,
-        y_test,
-        hyperparameters_bounds: dict = {
-            "n_estimators": (10, 200),
-            "max_depth": (1, 15),
-            "min_samples_split": (2, 10),
-            "min_samples_leaf": (1, 5),
-            "max_features": (1, 5),
-        },
-        seed=None,
-    ):
+    @abstractmethod
+    def __init__(self, seed=None):
         """
         :param data: podría ser un conjunto de datos de entrenamiento, o un array de features, etc.
         :param k: parámetro de ejemplo (número de clústeres u otro objetivo).
@@ -44,16 +26,8 @@ class FindHyperparametersClassification:
             np.random.seed(seed)
             random.seed(seed)
 
-        self.X_train = X_train
-        self.y_train = y_train
-        self.X_val = X_val
-        self.y_val = y_val
-        self.X_test = X_test
-        self.y_test = y_test
-        self.hyperparameters_bounds = hyperparameters_bounds
-        # Posiblemente derivar otros parámetros (p.ej., params_per_ind, etc.)
-
-    def create_individual(self) -> dict:
+    @abstractmethod
+    def create_individual(self) -> object:
         """
         Retorna una solución (individuo) aleatoria.
         Ejemplos:
@@ -61,16 +35,10 @@ class FindHyperparametersClassification:
           - Para clasificación: conjunto de pesos o hiperparámetros.
           - Para regresión simbólica: estructura de árbol o ecuación linear.
         """
-        hyperparameters = {}
-        for key in self.hyperparameters_bounds.keys():
-            hyperparameters[key] = random.randint(
-                self.hyperparameters_bounds[key][0],
-                self.hyperparameters_bounds[key][1],
-            )
+        pass
 
-        return hyperparameters
-
-    def fitness_function(self, individual: dict) -> float:
+    @abstractmethod
+    def fitness_function(self, individual: object) -> float:
         """
         Evalúa la calidad del individuo y retorna
         un valor numérico (cuanto más alto, mejor).
@@ -79,77 +47,40 @@ class FindHyperparametersClassification:
           - Clasificación: exactitud en validación
           - Regresión: -ECM
         """
-        random_forest = RandomForestClassifier(**individual)
-        random_forest.fit(self.X_train, self.y_train)
-        return random_forest.score(self.X_val, self.y_val)
+        pass
 
-    def crossover(self, parent1: dict, parent2: dict, crossover_rate: float) -> tuple:
+    @abstractmethod
+    def crossover(
+        self, parent1: object, parent2: object, crossover_rate: float
+    ) -> tuple:
         """
         Retorna dos 'hijos'. Tal vez no hacer nada si random.random() > crossover_rate.
         """
-        if random.random() > crossover_rate:
-            return parent1, parent2
-        else:
-            alpha = random.random()
-            child1 = {}
-            child2 = {}
-            for key in parent1.keys():
-                child1[key] = int(alpha * parent1[key] + (1 - alpha) * parent2[key])
-                child2[key] = int(alpha * parent2[key] + (1 - alpha) * parent1[key])
+        pass
 
-            return child1, child2
-
-    def mutation(self, individual: dict, mutation_rate: float) -> dict:
+    @abstractmethod
+    def mutation(self, individual: object, mutation_rate: float) -> object:
         """
         Muta el individuo in-place o crea uno nuevo.
         Ejemplos: desplazamiento aleatorio de parámetros, flip de bits, etc.
         """
-        if random.random() > mutation_rate:
-            return individual
-        else:
-            # Modificamos un parámetro aleatoriamente
-            key = random.choice(list(individual.keys()))
-            signo = random.choice([-1, 1])
-            lower_bound, upper_bound = self.hyperparameters_bounds[key]
-            individual[key] = individual[key] + signo * random.randint(
-                lower_bound, upper_bound
-            )
-            # Evitamos valores fuera de rango
-            individual[key] = int(max(min(individual[key], upper_bound), lower_bound))
+        pass
 
-            return individual
-
-    def score_test(self, individual: dict) -> float:
-        """
-        Evalua el modelo con los datos de test.
-        """
-        random_forest = RandomForestClassifier(**individual)
-        random_forest.fit(self.X_train, self.y_train)
-        return random_forest.score(self.X_test, self.y_test)
-
+    @abstractmethod
     def generate_table(self) -> object:
         """
         Genera una tabla con los mejores individuos y sus fitnesses.
         """
-        try:
-            from prettytable import PrettyTable
+        pass
 
-            table = PrettyTable()
-            hyperparameters_name = list(self.hyperparameters_bounds.keys())
-            table.field_names = ["Gen", "Fitness"] + hyperparameters_name
-        except ImportError:
-            table = None
-        return table
-
+    @abstractmethod
     def update_table(
         self, table: object, gen: int, best_ind: dict, best_fit: float
     ) -> None:
         """
         Actualiza la tabla con los mejores individuos y sus fitnesses.
         """
-        hyperparameters = self.hyperparameters_bounds.keys()
-        hyperparameters_values = [best_ind[key] for key in hyperparameters]
-        table.add_row([gen, round(best_fit, 3)] + hyperparameters_values)
+        pass
 
 
 class GeneticAlgorithm:
@@ -192,7 +123,7 @@ class GeneticAlgorithm:
         self.global_best = None
         self.global_best_fit = -float("inf")
 
-    def run(self, ml_task: FindHyperparametersClassification) -> object:
+    def run(self, ml_task: MLTask) -> object:
         """
         Bucle principal del GA:
           - crear población inicial (mediante ml_task.create_individual)
@@ -310,34 +241,3 @@ class GeneticAlgorithm:
             winner = max(tournament, key=lambda x: x[1])[0]
             selected.append(winner)
         return selected
-
-
-if __name__ == "__main__":
-
-    # Get actual folder
-    directory = os.path.dirname(os.path.realpath(__file__))
-
-    # Get dataset path
-    datasetPath = os.path.realpath(
-        os.path.join(os.path.join(directory, "data"), "schizophrenia_dataset.csv")
-    )
-
-    df = pd.read_csv(datasetPath)
-    X = df.drop(columns=["MedicationAdherence"])
-    y = df["MedicationAdherence"]
-
-    X_train, X_temp, y_train, y_temp = train_test_split(
-        X, y, test_size=0.3, random_state=42
-    )
-    X_val, X_test, y_val, y_test = train_test_split(
-        X_temp, y_temp, test_size=0.5, random_state=42
-    )
-
-    ml_task = FindHyperparametersClassification(
-        X_train, y_train, X_val, y_val, X_test, y_test, seed=42
-    )
-    ga = GeneticAlgorithm(seed=42)
-    best_sol = ga.run(ml_task=ml_task)
-    print(best_sol)
-
-    print(f"Test score: {ml_task.score_test(best_sol)}")

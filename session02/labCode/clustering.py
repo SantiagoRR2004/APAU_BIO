@@ -1,15 +1,14 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
-import os
 from sklearn.datasets import load_wine
 import pandas as pd
 import random
 import numpy as np
-from lab02code import GeneticAlgorithm
+from lab02code import GeneticAlgorithm, MLTask
 
 
-class MlTaskClustering:
+class MLTaskClustering(MLTask):
     """
     Esta clase debe contener los datos y definir cómo:
       - crear un individuo
@@ -155,7 +154,7 @@ if __name__ == "__main__":
     # Corremos el algoritmo genético
     seed = 42
     k = 3
-    ml_task = MlTaskClustering(data_2D, k=k, seed=seed)
+    ml_task = MLTaskClustering(data_2D, k=k, seed=seed)
     ga = GeneticAlgorithm(seed=seed)
     best_individual = ga.run(ml_task=ml_task)
     centers = np.array(best_individual).reshape(k, 2)
