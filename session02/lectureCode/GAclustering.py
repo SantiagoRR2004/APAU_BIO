@@ -30,12 +30,12 @@ class ClusteringGA(Clustering.Clustering):
         :param mutation_rate: base mutation probability
         :param elitism: keep the best individual from current gen into next gen
         """
-        super().__init__(*args, **kwargs)
-
         self.use_binary = use_binary_representation
         self.chrom_length = chrom_length
         self.mutation_rate = mutation_rate
         self.elitism = elitism
+
+        super().__init__(*args, **kwargs)
 
     # ------------------------------------------------------------
     # (1) GA Representation
@@ -275,8 +275,6 @@ class ClusteringGA(Clustering.Clustering):
     # ------------------------------------------------------------
 
     def run(self):
-        population = self.create_initial_population()
-
         # We'll track the best SSE (which we want to minimize) -> or track best fitness = -SSE (maximize).
         global_best = None
         global_best_fit = -float("inf")
@@ -302,11 +300,11 @@ class ClusteringGA(Clustering.Clustering):
 
         for gen in range(self.max_generations):
             # Evaluate fitness
-            fitnesses = [self.fitness_function(ind) for ind in population]
+            fitnesses = [self.fitness_function(ind) for ind in self.population]
 
             # Identify best of this generation
             best_idx = np.argmax(fitnesses)
-            best_ind = population[best_idx]
+            best_ind = self.population[best_idx]
             best_fit = fitnesses[best_idx]
             current_sse = self.calculate_sse(best_ind)
             self.bestSSEByGeneration.append(current_sse)
@@ -349,7 +347,7 @@ class ClusteringGA(Clustering.Clustering):
                 )
 
             # Selection
-            selected = self.tournament_selection(population, fitnesses)
+            selected = self.tournament_selection(self.population, fitnesses)
 
             # Crossover & Mutation -> next gen
             new_pop = []
@@ -366,15 +364,15 @@ class ClusteringGA(Clustering.Clustering):
             if self.elitism and len(new_pop) > 0:
                 new_pop[0] = best_ind
 
-            population = new_pop[: self.pop_size]
+            self.population = new_pop[: self.pop_size]
 
         if table is not None:
             print(table)
 
         # Final check among last population
-        final_fitnesses = [self.fitness_function(ind) for ind in population]
+        final_fitnesses = [self.fitness_function(ind) for ind in self.population]
         final_best_idx = np.argmax(final_fitnesses)
-        final_best_ind = population[final_best_idx]
+        final_best_ind = self.population[final_best_idx]
         final_best_fit = final_fitnesses[final_best_idx]
         final_best_sse = self.calculate_sse(final_best_ind)
 

@@ -79,8 +79,6 @@ class ClusteringGP(Clustering.Clustering):
         :param crossover_rate: probability of subtree crossover
         :param mutation_rate: probability of subtree mutation
         """
-        super().__init__(*args, **kwargs)
-
         self.max_depth = max_depth
         self.crossover_rate = crossover_rate
         self.mutation_rate = mutation_rate
@@ -89,8 +87,7 @@ class ClusteringGP(Clustering.Clustering):
         # For simplicity, we'll use 2-arity operators
         self.function_set = ["add", "sub", "avg", "mul"]
 
-        # Create initial population
-        self.population = self.create_initial_population()
+        super().__init__(*args, **kwargs)
 
     # ------------------------------------------------------------
     # Tree Generation & Mutation

@@ -23,7 +23,7 @@ class Clustering(ABC):
         lower_bound=-10,
         upper_bound=10,
         max_generations=50,
-        patience=100,  # Early stopping patience
+        patience=10,  # Early stopping patience
         min_delta=1e-3,  # Minimum improvement in SSE
         seed=None,
     ):
@@ -66,6 +66,9 @@ class Clustering(ABC):
                 raise ValueError(
                     f"Data dimension ({self.data.shape[1]}) does not match 'dim' ({dim})."
                 )
+
+        # Initialize population
+        self.population = self.create_initial_population()
 
         self.bestSSEByGeneration = []
 

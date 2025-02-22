@@ -28,8 +28,6 @@ class ClusteringDE(Clustering.Clustering):
         self.F = F
         self.CR = CR
 
-        # Initialize population
-        self.population = self.create_initial_population()
         # Evaluate SSE -> fitness = -SSE for all
         self.fitness_vals = [self._fitness_function(ind) for ind in self.population]
 
