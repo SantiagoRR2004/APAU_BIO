@@ -237,15 +237,17 @@ class ClusteringGP(Clustering.Clustering):
             gen_sse = -best_fit
             self.bestSSEByGeneration.append(gen_sse)
 
-            if gen_sse < best_sse:
-                best_sse = gen_sse
-                no_improve_count = 0
-            else:
-                no_improve_count += 1
-
+            # Update global best
             if best_fit > global_best_fit:
                 global_best = self._clone_tree(best_ind)
                 global_best_fit = best_fit
+                best_sse = gen_sse
+
+            # Early stopping check
+            if gen_sse < best_sse - self.min_delta:
+                no_improve_count = 0
+            else:
+                no_improve_count += 1
 
             if no_improve_count >= self.patience:
                 print(f"Early stopping at generation {gen} (no SSE improvement).")

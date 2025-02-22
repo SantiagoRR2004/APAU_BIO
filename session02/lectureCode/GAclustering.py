@@ -280,7 +280,6 @@ class ClusteringGA(Clustering.Clustering):
         global_best_fit = -float("inf")
         global_best_sse = float("inf")
 
-        best_sse_so_far = float("inf")
         no_improvement_counter = 0
 
         # for table
@@ -316,8 +315,7 @@ class ClusteringGA(Clustering.Clustering):
                 global_best_sse = current_sse
 
             # Early stopping check
-            if current_sse < best_sse_so_far - self.min_delta:
-                best_sse_so_far = current_sse
+            if current_sse < global_best_sse - self.min_delta:
                 no_improvement_counter = 0
             else:
                 no_improvement_counter += 1

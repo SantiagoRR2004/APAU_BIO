@@ -102,7 +102,6 @@ class ClusteringDE(Clustering.Clustering):
     # (5) Main DE Loop
     # ------------------------------------------------------------
     def run(self):
-        best_sse = float("inf")
         no_improve_count = 0
 
         # track best global
@@ -138,8 +137,7 @@ class ClusteringDE(Clustering.Clustering):
                 global_best_sse = gen_best_sse
 
             # Early stopping
-            if gen_best_sse < best_sse - self.min_delta:
-                best_sse = gen_best_sse
+            if gen_best_sse < global_best_sse - self.min_delta:
                 no_improve_count = 0
             else:
                 no_improve_count += 1
