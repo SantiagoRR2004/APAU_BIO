@@ -56,6 +56,7 @@ class MLTaskClustering(MLTask):
         # for each point, find nearest center
         points = self.data
         # distances shape => (#points, #centers)
+        # (n_samples, 1, n_features) - (1, k, n_features) --> (n_samples, k, n_features)
         dists = np.linalg.norm(points[:, None, :] - centers[None, :, :], axis=2)
         # find min distance for each point
         min_dists = np.min(dists, axis=1)
@@ -77,6 +78,7 @@ class MLTaskClustering(MLTask):
     def mutation(self, individual, mutation_rate=0.1):
         """
         Muta el cluster de un individuo
+
         """
         if random.random() > mutation_rate:
             return individual
@@ -155,7 +157,7 @@ if __name__ == "__main__":
     seed = 42
     k = 3
     ml_task = MLTaskClustering(data_2D, k=k, seed=seed)
-    ga = GeneticAlgorithm(seed=seed)
+    ga = GeneticAlgorithm(seed=seed, pop_size=300, generations=50, mutation_rate=0.15)
     best_individual = ga.run(ml_task=ml_task)
     centers = np.array(best_individual).reshape(k, 2)
     ml_task.plot_clusters(centers, y)
