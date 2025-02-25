@@ -4,6 +4,7 @@ import math
 import random
 import numpy as np
 import matplotlib.pyplot as plt
+import tqdm
 from scipy.spatial.distance import cdist
 from sklearn.datasets import make_blobs
 from sklearn.cluster import AgglomerativeClustering
@@ -58,7 +59,7 @@ class AntColonyClustering:
         plt.ion()  # Turn on interactive mode for real-time updates
         fig, ax = plt.subplots()
 
-        for gen in range(self.generations):
+        for gen in tqdm.tqdm(range(self.generations), desc="Pheromone Update"):
             all_paths = []
             for _ in range(self.num_ants):
                 path = self._construct_path()
@@ -67,7 +68,6 @@ class AntColonyClustering:
             # Update pheromones based on ant paths
             self._update_pheromones(all_paths)
 
-            print(f"Generation {gen+1}/{self.generations} - Pheromone Update Complete")
             # Real-time visualization of the pheromone matrix
             ax.clear()
             cax = ax.imshow(self.pheromones, cmap="hot", interpolation="nearest")
