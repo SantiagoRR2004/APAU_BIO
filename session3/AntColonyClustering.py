@@ -55,6 +55,9 @@ class AntColonyClustering:
         """
         Main ACO loop for clustering.
         """
+        plt.ion()  # Turn on interactive mode for real-time updates
+        fig, ax = plt.subplots()
+
         for gen in range(self.generations):
             all_paths = []
             for _ in range(self.num_ants):
@@ -65,6 +68,14 @@ class AntColonyClustering:
             self._update_pheromones(all_paths)
 
             print(f"Generation {gen+1}/{self.generations} - Pheromone Update Complete")
+            # Real-time visualization of the pheromone matrix
+            ax.clear()
+            cax = ax.imshow(self.pheromones, cmap="hot", interpolation="nearest")
+            ax.set_title(f"Pheromone Matrix - Generation {gen+1}")
+
+            plt.pause(0.1)  # Pause to update the figure
+
+        plt.ioff()  # Turn off interactive mode
 
         # Cluster formation: Convert pheromones into final clusters
         self.cluster_labels = self._form_clusters()
