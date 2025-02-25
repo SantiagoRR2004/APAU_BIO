@@ -205,26 +205,29 @@ class AntColonyClustering:
 if __name__ == "__main__":
     print("=== Ant Colony Optimization for Clustering with Test Validation ===")
 
-    # Generate synthetic training data (3 clusters)
+    # Set random seed
     np.random.seed(42)
-    train_data = np.vstack(
-        [
-            np.random.normal(loc=(0, 0), scale=0.5, size=(100, 2)),
-            np.random.normal(loc=(5, 5), scale=0.8, size=(120, 2)),
-            np.random.normal(loc=(2, 8), scale=0.7, size=(80, 2)),
-        ]
-    )
-    train_labels = np.concatenate([[0] * 100, [1] * 120, [2] * 80])
 
-    # Generate test data sampled from the same distributions
-    test_data = np.vstack(
-        [
-            np.random.normal(loc=(0, 0), scale=0.5, size=(10, 2)),
-            np.random.normal(loc=(5, 5), scale=0.8, size=(10, 2)),
-            np.random.normal(loc=(2, 8), scale=0.7, size=(10, 2)),
-        ]
+    # Generate synthetic training data (3 clusters)
+    train_data, train_labels = make_blobs(
+        n_samples=[100, 120, 80],
+        centers=[(0, 0), (5, 5), (2, 8)],
+        cluster_std=[0.5, 0.8, 0.7],
+        random_state=42,
     )
-    test_labels = np.concatenate([[0] * 10, [1] * 10, [2] * 10])
+
+    # Sort the data by label
+    sorted_indices = np.argsort(train_labels)
+    train_data = train_data[sorted_indices]
+    train_labels = train_labels[sorted_indices]
+
+    # Generate synthetic test data (smaller sample size)
+    test_data, test_labels = make_blobs(
+        n_samples=[10, 10, 10],
+        centers=[(0, 0), (5, 5), (2, 8)],
+        cluster_std=[0.5, 0.8, 0.7],
+        random_state=43,
+    )  # Different seed for variation
 
     # Compute distance matrix for training data
     train_distance_matrix = cdist(train_data, train_data, metric="euclidean")
