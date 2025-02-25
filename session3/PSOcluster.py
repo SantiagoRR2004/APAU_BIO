@@ -5,20 +5,33 @@ from sklearn.datasets import make_blobs
 from sklearn.metrics import accuracy_score
 from scipy.stats import mode
 
+
 # Define the Particle class
 class Particle:
     def __init__(self, num_clusters, data):
         self.num_clusters = num_clusters
-        self.position = np.random.rand(num_clusters, data.shape[1])  # Initialize random cluster centroids
-        self.velocity = np.random.rand(num_clusters, data.shape[1])  # Initialize velocity
+        self.position = np.random.rand(
+            num_clusters, data.shape[1]
+        )  # Initialize random cluster centroids
+        self.velocity = np.random.rand(
+            num_clusters, data.shape[1]
+        )  # Initialize velocity
         self.best_position = np.copy(self.position)
         self.best_error = np.inf
         self.error = np.inf
 
     def update_velocity(self, global_best_position, w=0.5, c1=1.5, c2=1.5):
         inertia = w * self.velocity
-        cognitive = c1 * np.random.rand(self.num_clusters, self.position.shape[1]) * (self.best_position - self.position)
-        social = c2 * np.random.rand(self.num_clusters, self.position.shape[1]) * (global_best_position - self.position)
+        cognitive = (
+            c1
+            * np.random.rand(self.num_clusters, self.position.shape[1])
+            * (self.best_position - self.position)
+        )
+        social = (
+            c2
+            * np.random.rand(self.num_clusters, self.position.shape[1])
+            * (global_best_position - self.position)
+        )
         self.velocity = inertia + cognitive + social
 
     def update_position(self):
@@ -32,6 +45,7 @@ class Particle:
         if self.error < self.best_error:
             self.best_error = self.error
             self.best_position = np.copy(self.position)
+
 
 # PSO for clustering
 class PSO:
@@ -56,13 +70,17 @@ class PSO:
                 particle.update_velocity(self.global_best_position)
                 particle.update_position()
 
-            print(f"Iteration {i+1}/{self.max_iters}, Best Error: {self.global_best_error}")
+            print(
+                f"Iteration {i+1}/{self.max_iters}, Best Error: {self.global_best_error}"
+            )
 
         return self.global_best_position
 
     def assign_clusters(self, data):
         """Assigns each data point to the nearest cluster centroid."""
-        distances = np.linalg.norm(data[:, np.newaxis] - self.global_best_position, axis=2)
+        distances = np.linalg.norm(
+            data[:, np.newaxis] - self.global_best_position, axis=2
+        )
         labels = np.argmin(distances, axis=1)
         return labels
 
@@ -71,9 +89,23 @@ class PSO:
         labels = self.assign_clusters(self.data)
 
         plt.figure(figsize=(8, 6))
-        plt.scatter(self.data[:, 0], self.data[:, 1], c=labels, cmap='viridis', marker='o', label="Training Data")
-        plt.scatter(self.global_best_position[:, 0], self.global_best_position[:, 1], c='red', marker='x', s=200, label='Centroids')
-        plt.title('PSO Clustering Results (Training Data)')
+        plt.scatter(
+            self.data[:, 0],
+            self.data[:, 1],
+            c=labels,
+            cmap="viridis",
+            marker="o",
+            label="Training Data",
+        )
+        plt.scatter(
+            self.global_best_position[:, 0],
+            self.global_best_position[:, 1],
+            c="red",
+            marker="x",
+            s=200,
+            label="Centroids",
+        )
+        plt.title("PSO Clustering Results (Training Data)")
         plt.legend()
         plt.show()
 
@@ -85,15 +117,39 @@ class PSO:
         plt.figure(figsize=(8, 6))
 
         # Plot training data
-        plt.scatter(self.data[:, 0], self.data[:, 1], c=train_labels, cmap='viridis', marker='o', alpha=0.3, label="Training Data")
+        plt.scatter(
+            self.data[:, 0],
+            self.data[:, 1],
+            c=train_labels,
+            cmap="viridis",
+            marker="o",
+            alpha=0.3,
+            label="Training Data",
+        )
 
         # Plot test data with same color as assigned cluster
-        plt.scatter(test_data[:, 0], test_data[:, 1], c=test_labels, cmap='viridis', marker='s', edgecolors='black', s=80, label="Test Data")
+        plt.scatter(
+            test_data[:, 0],
+            test_data[:, 1],
+            c=test_labels,
+            cmap="viridis",
+            marker="s",
+            edgecolors="black",
+            s=80,
+            label="Test Data",
+        )
 
         # Plot centroids
-        plt.scatter(self.global_best_position[:, 0], self.global_best_position[:, 1], c='red', marker='x', s=200, label='Centroids')
+        plt.scatter(
+            self.global_best_position[:, 0],
+            self.global_best_position[:, 1],
+            c="red",
+            marker="x",
+            s=200,
+            label="Centroids",
+        )
 
-        plt.title('PSO Clustering Results (Test Data)')
+        plt.title("PSO Clustering Results (Test Data)")
         plt.legend()
         plt.show()
 
@@ -106,8 +162,12 @@ class PSO:
         for i in range(self.num_clusters):
             cluster_indices = np.where(predicted_labels == i)[0]
             if len(cluster_indices) > 0:
-                most_common_value = mode(true_labels[cluster_indices], keepdims=False)[0]
-                if isinstance(most_common_value, np.ndarray):  # Handle cases where mode() returns an array
+                most_common_value = mode(true_labels[cluster_indices], keepdims=False)[
+                    0
+                ]
+                if isinstance(
+                    most_common_value, np.ndarray
+                ):  # Handle cases where mode() returns an array
                     most_common = most_common_value[0]
                 else:
                     most_common = most_common_value  # If it's a scalar, use it directly
@@ -116,15 +176,26 @@ class PSO:
         purity_score = cluster_purity / len(true_labels)  # Fix NameError
         print(f"Clustering Purity Score: {purity_score:.2f}")
 
+
 # Generate synthetic training data
 def generate_data(num_samples=200, centers=3):
-    X, y, centers = make_blobs(n_samples=num_samples, centers=centers, cluster_std=1.0, random_state=42, return_centers=True)
+    X, y, centers = make_blobs(
+        n_samples=num_samples,
+        centers=centers,
+        cluster_std=1.0,
+        random_state=42,
+        return_centers=True,
+    )
     return X, y, centers
+
 
 # Generate test data sampled from the **same original clusters**
 def generate_test_data(num_samples=50, centers=None):
-    X, y = make_blobs(n_samples=num_samples, centers=centers, cluster_std=1.0, random_state=99)
+    X, y = make_blobs(
+        n_samples=num_samples, centers=centers, cluster_std=1.0, random_state=99
+    )
     return X, y
+
 
 # Main function
 def main():
@@ -142,6 +213,7 @@ def main():
 
     # Evaluate test clustering performance
     pso.evaluate_test_data(test_data, test_labels)
+
 
 if __name__ == "__main__":
     main()

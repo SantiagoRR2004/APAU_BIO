@@ -9,6 +9,7 @@ from sklearn.datasets import make_blobs
 from sklearn.cluster import AgglomerativeClustering
 from scipy.stats import mode
 
+
 class AntColonyClustering:
     """
     Ant Colony Optimization for Clustering.
@@ -19,13 +20,13 @@ class AntColonyClustering:
         self,
         distance_matrix,
         num_ants=10,
-        alpha=1.0,             # Importance of pheromone
-        beta=2.0,              # Importance of similarity
+        alpha=1.0,  # Importance of pheromone
+        beta=2.0,  # Importance of similarity
         evaporation_rate=0.5,  # Pheromone evaporation
-        pheromone_constant=100,# Q in ACO
+        pheromone_constant=100,  # Q in ACO
         generations=50,
         num_clusters=3,
-        seed=None
+        seed=None,
     ):
         if seed is not None:
             random.seed(seed)
@@ -39,7 +40,7 @@ class AntColonyClustering:
         self.evaporation_rate = evaporation_rate
         self.Q = pheromone_constant
         self.generations = generations
-        self.num_clusters = num_clusters  
+        self.num_clusters = num_clusters
 
         # Initialize pheromone trails
         self.pheromones = np.ones((self.num_nodes, self.num_nodes)) * 0.1
@@ -91,8 +92,12 @@ class AntColonyClustering:
         """
         Selects the next node based on pheromone strength and heuristic information.
         """
-        pheromone_vals = np.array([self.pheromones[current_node, j] ** self.alpha for j in unvisited])
-        heuristic_vals = np.array([self.desirability[current_node, j] ** self.beta for j in unvisited])
+        pheromone_vals = np.array(
+            [self.pheromones[current_node, j] ** self.alpha for j in unvisited]
+        )
+        heuristic_vals = np.array(
+            [self.desirability[current_node, j] ** self.beta for j in unvisited]
+        )
 
         probabilities = pheromone_vals * heuristic_vals
         probabilities /= probabilities.sum()
@@ -103,7 +108,7 @@ class AntColonyClustering:
         """
         Evaporates old pheromones and deposits new ones based on paths.
         """
-        self.pheromones *= (1 - self.evaporation_rate)
+        self.pheromones *= 1 - self.evaporation_rate
 
         for path in all_paths:
             deposit_amount = self.Q / len(path)
@@ -119,8 +124,12 @@ class AntColonyClustering:
         # Convert pheromone matrix into similarity (inverse of distance)
         similarity_matrix = self.pheromones / self.pheromones.max()
 
-        clustering = AgglomerativeClustering(n_clusters=self.num_clusters, metric='precomputed', linkage='average')
-        labels = clustering.fit_predict(1 - similarity_matrix)  # Convert similarity to distance
+        clustering = AgglomerativeClustering(
+            n_clusters=self.num_clusters, metric="precomputed", linkage="average"
+        )
+        labels = clustering.fit_predict(
+            1 - similarity_matrix
+        )  # Convert similarity to distance
 
         return labels
 
@@ -128,7 +137,7 @@ class AntColonyClustering:
         """
         Assigns test data to clusters based on nearest neighbor in training data.
         """
-        test_distances = cdist(test_data, train_data, metric='euclidean')
+        test_distances = cdist(test_data, train_data, metric="euclidean")
         nearest_train_indices = np.argmin(test_distances, axis=1)
         test_labels = self.cluster_labels[nearest_train_indices]
         return test_labels
@@ -143,9 +152,17 @@ class AntColonyClustering:
         for cluster in unique_clusters:
             cluster_indices = np.where(test_labels == cluster)[0]
             if len(cluster_indices) > 0:
-                most_common_value = mode(true_test_labels[cluster_indices], keepdims=False)[0]
-                most_common = most_common_value[0] if isinstance(most_common_value, np.ndarray) else most_common_value
-                cluster_purity += np.sum(true_test_labels[cluster_indices] == most_common)
+                most_common_value = mode(
+                    true_test_labels[cluster_indices], keepdims=False
+                )[0]
+                most_common = (
+                    most_common_value[0]
+                    if isinstance(most_common_value, np.ndarray)
+                    else most_common_value
+                )
+                cluster_purity += np.sum(
+                    true_test_labels[cluster_indices] == most_common
+                )
 
         purity_score = cluster_purity / len(true_test_labels)
         print(f"Clustering Purity Score: {purity_score:.2f}")
@@ -154,11 +171,28 @@ class AntColonyClustering:
         """
         Plots clustered training data and optionally test data.
         """
-        plt.figure(figsize=(8,6))
-        plt.scatter(train_data[:, 0], train_data[:, 1], c=self.cluster_labels, cmap='tab10', edgecolors='k', marker='o', label="Train Data")
+        plt.figure(figsize=(8, 6))
+        plt.scatter(
+            train_data[:, 0],
+            train_data[:, 1],
+            c=self.cluster_labels,
+            cmap="tab10",
+            edgecolors="k",
+            marker="o",
+            label="Train Data",
+        )
 
         if test_data is not None and test_labels is not None:
-            plt.scatter(test_data[:, 0], test_data[:, 1], c=test_labels, cmap='tab10', edgecolors='black', marker='*', s=100, label="Test Data")
+            plt.scatter(
+                test_data[:, 0],
+                test_data[:, 1],
+                c=test_labels,
+                cmap="tab10",
+                edgecolors="black",
+                marker="*",
+                s=100,
+                label="Test Data",
+            )
 
         plt.title("ACO-Based Clustering")
         plt.xlabel("Feature 1")
@@ -173,23 +207,27 @@ if __name__ == "__main__":
 
     # Generate synthetic training data (3 clusters)
     np.random.seed(42)
-    train_data = np.vstack([
-        np.random.normal(loc=(0,0), scale=0.5, size=(100,2)),
-        np.random.normal(loc=(5,5), scale=0.8, size=(120,2)),
-        np.random.normal(loc=(2,8), scale=0.7, size=(80,2))
-    ])
-    train_labels = np.concatenate([[0]*100, [1]*120, [2]*80])
+    train_data = np.vstack(
+        [
+            np.random.normal(loc=(0, 0), scale=0.5, size=(100, 2)),
+            np.random.normal(loc=(5, 5), scale=0.8, size=(120, 2)),
+            np.random.normal(loc=(2, 8), scale=0.7, size=(80, 2)),
+        ]
+    )
+    train_labels = np.concatenate([[0] * 100, [1] * 120, [2] * 80])
 
     # Generate test data sampled from the same distributions
-    test_data = np.vstack([
-        np.random.normal(loc=(0,0), scale=0.5, size=(10,2)),
-        np.random.normal(loc=(5,5), scale=0.8, size=(10,2)),
-        np.random.normal(loc=(2,8), scale=0.7, size=(10,2))
-    ])
-    test_labels = np.concatenate([[0]*10, [1]*10, [2]*10])
+    test_data = np.vstack(
+        [
+            np.random.normal(loc=(0, 0), scale=0.5, size=(10, 2)),
+            np.random.normal(loc=(5, 5), scale=0.8, size=(10, 2)),
+            np.random.normal(loc=(2, 8), scale=0.7, size=(10, 2)),
+        ]
+    )
+    test_labels = np.concatenate([[0] * 10, [1] * 10, [2] * 10])
 
     # Compute distance matrix for training data
-    train_distance_matrix = cdist(train_data, train_data, metric='euclidean')
+    train_distance_matrix = cdist(train_data, train_data, metric="euclidean")
 
     # Instantiate ACO clustering
     aco_clustering = AntColonyClustering(
@@ -201,7 +239,7 @@ if __name__ == "__main__":
         pheromone_constant=100,
         generations=20,
         num_clusters=3,
-        seed=42
+        seed=42,
     )
 
     # Run ACO clustering

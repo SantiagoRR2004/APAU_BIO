@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import random
 from scipy.stats import mode
 
+
 class SOMKohonen:
     """
     A simple Self-Organizing Map (Kohonen Map) for clustering.
@@ -12,14 +13,14 @@ class SOMKohonen:
     """
 
     def __init__(
-        self, 
-        map_size=(10, 10),   # shape of the SOM grid
-        input_dim=2,         # dimension of input data
+        self,
+        map_size=(10, 10),  # shape of the SOM grid
+        input_dim=2,  # dimension of input data
         learning_rate=0.5,
-        sigma=3.0,           # initial neighborhood radius
-        lr_decay=0.99,       # learning rate decay per epoch
-        sigma_decay=0.99,    # sigma decay per epoch
-        seed=None
+        sigma=3.0,  # initial neighborhood radius
+        lr_decay=0.99,  # learning rate decay per epoch
+        sigma_decay=0.99,  # sigma decay per epoch
+        seed=None,
     ):
         if seed is not None:
             np.random.seed(seed)
@@ -54,10 +55,10 @@ class SOMKohonen:
         Find the Best Matching Unit (BMU) for input x.
         Returns (row, col) of the BMU in the grid.
         """
-        diff = self.weights - x  
-        dist_sq = np.sum(diff**2, axis=2)  
+        diff = self.weights - x
+        dist_sq = np.sum(diff**2, axis=2)
         bmu_idx = np.unravel_index(np.argmin(dist_sq), dist_sq.shape)
-        return bmu_idx  
+        return bmu_idx
 
     def _update_weights(self, x, bmu_row, bmu_col):
         """
@@ -66,9 +67,11 @@ class SOMKohonen:
         rows, cols, _ = self.weights.shape
         for i in range(rows):
             for j in range(cols):
-                dist_sq = (i - bmu_row)**2 + (j - bmu_col)**2
+                dist_sq = (i - bmu_row) ** 2 + (j - bmu_col) ** 2
                 neigh_strength = np.exp(-dist_sq / (2.0 * (self.sigma**2)))
-                self.weights[i, j, :] += self.learning_rate * neigh_strength * (x - self.weights[i, j, :])
+                self.weights[i, j, :] += (
+                    self.learning_rate * neigh_strength * (x - self.weights[i, j, :])
+                )
 
     def get_cluster_assignments(self, data):
         """
@@ -102,13 +105,17 @@ class SOMKohonen:
             color_labels.append(unique_ids[key])
 
         plt.figure()
-        scatter = plt.scatter(train_data[:,0], train_data[:,1], c=color_labels, cmap='tab10', alpha=0.7)
+        scatter = plt.scatter(
+            train_data[:, 0], train_data[:, 1], c=color_labels, cmap="tab10", alpha=0.7
+        )
         plt.colorbar(scatter, label="Cluster ID (BMU)")
 
         # SOM Neurons
         rows, cols, _ = self.weights.shape
-        w_2d = self.weights.reshape(rows*cols, 2)
-        plt.scatter(w_2d[:,0], w_2d[:,1], marker='s', s=30, c='black', label="SOM Neurons")
+        w_2d = self.weights.reshape(rows * cols, 2)
+        plt.scatter(
+            w_2d[:, 0], w_2d[:, 1], marker="s", s=30, c="black", label="SOM Neurons"
+        )
 
         # Plot test data if provided
         if test_data is not None:
@@ -118,7 +125,16 @@ class SOMKohonen:
             # Assign test points the same color as their BMU cluster
             test_colors = [unique_ids[key] for key in test_assignments]
 
-            plt.scatter(test_data[:,0], test_data[:,1], marker='*', s=100, c=test_colors, cmap='tab10', edgecolors='black', label="Test Data")
+            plt.scatter(
+                test_data[:, 0],
+                test_data[:, 1],
+                marker="*",
+                s=100,
+                c=test_colors,
+                cmap="tab10",
+                edgecolors="black",
+                label="Test Data",
+            )
 
         plt.legend()
         plt.title("SOM Clustering with Test Data")
@@ -135,19 +151,28 @@ class SOMKohonen:
         # Compute clustering purity using majority vote
         cluster_purity = 0
         unique_clusters = list(set(predicted_assignments))
-        cluster_mapping = {c: i for i, c in enumerate(unique_clusters)}  # Assign cluster indices
+        cluster_mapping = {
+            c: i for i, c in enumerate(unique_clusters)
+        }  # Assign cluster indices
 
         predicted_labels = np.array([cluster_mapping[c] for c in predicted_assignments])
 
         for i in range(len(unique_clusters)):
             cluster_indices = np.where(predicted_labels == i)[0]
             if len(cluster_indices) > 0:
-                most_common_value = mode(true_labels[cluster_indices], keepdims=False)[0]
-                most_common = most_common_value[0] if isinstance(most_common_value, np.ndarray) else most_common_value
+                most_common_value = mode(true_labels[cluster_indices], keepdims=False)[
+                    0
+                ]
+                most_common = (
+                    most_common_value[0]
+                    if isinstance(most_common_value, np.ndarray)
+                    else most_common_value
+                )
                 cluster_purity += np.sum(true_labels[cluster_indices] == most_common)
 
         purity_score = cluster_purity / len(true_labels)
         print(f"Clustering Purity Score: {purity_score:.2f}")
+
 
 # -------------------------------------------------------------------------
 if __name__ == "__main__":
@@ -155,28 +180,32 @@ if __name__ == "__main__":
 
     # Generate synthetic training data (3 clusters)
     np.random.seed(42)
-    blob1 = np.random.normal(loc=(0,0), scale=0.5, size=(100,2))
-    blob2 = np.random.normal(loc=(5,5), scale=0.8, size=(120,2))
-    blob3 = np.random.normal(loc=(2,8), scale=0.7, size=(80,2))
+    blob1 = np.random.normal(loc=(0, 0), scale=0.5, size=(100, 2))
+    blob2 = np.random.normal(loc=(5, 5), scale=0.8, size=(120, 2))
+    blob3 = np.random.normal(loc=(2, 8), scale=0.7, size=(80, 2))
     train_data = np.vstack([blob1, blob2, blob3])
-    train_labels = np.concatenate([[0]*100, [1]*120, [2]*80])  # Ground truth labels
+    train_labels = np.concatenate(
+        [[0] * 100, [1] * 120, [2] * 80]
+    )  # Ground truth labels
 
     # Generate test data (sampled from same clusters)
-    test_blob1 = np.random.normal(loc=(0.2, 0.1), scale=0.5, size=(10,2))
-    test_blob2 = np.random.normal(loc=(5.2, 5.2), scale=0.8, size=(10,2))
-    test_blob3 = np.random.normal(loc=(2.1, 7.8), scale=0.7, size=(10,2))
+    test_blob1 = np.random.normal(loc=(0.2, 0.1), scale=0.5, size=(10, 2))
+    test_blob2 = np.random.normal(loc=(5.2, 5.2), scale=0.8, size=(10, 2))
+    test_blob3 = np.random.normal(loc=(2.1, 7.8), scale=0.7, size=(10, 2))
     test_data = np.vstack([test_blob1, test_blob2, test_blob3])
-    test_labels = np.concatenate([[0]*10, [1]*10, [2]*10])  # True labels for test data
+    test_labels = np.concatenate(
+        [[0] * 10, [1] * 10, [2] * 10]
+    )  # True labels for test data
 
     # Create and train SOM
     som = SOMKohonen(
-        map_size=(10,10),
+        map_size=(10, 10),
         input_dim=2,
         learning_rate=0.5,
         sigma=3.0,
         lr_decay=0.95,
         sigma_decay=0.95,
-        seed=123
+        seed=123,
     )
     som.train(train_data, epochs=30)
 

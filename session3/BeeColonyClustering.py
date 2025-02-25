@@ -8,6 +8,7 @@ from sklearn.datasets import make_blobs
 from sklearn.cluster import KMeans
 from scipy.stats import mode
 
+
 class BeeColonyClustering:
     """
     Improved Bee Colony Optimization (BCO) for Clustering with:
@@ -25,7 +26,7 @@ class BeeColonyClustering:
         num_scouts=5,
         generations=50,
         top_solutions=5,  # number of best solutions to keep for final K-Means
-        seed=None
+        seed=None,
     ):
         if seed is not None:
             np.random.seed(seed)
@@ -47,8 +48,9 @@ class BeeColonyClustering:
 
         # Initialize random positions for bee solutions (shape: [num_bees, num_clusters, num_features])
         self.positions = np.random.uniform(
-            low=self.data_min, high=self.data_max,
-            size=(self.num_bees, self.num_clusters, self.num_features)
+            low=self.data_min,
+            high=self.data_max,
+            size=(self.num_bees, self.num_clusters, self.num_features),
         )
 
         # Track best solution
@@ -59,9 +61,9 @@ class BeeColonyClustering:
         """
         Compute sum of squared distances of all data points to their nearest centroid.
         """
-        distances = cdist(self.data, centroids, metric='euclidean')
+        distances = cdist(self.data, centroids, metric="euclidean")
         min_distances = np.min(distances, axis=1)
-        return np.sum(min_distances ** 2)
+        return np.sum(min_distances**2)
 
     def _bound_solution(self, solution):
         """
@@ -74,7 +76,7 @@ class BeeColonyClustering:
         Generate new position near current_position, guided by the global best solution.
         """
         # Slightly move toward the global best
-        direction = (self.best_solution - current_position)
+        direction = self.best_solution - current_position
         step = np.random.uniform(-0.1, 0.1, current_position.shape) * direction
         new_position = current_position + step
         return self._bound_solution(new_position)
@@ -109,14 +111,18 @@ class BeeColonyClustering:
         )
         for i, idx in enumerate(selected_indices):
             candidate = self._local_search(self.positions[idx])
-            if self.fitness(candidate) < self.fitness(self.positions[self.num_employed + i]):
+            if self.fitness(candidate) < self.fitness(
+                self.positions[self.num_employed + i]
+            ):
                 self.positions[self.num_employed + i] = candidate
 
         # === 3) Scout Bees explore random positions near best solution
         for i in range(self.num_scouts):
             # Move the last i-th bee
-            random_explore = self.best_solution + np.random.uniform(-1.0, 1.0, self.best_solution.shape)
-            self.positions[-(i+1)] = self._bound_solution(random_explore)
+            random_explore = self.best_solution + np.random.uniform(
+                -1.0, 1.0, self.best_solution.shape
+            )
+            self.positions[-(i + 1)] = self._bound_solution(random_explore)
 
     def _finalize_centroids(self, top_positions):
         """
@@ -151,13 +157,15 @@ class BeeColonyClustering:
                 self.best_fitness = current_best_fit
                 self.best_solution = self.positions[current_best_idx].copy()
 
-            print(f"Gen {gen+1}/{self.generations} | Best Fitness: {self.best_fitness:.2f}")
+            print(
+                f"Gen {gen+1}/{self.generations} | Best Fitness: {self.best_fitness:.2f}"
+            )
 
         # === Final Consolidation
         # 1) Sort all positions by fitness
         fitnesses = np.array([self.fitness(pos) for pos in self.positions])
         sorted_indices = np.argsort(fitnesses)
-        top_indices = sorted_indices[:self.top_solutions]
+        top_indices = sorted_indices[: self.top_solutions]
         top_positions = self.positions[top_indices]
 
         # 2) K-Means on the top solutions
@@ -172,7 +180,7 @@ class BeeColonyClustering:
         """
         Assign test data to clusters based on nearest centroid in self.best_solution.
         """
-        test_distances = cdist(test_data, self.best_solution, metric='euclidean')
+        test_distances = cdist(test_data, self.best_solution, metric="euclidean")
         test_labels = np.argmin(test_distances, axis=1)
         return test_labels
 
@@ -186,9 +194,17 @@ class BeeColonyClustering:
         for cluster in unique_clusters:
             cluster_indices = np.where(test_labels == cluster)[0]
             if len(cluster_indices) > 0:
-                most_common_value = mode(true_test_labels[cluster_indices], keepdims=False)[0]
-                most_common = most_common_value[0] if isinstance(most_common_value, np.ndarray) else most_common_value
-                cluster_purity += np.sum(true_test_labels[cluster_indices] == most_common)
+                most_common_value = mode(
+                    true_test_labels[cluster_indices], keepdims=False
+                )[0]
+                most_common = (
+                    most_common_value[0]
+                    if isinstance(most_common_value, np.ndarray)
+                    else most_common_value
+                )
+                cluster_purity += np.sum(
+                    true_test_labels[cluster_indices] == most_common
+                )
 
         purity_score = cluster_purity / len(true_test_labels)
         print(f"Clustering Purity Score: {purity_score:.2f}")
@@ -197,42 +213,75 @@ class BeeColonyClustering:
         """
         Plots clustered training data and optionally test data.
         """
-        train_labels = np.argmin(cdist(train_data, self.best_solution, metric='euclidean'), axis=1)
+        train_labels = np.argmin(
+            cdist(train_data, self.best_solution, metric="euclidean"), axis=1
+        )
 
-        plt.figure(figsize=(8,6))
-        plt.scatter(train_data[:, 0], train_data[:, 1], c=train_labels, cmap='tab10', edgecolors='k', marker='o', label="Train Data")
+        plt.figure(figsize=(8, 6))
+        plt.scatter(
+            train_data[:, 0],
+            train_data[:, 1],
+            c=train_labels,
+            cmap="tab10",
+            edgecolors="k",
+            marker="o",
+            label="Train Data",
+        )
 
         if test_data is not None and test_labels is not None:
-            plt.scatter(test_data[:, 0], test_data[:, 1], c=test_labels, cmap='tab10', edgecolors='black', marker='*', s=100, label="Test Data")
+            plt.scatter(
+                test_data[:, 0],
+                test_data[:, 1],
+                c=test_labels,
+                cmap="tab10",
+                edgecolors="black",
+                marker="*",
+                s=100,
+                label="Test Data",
+            )
 
         # Plot final centroids
-        plt.scatter(self.best_solution[:, 0], self.best_solution[:, 1], c='red', marker='X', s=200, label='Centroids')
+        plt.scatter(
+            self.best_solution[:, 0],
+            self.best_solution[:, 1],
+            c="red",
+            marker="X",
+            s=200,
+            label="Centroids",
+        )
         plt.title("Improved BCO Clustering")
         plt.xlabel("Feature 1")
         plt.ylabel("Feature 2")
         plt.legend()
         plt.show()
 
+
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
-    print("=== Improved Bee Colony Optimization for Clustering with Test Validation ===")
+    print(
+        "=== Improved Bee Colony Optimization for Clustering with Test Validation ==="
+    )
 
     # Generate synthetic training data (3 clusters)
     np.random.seed(42)
-    train_data = np.vstack([
-        np.random.normal(loc=(0,0), scale=0.5, size=(100,2)),
-        np.random.normal(loc=(5,5), scale=0.8, size=(120,2)),
-        np.random.normal(loc=(2,8), scale=0.7, size=(80,2))
-    ])
-    train_labels = np.concatenate([[0]*100, [1]*120, [2]*80])
+    train_data = np.vstack(
+        [
+            np.random.normal(loc=(0, 0), scale=0.5, size=(100, 2)),
+            np.random.normal(loc=(5, 5), scale=0.8, size=(120, 2)),
+            np.random.normal(loc=(2, 8), scale=0.7, size=(80, 2)),
+        ]
+    )
+    train_labels = np.concatenate([[0] * 100, [1] * 120, [2] * 80])
 
     # Generate test data sampled from the same distributions
-    test_data = np.vstack([
-        np.random.normal(loc=(0,0), scale=0.5, size=(10,2)),
-        np.random.normal(loc=(5,5), scale=0.8, size=(10,2)),
-        np.random.normal(loc=(2,8), scale=0.7, size=(10,2))
-    ])
-    test_labels = np.concatenate([[0]*10, [1]*10, [2]*10])
+    test_data = np.vstack(
+        [
+            np.random.normal(loc=(0, 0), scale=0.5, size=(10, 2)),
+            np.random.normal(loc=(5, 5), scale=0.8, size=(10, 2)),
+            np.random.normal(loc=(2, 8), scale=0.7, size=(10, 2)),
+        ]
+    )
+    test_labels = np.concatenate([[0] * 10, [1] * 10, [2] * 10])
 
     # Instantiate BCO clustering
     bco_clustering = BeeColonyClustering(
@@ -242,8 +291,8 @@ if __name__ == "__main__":
         num_employed=15,
         num_scouts=5,
         generations=20,
-        top_solutions=5,   # We'll keep 5 best solutions for final K-Means
-        seed=42
+        top_solutions=5,  # We'll keep 5 best solutions for final K-Means
+        seed=42,
     )
 
     # Run BCO clustering
