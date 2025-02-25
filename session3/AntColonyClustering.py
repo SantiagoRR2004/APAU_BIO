@@ -219,12 +219,15 @@ if __name__ == "__main__":
     # Set random seed
     np.random.seed(42)
 
+    nClusters = 3
+    clusterSTD = [random.uniform(0.3, 1.3) for _ in range(nClusters)]
+
     # Generate synthetic training data (3 clusters)
-    train_data, train_labels = make_blobs(
-        n_samples=[100, 120, 80],
-        centers=[(0, 0), (5, 5), (2, 8)],
-        cluster_std=[0.5, 0.8, 0.7],
+    train_data, train_labels, centers = make_blobs(
+        n_samples=[random.randint(50, 100) for _ in range(nClusters)],
+        cluster_std=clusterSTD,
         random_state=42,
+        return_centers=True,
     )
 
     # Sort the data by label
@@ -234,9 +237,9 @@ if __name__ == "__main__":
 
     # Generate synthetic test data (smaller sample size)
     test_data, test_labels = make_blobs(
-        n_samples=[10, 10, 10],
-        centers=[(0, 0), (5, 5), (2, 8)],
-        cluster_std=[0.5, 0.8, 0.7],
+        n_samples=[10] * nClusters,
+        centers=centers,
+        cluster_std=clusterSTD,
         random_state=43,
     )  # Different seed for variation
 
@@ -252,7 +255,7 @@ if __name__ == "__main__":
         evaporation_rate=0.3,
         pheromone_constant=100,
         generations=20,
-        num_clusters=3,
+        num_clusters=nClusters,
         seed=42,
     )
 
