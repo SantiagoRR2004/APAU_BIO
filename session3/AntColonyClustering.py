@@ -9,6 +9,7 @@ from scipy.spatial.distance import cdist
 from sklearn.datasets import make_blobs
 from sklearn.cluster import AgglomerativeClustering
 from scipy.stats import mode
+from concurrent.futures import ProcessPoolExecutor
 
 
 class AntColonyClustering:
@@ -28,7 +29,28 @@ class AntColonyClustering:
         generations=50,
         num_clusters=3,
         seed=None,
-    ):
+        *,
+        useConcurrent=False,
+    ) -> None:
+        """
+        Initialize the ACO clustering algorithm.
+
+        Parameters:
+            - distance_matrix: Pairwise distance matrix between data points.
+            - num_ants: Number of ants to traverse the graph.
+            - alpha: Importance of pheromone in decision-making.
+            - beta: Importance of heuristic information (distance) in decision-making.
+            - evaporation_rate: Rate at which pheromones evaporate.
+            - pheromone_constant: Constant Q in pheromone update.
+            - generations: Number of iterations to update pheromones.
+            - num_clusters: Number of clusters to form.
+            - seed: Random seed for reproducibility.
+            - useConcurrent: Use concurrent processing for parallel execution
+                Use False when the distance matrix is too small to avoid overhead.
+
+        Returns:
+            - None
+        """
         if seed is not None:
             random.seed(seed)
             np.random.seed(seed)
@@ -42,6 +64,7 @@ class AntColonyClustering:
         self.Q = pheromone_constant
         self.generations = generations
         self.num_clusters = num_clusters
+        self.useConcurrent = useConcurrent
 
         # Initialize pheromone trails
         self.pheromones = np.ones((self.num_nodes, self.num_nodes)) * 0.1
@@ -60,10 +83,17 @@ class AntColonyClustering:
         fig, ax = plt.subplots()
 
         for gen in tqdm.tqdm(range(self.generations), desc="Pheromone Update"):
-            all_paths = []
-            for _ in range(self.num_ants):
-                path = self._construct_path()
-                all_paths.append(path)
+            if self.useConcurrent:
+                # Initialize the executor
+                with ProcessPoolExecutor() as executor:
+                    # Submit the tasks in parallel and collect the results
+                    all_paths = list(
+                        executor.map(
+                            AntColonyClustering._construct_path, [self] * self.num_ants
+                        )
+                    )
+            else:
+                all_paths = [self._construct_path() for _ in range(self.num_ants)]
 
             # Update pheromones based on ant paths
             self._update_pheromones(all_paths)
