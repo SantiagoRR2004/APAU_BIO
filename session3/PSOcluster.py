@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets import make_blobs
@@ -49,7 +50,7 @@ class Particle:
 
 # PSO for clustering
 class PSO:
-    def __init__(self, num_clusters, data, num_particles=30, max_iters=100):
+    def __init__(self, num_clusters, data, num_particles=30, max_iters=100, seed=None):
         self.num_clusters = num_clusters
         self.data = data
         self.num_particles = num_particles
@@ -57,6 +58,9 @@ class PSO:
         self.global_best_position = None
         self.global_best_error = np.inf
         self.particles = [Particle(num_clusters, data) for _ in range(num_particles)]
+
+        if seed is not None:
+            np.random.seed(seed)
 
     def optimize(self):
         for i in range(self.max_iters):
@@ -159,6 +163,9 @@ class PSO:
 
         # Compute clustering purity using majority vote
         cluster_purity = 0
+        if isinstance(true_labels, pd.core.series.Series):
+            true_labels = true_labels.to_numpy()
+
         for i in range(self.num_clusters):
             cluster_indices = np.where(predicted_labels == i)[0]
             if len(cluster_indices) > 0:
