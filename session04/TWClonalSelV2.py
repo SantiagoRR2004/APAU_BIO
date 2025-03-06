@@ -15,19 +15,19 @@ def generate_single_timeseries_with_anomalies(
     anomaly_intervals=[(100, 120), (250, 270)],
     window_size=20,
     step=20,
-    random_seed=42
+    random_seed=42,
 ):
     np.random.seed(random_seed)
 
     # 1) Build base normal wave
-    t_axis = np.linspace(0, 4*np.pi, n_points)
+    t_axis = np.linspace(0, 4 * np.pi, n_points)
     base_amp = 1.0
     wave = base_amp * np.sin(t_axis)
     noise = 0.1 * np.random.randn(n_points)
     T = wave + noise
 
     # 2) Insert anomalies
-    for (start_idx, end_idx) in anomaly_intervals:
+    for start_idx, end_idx in anomaly_intervals:
         # triple amplitude + bigger noise
         T[start_idx:end_idx] = 3.0 * base_amp * np.sin(t_axis[start_idx:end_idx])
         T[start_idx:end_idx] += 0.3 * np.random.randn(end_idx - start_idx)
@@ -40,7 +40,7 @@ def generate_single_timeseries_with_anomalies(
         window_data = T[ws:we]
         # label=1 if overlaps any anomaly interval
         label = 0
-        for (a_start, a_end) in anomaly_intervals:
+        for a_start, a_end in anomaly_intervals:
             if not (we <= a_start or ws >= a_end):
                 label = 1
                 break
@@ -51,39 +51,43 @@ def generate_single_timeseries_with_anomalies(
     y = np.array(y, dtype=int)
     return T, X, y, list(window_starts)
 
+
 def plot_timeseries_with_windows(
     T,
     anomaly_intervals,
     window_size,
     window_starts,
     y,
-    title="Time Series with Windows"
+    title="Time Series with Windows",
 ):
     n_points = len(T)
     plt.figure(figsize=(12, 4))
 
     # Plot entire series in blue
-    plt.plot(np.arange(n_points), T, color='blue', lw=1)
+    plt.plot(np.arange(n_points), T, color="blue", lw=1)
 
     # Overwrite anomaly intervals in red
-    for (a_start, a_end) in anomaly_intervals:
-        plt.plot(np.arange(a_start, a_end), T[a_start:a_end], color='red', lw=1)
+    for a_start, a_end in anomaly_intervals:
+        plt.plot(np.arange(a_start, a_end), T[a_start:a_end], color="red", lw=1)
 
     # Draw vertical spans for each window
     for i, ws in enumerate(window_starts):
         we = ws + window_size
         label = y[i]
-        color = 'orange' if label==1 else 'green'
+        color = "orange" if label == 1 else "green"
         plt.axvspan(ws, we, color=color, alpha=0.1)
 
     plt.title(title)
     plt.xlabel("Time Index")
     plt.ylabel("Signal Amplitude")
     plt.xlim(0, n_points)
-    plt.legend(["Full Series (blue=normal, red=anomaly)", 
-                "Window shading (green=normal, orange=anomaly)"])
+    plt.legend(
+        [
+            "Full Series (blue=normal, red=anomaly)",
+            "Window shading (green=normal, orange=anomaly)",
+        ]
+    )
     plt.show()
-
 
 
 ##############################################################################
@@ -96,14 +100,17 @@ class ClonalSelectionAIS:
     an 'affinity' to normal data. We do a rank-based cloning & mutation,
     similar to the 2D examples but extended to time-window vectors.
     """
-    def __init__(self,
-                 pop_size=30,
-                 clone_factor=5,
-                 beta=1.0,
-                 mutation_std=0.1,
-                 max_gens=10,
-                 diversity_rate=0.1,
-                 random_seed=123):
+
+    def __init__(
+        self,
+        pop_size=30,
+        clone_factor=5,
+        beta=1.0,
+        mutation_std=0.1,
+        max_gens=10,
+        diversity_rate=0.1,
+        random_seed=123,
+    ):
         self.pop_size = pop_size
         self.clone_factor = clone_factor
         self.beta = beta
@@ -114,8 +121,8 @@ class ClonalSelectionAIS:
         if random_seed is not None:
             np.random.seed(random_seed)
 
-        self.population_ = None   # shape: (pop_size, n_features)
-        self.threshold_ = None    # distance threshold
+        self.population_ = None  # shape: (pop_size, n_features)
+        self.threshold_ = None  # distance threshold
         self.loss_history_ = []
 
     def _init_population(self, X):
@@ -125,8 +132,9 @@ class ClonalSelectionAIS:
         mins = X.min(axis=0) - 0.5
         maxs = X.max(axis=0) + 0.5
         n_features = X.shape[1]
-        self.population_ = np.random.uniform(mins, maxs,
-                                             size=(self.pop_size, n_features))
+        self.population_ = np.random.uniform(
+            mins, maxs, size=(self.pop_size, n_features)
+        )
 
     def _affinity(self, antibody, X_normal):
         """
@@ -155,8 +163,9 @@ class ClonalSelectionAIS:
             for _ in range(clone_count):
                 clone = parent.copy()
                 mut_rate = self.beta / (parent_aff + eps)
-                noise = np.random.normal(0, self.mutation_std * mut_rate,
-                                         size=clone.shape)
+                noise = np.random.normal(
+                    0, self.mutation_std * mut_rate, size=clone.shape
+                )
                 clone += noise
                 clones_list.append(clone)
         if len(clones_list) == 0:
@@ -175,7 +184,6 @@ class ClonalSelectionAIS:
         for gen in range(self.max_gens):
             # Evaluate
             affs = self._evaluate_pop(X_normal)
-         
 
             # Clone & mutate
             clones = self._clone_and_mutate(self.population_, affs)
@@ -187,7 +195,7 @@ class ClonalSelectionAIS:
             combined_affs = np.concatenate([affs, clone_affs])
 
             # Keep best pop_size
-            best_idx = np.argsort(combined_affs)[::-1][:self.pop_size]
+            best_idx = np.argsort(combined_affs)[::-1][: self.pop_size]
             self.population_ = combined[best_idx]
 
             # ---- Fix starts here ----
@@ -201,9 +209,10 @@ class ClonalSelectionAIS:
                 # create new random
                 mins = X_normal.min(axis=0) - 0.5
                 maxs = X_normal.max(axis=0) + 0.5
-                new_rand = np.random.uniform(mins, maxs, size=(n_new, X_normal.shape[1]))
+                new_rand = np.random.uniform(
+                    mins, maxs, size=(n_new, X_normal.shape[1])
+                )
                 self.population_[worst_idx] = new_rand
-
 
             # Compute threshold = max distance from normal to nearest antibody
             # so all training normal => inliers
@@ -223,9 +232,13 @@ class ClonalSelectionAIS:
                 self.loss_history_.append(loss)
 
             # Plot iteration
-            self._plot_iteration(X_val if X_val is not None else X_normal,
-                                 y_val if y_val is not None else np.zeros(len(X_normal)),
-                                 gen, loss, pca_2d)
+            self._plot_iteration(
+                X_val if X_val is not None else X_normal,
+                y_val if y_val is not None else np.zeros(len(X_normal)),
+                gen,
+                loss,
+                pca_2d,
+            )
 
     def _compute_threshold(self, X_normal):
         """
@@ -267,59 +280,73 @@ class ClonalSelectionAIS:
             X2 = pca_2d.transform(X_data)
             y_pred = self.predict(X_data)
             # Normal
-            plt.scatter(X2[y_pred==0, 0], X2[y_pred==0, 1],
-                        c='blue', alpha=0.5, label='Pred Normal')
+            plt.scatter(
+                X2[y_pred == 0, 0],
+                X2[y_pred == 0, 1],
+                c="blue",
+                alpha=0.5,
+                label="Pred Normal",
+            )
             # Anomaly
-            plt.scatter(X2[y_pred==1, 0], X2[y_pred==1, 1],
-                        c='red', alpha=0.5, label='Pred Anomaly')
+            plt.scatter(
+                X2[y_pred == 1, 0],
+                X2[y_pred == 1, 1],
+                c="red",
+                alpha=0.5,
+                label="Pred Anomaly",
+            )
             # True label outlines
             # (We'll just outline anomalies in black)
-            anomalies_idx = np.where(y_data==1)[0]
-            plt.scatter(X2[anomalies_idx,0], X2[anomalies_idx,1],
-                        facecolors='none', edgecolors='black',
-                        marker='o', s=80, label='True Anomaly')
+            anomalies_idx = np.where(y_data == 1)[0]
+            plt.scatter(
+                X2[anomalies_idx, 0],
+                X2[anomalies_idx, 1],
+                facecolors="none",
+                edgecolors="black",
+                marker="o",
+                s=80,
+                label="True Anomaly",
+            )
 
             # Plot population
             pop2 = pca_2d.transform(self.population_)
-            plt.scatter(pop2[:,0], pop2[:,1],
-                        c='green', marker='X', s=80,
-                        label='AIS Centers')
+            plt.scatter(
+                pop2[:, 0], pop2[:, 1], c="green", marker="X", s=80, label="AIS Centers"
+            )
 
         plt.legend()
         plt.pause(0.5)
+
 
 ##############################################################################
 # (C) Demo: Train & Evaluate
 ##############################################################################
 if __name__ == "__main__":
 
-
     # 1) Generate
-    anomaly_intervals = [(100,120), (250,270)]
+    anomaly_intervals = [(100, 120), (250, 270)]
     T, X, y, window_starts = generate_single_timeseries_with_anomalies(
         n_points=400,
         anomaly_intervals=anomaly_intervals,
         window_size=100,
         step=20,
-        random_seed=42
+        random_seed=42,
     )
     # 2) Plot
     plot_timeseries_with_windows(
-        T, 
+        T,
         anomaly_intervals,
         window_size=100,
         window_starts=window_starts,
         y=y,
-        title="Single Time Series with Marked Windows & Anomalies"
+        title="Single Time Series with Marked Windows & Anomalies",
     )
 
-
-
     # 2) Split into train (only normal) + test
-    X_train, X_test, y_train, y_test = train_test_split(X, y,
-                                                        test_size=0.3,
-                                                        random_state=999)
-    X_train_normal = X_train[y_train==0]
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=999
+    )
+    X_train_normal = X_train[y_train == 0]
 
     # For 2D plotting, we'll use PCA on the entire dataset
     pca = PCA(n_components=2, random_state=777)
@@ -333,14 +360,11 @@ if __name__ == "__main__":
         mutation_std=0.1,
         max_gens=10,
         diversity_rate=0.1,
-        random_seed=123
+        random_seed=123,
     )
 
     # 4) Fit on normal data
-    ais.fit(X_train_normal, 
-            X_val=X_test, 
-            y_val=y_test, 
-            pca_2d=pca)
+    ais.fit(X_train_normal, X_val=X_test, y_val=y_test, pca_2d=pca)
 
     # Turn off interactive & show final
     plt.ioff()
@@ -348,7 +372,7 @@ if __name__ == "__main__":
 
     # 5) Plot final loss history
     plt.figure()
-    plt.plot(ais.loss_history_, marker='o')
+    plt.plot(ais.loss_history_, marker="o")
     plt.title("Clonal AIS: Loss History")
     plt.xlabel("Generation")
     plt.ylabel("Loss (Test Misclassification)")
@@ -361,4 +385,4 @@ if __name__ == "__main__":
     cm = confusion_matrix(y_test, y_pred)
     print(cm)
     print("\nClassification Report:")
-    print(classification_report(y_test, y_pred, target_names=["Normal","Anomaly"]))
+    print(classification_report(y_test, y_pred, target_names=["Normal", "Anomaly"]))
