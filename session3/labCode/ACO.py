@@ -15,6 +15,22 @@ from sklearn.model_selection import train_test_split
 from scipy.spatial.distance import cdist
 
 
+def ACOfunction(X_train, X_test, seed) -> list:
+
+    distance_matrix = cdist(X_train, X_train, metric="euclidean")
+
+    # Initialize and run ACO for clustering
+    ant = AntColonyClustering.AntColonyClustering(
+        distance_matrix=distance_matrix, seed=seed
+    )
+
+    # Run ACO clustering
+    ant.run()
+
+    # Assign test data to clusters
+    return ant.assign_test_data(X_test, X_train)
+
+
 if __name__ == "__main__":
     seed = 0
     # Cargamos el dataset de vinos

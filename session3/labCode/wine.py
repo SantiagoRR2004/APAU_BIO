@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 
 
 import PSO
+import ACO
 
 
 def plot_test_data_clusters(X_Train, y_Train, X_Test, y_test):
@@ -62,3 +63,4 @@ if __name__ == "__main__":
     )
 
     dust = PSO.PSOfunction(X_train, X_test, seed)
+    ants = ACO.ACOfunction(X_train, X_test, seed)
