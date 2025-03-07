@@ -13,6 +13,14 @@ from sklearn.datasets import load_wine
 from sklearn.model_selection import train_test_split
 
 
+def PSOfunction(X_train, X_test, seed) -> list:
+    # Initialize and run PSO for clustering
+    pso = PSO(num_clusters=3, data=X_train, num_particles=50, max_iters=150, seed=seed)
+    pso.optimize()
+
+    return pso.assign_clusters(X_test)
+
+
 if __name__ == "__main__":
     seed = 0
     # Cargamos el dataset de vinos
