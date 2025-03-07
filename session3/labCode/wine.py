@@ -9,34 +9,36 @@ import PSO
 import ACO
 
 
-def plot_test_data_clusters(X_Train, y_Train, X_Test, y_test):
-
+def plot_clusters(train_data, test_data=None, test_labels=None, cluster_labels=None):
+    """
+    Plots clustered training data and optionally test data.
+    """
     plt.figure(figsize=(8, 6))
-
-    # Plot training data
     plt.scatter(
-        X_Train[:, 0],
-        X_Train[:, 1],
-        c=X_Test,
-        cmap="viridis",
+        train_data[:, 0],
+        train_data[:, 1],
+        c=cluster_labels,
+        cmap="tab10",
+        edgecolors="k",
         marker="o",
-        alpha=0.3,
-        label="Training Data",
+        label="Train Data",
     )
 
-    # Plot test data with same color as assigned cluster
-    plt.scatter(
-        X_Train[:, 0],
-        X_Train[:, 1],
-        c=y_test,
-        cmap="viridis",
-        marker="s",
-        edgecolors="black",
-        s=80,
-        label="Test Data",
-    )
+    if test_data is not None and test_labels is not None:
+        plt.scatter(
+            test_data[:, 0],
+            test_data[:, 1],
+            c=test_labels,
+            cmap="tab10",
+            edgecolors="black",
+            marker="*",
+            s=100,
+            label="Test Data",
+        )
 
-    plt.title("Clustering Results (Test Data)")
+    plt.title("ACO-Based Clustering")
+    plt.xlabel("Feature 1")
+    plt.ylabel("Feature 2")
     plt.legend()
     plt.show()
 
