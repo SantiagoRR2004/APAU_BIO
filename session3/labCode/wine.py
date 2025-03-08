@@ -1,8 +1,10 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 from sklearn.datasets import load_wine
 from sklearn.model_selection import train_test_split
+from scipy.stats import mode
 
 
 import PSO
@@ -43,6 +45,30 @@ def plot_clusters(train_data, test_data=None, test_labels=None, cluster_labels=N
     plt.show()
 
 
+def evaluate_test_data(true_labels, predicted_labels):
+    """Evaluates clustering performance by comparing predicted labels with true labels."""
+
+    # Compute clustering purity using majority vote
+    cluster_purity = 0
+    if isinstance(true_labels, pd.core.series.Series):
+        true_labels = true_labels.to_numpy()
+
+    for i in range(len(np.unique(predicted_labels))):
+        cluster_indices = np.where(predicted_labels == i)[0]
+        if len(cluster_indices) > 0:
+            most_common_value = mode(true_labels[cluster_indices], keepdims=False)[0]
+            if isinstance(
+                most_common_value, np.ndarray
+            ):  # Handle cases where mode() returns an array
+                most_common = most_common_value[0]
+            else:
+                most_common = most_common_value  # If it's a scalar, use it directly
+            cluster_purity += np.sum(true_labels[cluster_indices] == most_common)
+
+    purity_score = cluster_purity / len(true_labels)  # Fix NameError
+    print(f"Clustering Purity Score: {purity_score:.2f}")
+
+
 if __name__ == "__main__":
     seed = 0
     # Cargamos el dataset de vinos
@@ -66,3 +92,9 @@ if __name__ == "__main__":
 
     dust = PSO.PSOfunction(X_train, X_test, seed)
     ants = ACO.ACOfunction(X_train, X_test, seed)
+
+    print("PSO", sep=" ")
+    evaluate_test_data(y_test, dust)
+
+    print("ACO", sep=" ")
+    evaluate_test_data(y_test, ants)
