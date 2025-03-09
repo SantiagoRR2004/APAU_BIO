@@ -161,6 +161,12 @@ class AntColonyClustering:
             unvisited.remove(next_node)
             current_node = next_node
 
+        # for _ in range(int(self.num_nodes**0.5)):
+        #     next_node = self._select_next_node(current_node, unvisited)
+        #     path.append(next_node)
+        #     unvisited.remove(next_node)
+        #     current_node = next_node
+
         return path
 
     def _select_next_node(self, current_node, unvisited):
