@@ -31,6 +31,7 @@ class AntColonyClustering:
         seed=None,
         *,
         useConcurrent=False,
+        data=None,
     ) -> None:
         """
         Initialize the ACO clustering algorithm.
@@ -47,6 +48,7 @@ class AntColonyClustering:
             - seed: Random seed for reproducibility.
             - useConcurrent: Use concurrent processing for parallel execution
                 Use False when the distance matrix is too small to avoid overhead.
+            - data: Training data for clustering. It is used to show a graph.
 
         Returns:
             - None
@@ -65,6 +67,7 @@ class AntColonyClustering:
         self.generations = generations
         self.num_clusters = num_clusters
         self.useConcurrent = useConcurrent
+        self.data = data
 
         # Initialize pheromone trails
         self.pheromones = np.ones((self.num_nodes, self.num_nodes)) * 0.1
@@ -98,10 +101,41 @@ class AntColonyClustering:
             # Update pheromones based on ant paths
             self._update_pheromones(all_paths)
 
-            # Real-time visualization of the pheromone matrix
+            # Real-time visualization of the pheromones
             ax.clear()
-            cax = ax.imshow(self.pheromones, cmap="hot", interpolation="nearest")
-            ax.set_title(f"Pheromone Matrix - Generation {gen+1}")
+            if self.data is None:
+                cax = ax.imshow(self.pheromones, cmap="hot", interpolation="nearest")
+            else:
+                ax.scatter(
+                    self.data[:, 0],
+                    self.data[:, 1],
+                    marker="o",
+                    label="Train Data",
+                    color="blue",
+                )
+                # Draw connections (edges) between points based on pheromone strength
+                num_points = len(self.data)
+                maxPheromone = np.max(self.pheromones)
+
+                for i in range(num_points):
+                    for j in range(i + 1, num_points):  # Avoid redundant connections
+                        pheromone_strength = self.pheromones[i, j]
+                        if pheromone_strength > 0:  # Only draw if pheromone is present
+                            x_values = [self.data[i, 0], self.data[j, 0]]
+                            y_values = [self.data[i, 1], self.data[j, 1]]
+                            ax.plot(
+                                x_values,
+                                y_values,
+                                color="red",
+                                alpha=min(
+                                    1, pheromone_strength / maxPheromone
+                                ),  # Normalize transparency
+                                linewidth=pheromone_strength
+                                / maxPheromone
+                                * 2,  # Normalize line width
+                            )
+
+            ax.set_title(f"Pheromones - Generation {gen+1}")
 
             plt.pause(0.1)  # Pause to update the figure
 
@@ -287,6 +321,7 @@ if __name__ == "__main__":
         generations=20,
         num_clusters=nClusters,
         seed=42,
+        data=train_data,
     )
 
     # Run ACO clustering
