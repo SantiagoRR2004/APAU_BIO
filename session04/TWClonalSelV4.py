@@ -141,7 +141,7 @@ class ClonalSelectionAIS:
 
         return np.array(clones_list) if len(clones_list) > 0 else population
 
-    def fit(self, X_normal):
+    def fit(self, X_normal, pca_2d=None):
         """
         Train the AIS purely on normal data. Each generation, we measure
         coverage-based loss (sum of min distances) to see if coverage improves.
@@ -179,9 +179,16 @@ class ClonalSelectionAIS:
             # 6) Compute coverage loss & store
             c_loss = self._coverage_loss(X_normal)
             self.coverage_loss_history_.append(c_loss)
+            self._set_threshold(X_normal)
+            if pca_2d is not None:
+                self._plot_iteration(
+                    X_normal, np.zeros(len(X_normal)), gen, c_loss, pca_2d
+                )
 
-        # 7) After final iteration, set threshold
-        self._set_threshold(X_normal)
+        if pca_2d is not None:
+            # Turn off interactive & show final
+            plt.ioff()
+            plt.show()
 
     def _set_threshold(self, X_normal):
         """
@@ -209,6 +216,58 @@ class ClonalSelectionAIS:
         dist_mat = cdist(X, self.population_)
         min_dists = dist_mat.min(axis=1)
         return (min_dists > self.threshold_).astype(int)
+
+    def _plot_iteration(self, X_data, y_data, gen, loss, pca_2d=None):
+        """
+        If pca_2d is provided, project X_data to 2D for visualization,
+        color by predicted label, show normal(blue) vs. anomaly(red),
+        plus population in green.
+        """
+        plt.ion()
+        plt.clf()
+        title = f"Clonal Selection AIS - Gen {gen+1}, Loss={loss:.3f}"
+        plt.title(title)
+
+        if pca_2d is not None and len(X_data) > 0:
+            X2 = pca_2d.transform(X_data)
+            y_pred = self.predict(X_data)
+            # Normal
+            plt.scatter(
+                X2[y_pred == 0, 0],
+                X2[y_pred == 0, 1],
+                c="blue",
+                alpha=0.5,
+                label="Pred Normal",
+            )
+            # Anomaly
+            plt.scatter(
+                X2[y_pred == 1, 0],
+                X2[y_pred == 1, 1],
+                c="red",
+                alpha=0.5,
+                label="Pred Anomaly",
+            )
+            # True label outlines
+            # (We'll just outline anomalies in black)
+            anomalies_idx = np.where(y_data == 1)[0]
+            plt.scatter(
+                X2[anomalies_idx, 0],
+                X2[anomalies_idx, 1],
+                facecolors="none",
+                edgecolors="black",
+                marker="o",
+                s=80,
+                label="True Anomaly",
+            )
+
+            # Plot population
+            pop2 = pca_2d.transform(self.population_)
+            plt.scatter(
+                pop2[:, 0], pop2[:, 1], c="green", marker="X", s=80, label="AIS Centers"
+            )
+
+        plt.legend()
+        plt.pause(0.5)
 
 
 ##############################################################################
