@@ -12,25 +12,24 @@ import torch.optim as optim
 # (A) Generate synthetic time-series windows (normal vs. anomalies)
 ##############################################################################
 
-
 def generate_single_timeseries_with_anomalies(
     n_points=400,
     anomaly_intervals=[(100, 120), (250, 270)],
     window_size=20,
     step=20,
-    random_seed=42,
+    random_seed=42
 ):
     np.random.seed(random_seed)
 
     # 1) Build base normal wave
-    t_axis = np.linspace(0, 4 * np.pi, n_points)
+    t_axis = np.linspace(0, 4*np.pi, n_points)
     base_amp = 1.0
     wave = base_amp * np.sin(t_axis)
     noise = 0.1 * np.random.randn(n_points)
     T = wave + noise
 
     # 2) Insert anomalies
-    for start_idx, end_idx in anomaly_intervals:
+    for (start_idx, end_idx) in anomaly_intervals:
         # triple amplitude + bigger noise
         T[start_idx:end_idx] = 3.0 * base_amp * np.sin(t_axis[start_idx:end_idx])
         T[start_idx:end_idx] += 0.3 * np.random.randn(end_idx - start_idx)
@@ -43,7 +42,7 @@ def generate_single_timeseries_with_anomalies(
         window_data = T[ws:we]
         # label=1 if overlaps any anomaly interval
         label = 0
-        for a_start, a_end in anomaly_intervals:
+        for (a_start, a_end) in anomaly_intervals:
             if not (we <= a_start or ws >= a_end):
                 label = 1
                 break
@@ -61,35 +60,33 @@ def plot_timeseries_with_windows(
     window_size,
     window_starts,
     y,
-    title="Time Series with Windows",
+    title="Time Series with Windows"
 ):
     n_points = len(T)
     plt.figure(figsize=(12, 4))
 
     # Plot entire series in blue
-    plt.plot(np.arange(n_points), T, color="blue", lw=1)
+    plt.plot(np.arange(n_points), T, color='blue', lw=1)
 
     # Overwrite anomaly intervals in red
-    for a_start, a_end in anomaly_intervals:
-        plt.plot(np.arange(a_start, a_end), T[a_start:a_end], color="red", lw=1)
+    for (a_start, a_end) in anomaly_intervals:
+        plt.plot(np.arange(a_start, a_end), T[a_start:a_end], color='red', lw=1)
 
     # Draw vertical spans for each window
     for i, ws in enumerate(window_starts):
         we = ws + window_size
         label = y[i]
-        color = "orange" if label == 1 else "green"
+        color = 'orange' if label==1 else 'green'
         plt.axvspan(ws, we, color=color, alpha=0.1)
 
     plt.title(title)
     plt.xlabel("Time Index")
     plt.ylabel("Signal Amplitude")
     plt.xlim(0, n_points)
-    plt.legend(
-        [
-            "Full Series (blue=normal, red=anomaly)",
-            "Window shading (green=normal, orange=anomaly)",
-        ]
-    )
+    plt.legend([
+        "Full Series (blue=normal, red=anomaly)",
+        "Window shading (green=normal, orange=anomaly)"
+    ])
     plt.show()
 
 
@@ -101,28 +98,34 @@ class DNNAnomalyDetector(nn.Module):
     A simple feed-forward neural network (fully connected) that
     classifies each window as normal (0) or anomaly (1).
     """
-
-    def __init__(self, input_dim, hidden_dim=16, lr=1e-3, epochs=10, device="cpu"):
+    def __init__(
+        self,
+        input_dim,
+        hidden_dim=16,
+        lr=1e-3,
+        epochs=10,
+        device="cpu"
+    ):
         super().__init__()
-
+        
         # Define a small MLP for classification
         self.model = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
             nn.ReLU(),
-            nn.Linear(hidden_dim, 2),  # output => 2 classes: normal vs anomaly
+            nn.Linear(hidden_dim, 2)  # output => 2 classes: normal vs anomaly
         )
-
+        
         self.criterion = nn.CrossEntropyLoss()
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.epochs = epochs
         self.device = device
         self.to(self.device)
-
+        
         self.train_loss_history = []
 
     def forward(self, x):
         """
-        Forward pass through the MLP.
+        Forward pass through the MLP. 
         x should be a 2D tensor: [batch_size, input_dim].
         """
         return self.model(x)
@@ -138,9 +141,7 @@ class DNNAnomalyDetector(nn.Module):
 
         # Create minibatches (for small data, we can do full-batch)
         dataset = torch.utils.data.TensorDataset(X_train_t, y_train_t)
-        dataloader = torch.utils.data.DataLoader(
-            dataset, batch_size=batch_size, shuffle=True
-        )
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
         for epoch in range(self.epochs):
             self.train()
@@ -148,14 +149,14 @@ class DNNAnomalyDetector(nn.Module):
 
             for Xb, yb in dataloader:
                 # Forward
-                preds = self.forward(Xb)  # shape: [batch_size, 2]
+                preds = self.forward(Xb)   # shape: [batch_size, 2]
                 loss = self.criterion(preds, yb)
-
+                
                 # Backward
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
-
+                
                 epoch_loss += loss.item()
 
             avg_loss = epoch_loss / len(dataloader)
@@ -164,9 +165,7 @@ class DNNAnomalyDetector(nn.Module):
             # Optional: Evaluate on validation
             if X_val is not None and y_val is not None:
                 val_acc = self.evaluate_accuracy(X_val, y_val)
-                print(
-                    f"Epoch {epoch+1}/{self.epochs}, Train Loss: {avg_loss:.4f}, Val Acc: {val_acc:.4f}"
-                )
+                print(f"Epoch {epoch+1}/{self.epochs}, Train Loss: {avg_loss:.4f}, Val Acc: {val_acc:.4f}")
             else:
                 print(f"Epoch {epoch+1}/{self.epochs}, Train Loss: {avg_loss:.4f}")
 
@@ -202,13 +201,13 @@ class DNNAnomalyDetector(nn.Module):
 if __name__ == "__main__":
 
     # 1) Generate data
-    anomaly_intervals = [(100, 120), (250, 270)]
+    anomaly_intervals = [(100,120), (250,270)]
     T, X, y, window_starts = generate_single_timeseries_with_anomalies(
         n_points=400,
         anomaly_intervals=anomaly_intervals,
         window_size=100,
         step=20,
-        random_seed=42,
+        random_seed=42
     )
 
     # 2) Visualize data and windows
@@ -218,7 +217,7 @@ if __name__ == "__main__":
         window_size=100,
         window_starts=window_starts,
         y=y,
-        title="Single Time Series with Marked Windows & Anomalies",
+        title="Single Time Series with Marked Windows & Anomalies"
     )
 
     # 3) Train-test split
@@ -232,8 +231,8 @@ if __name__ == "__main__":
         input_dim=input_dim,
         hidden_dim=16,
         lr=1e-3,
-        epochs=20,  # increase epochs if needed
-        device="cpu",  # or "cuda" if you have a GPU
+        epochs=20,      # increase epochs if needed
+        device="cpu"    # or "cuda" if you have a GPU
     )
 
     dnn_detector.fit(X_train, y_train, X_val=X_test, y_val=y_test, batch_size=16)
@@ -250,7 +249,7 @@ if __name__ == "__main__":
 
     # 6) Plot training loss
     plt.figure()
-    plt.plot(dnn_detector.train_loss_history, marker="o")
+    plt.plot(dnn_detector.train_loss_history, marker='o')
     plt.title("DNN Anomaly Detector: Training Loss")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
@@ -262,29 +261,10 @@ if __name__ == "__main__":
     X2_test = pca.transform(X_test)
     plt.figure()
     plt.title("Test Data Visualization (PCA 2D)")
-    plt.scatter(
-        X2_test[y_pred == 0, 0],
-        X2_test[y_pred == 0, 1],
-        c="blue",
-        alpha=0.5,
-        label="Pred Normal",
-    )
-    plt.scatter(
-        X2_test[y_pred == 1, 0],
-        X2_test[y_pred == 1, 1],
-        c="red",
-        alpha=0.5,
-        label="Pred Anomaly",
-    )
+    plt.scatter(X2_test[y_pred==0,0], X2_test[y_pred==0,1], c='blue', alpha=0.5, label='Pred Normal')
+    plt.scatter(X2_test[y_pred==1,0], X2_test[y_pred==1,1], c='red', alpha=0.5, label='Pred Anomaly')
     # Mark true anomalies with black edges:
-    anomaly_idx = np.where(y_test == 1)[0]
-    plt.scatter(
-        X2_test[anomaly_idx, 0],
-        X2_test[anomaly_idx, 1],
-        facecolors="none",
-        edgecolors="black",
-        s=80,
-        label="True Anomaly",
-    )
+    anomaly_idx = np.where(y_test==1)[0]
+    plt.scatter(X2_test[anomaly_idx,0], X2_test[anomaly_idx,1], facecolors='none', edgecolors='black', s=80, label='True Anomaly')
     plt.legend()
     plt.show()
