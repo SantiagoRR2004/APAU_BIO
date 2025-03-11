@@ -71,6 +71,30 @@ def main():
     print("\nClassification Report:")
     print(classification_report(y_test, y_pred, target_names=["Normal", "Anomaly"]))
 
+    plt.figure(figsize=(8, 6))
+    X_normal = X_test[y_test == 0]
+    X_anomalies = X_test[y_test == 1]
+    plt.scatter(X_normal[:, 0], X_normal[:, 1], c="blue", alpha=0.5, label="Normal")
+    plt.scatter(
+        X_anomalies[:, 0],
+        X_anomalies[:, 1],
+        c="red",
+        alpha=0.7,
+        marker="x",
+        label="Anomalies",
+    )
+    plt.scatter(
+        ais.population_[:, 0],
+        ais.population_[:, 1],
+        facecolors="none",
+        edgecolors="magenta",
+        s=120,
+        label="AIS Centers",
+    )
+    plt.title("Final AIS Centers vs. Data")
+    plt.legend()
+    plt.show()
+
 
 if __name__ == "__main__":
     main()
