@@ -33,6 +33,10 @@ for file in os.listdir(anomalyPath):
 
 data = data.sort_values(by="timestamp")
 
+# There is an error in flatmiddle.csv
+# Until we are able to fix it, we will drop it
+data = data.drop(columns="flatmiddle")
+
 
 # We can plot the data
 plt.figure(figsize=(12, 6))
