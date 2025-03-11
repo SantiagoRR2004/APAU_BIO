@@ -8,24 +8,25 @@ from sklearn.metrics import confusion_matrix, classification_report
 # (A) Time-series generator
 ##############################################################################
 
+
 def generate_single_timeseries_with_anomalies(
     n_points=400,
     anomaly_intervals=[(100, 120), (250, 270)],
     window_size=20,
     step=20,
-    random_seed=42
+    random_seed=42,
 ):
     np.random.seed(random_seed)
 
     # 1) Build base normal wave
-    t_axis = np.linspace(0, 4*np.pi, n_points)
+    t_axis = np.linspace(0, 4 * np.pi, n_points)
     base_amp = 1.0
     wave = base_amp * np.sin(t_axis)
     noise = 0.1 * np.random.randn(n_points)
     T = wave + noise
 
     # 2) Insert anomalies
-    for (start_idx, end_idx) in anomaly_intervals:
+    for start_idx, end_idx in anomaly_intervals:
         # triple amplitude + bigger noise
         T[start_idx:end_idx] = 3.0 * base_amp * np.sin(t_axis[start_idx:end_idx])
         T[start_idx:end_idx] += 0.3 * np.random.randn(end_idx - start_idx)
@@ -38,7 +39,7 @@ def generate_single_timeseries_with_anomalies(
         window_data = T[ws:we]
         # label=1 if overlaps any anomaly interval
         label = 0
-        for (a_start, a_end) in anomaly_intervals:
+        for a_start, a_end in anomaly_intervals:
             if not (we <= a_start or ws >= a_end):
                 label = 1
                 break
@@ -49,37 +50,42 @@ def generate_single_timeseries_with_anomalies(
     y = np.array(y, dtype=int)
     return T, X, y, list(window_starts)
 
+
 def plot_timeseries_with_windows(
     T,
     anomaly_intervals,
     window_size,
     window_starts,
     y,
-    title="Time Series with Windows"
+    title="Time Series with Windows",
 ):
     n_points = len(T)
     plt.figure(figsize=(12, 4))
 
     # Plot entire series in blue
-    plt.plot(np.arange(n_points), T, color='blue', lw=1)
+    plt.plot(np.arange(n_points), T, color="blue", lw=1)
 
     # Overwrite anomaly intervals in red
-    for (a_start, a_end) in anomaly_intervals:
-        plt.plot(np.arange(a_start, a_end), T[a_start:a_end], color='red', lw=1)
+    for a_start, a_end in anomaly_intervals:
+        plt.plot(np.arange(a_start, a_end), T[a_start:a_end], color="red", lw=1)
 
     # Draw vertical spans for each window
     for i, ws in enumerate(window_starts):
         we = ws + window_size
         label = y[i]
-        color = 'orange' if label==1 else 'green'
+        color = "orange" if label == 1 else "green"
         plt.axvspan(ws, we, color=color, alpha=0.1)
 
     plt.title(title)
     plt.xlabel("Time Index")
     plt.ylabel("Signal Amplitude")
     plt.xlim(0, n_points)
-    plt.legend(["Full Series (blue=normal, red=anomaly)", 
-                "Window shading (green=normal, orange=anomaly)"])
+    plt.legend(
+        [
+            "Full Series (blue=normal, red=anomaly)",
+            "Window shading (green=normal, orange=anomaly)",
+        ]
+    )
     plt.show()
 
 
@@ -90,12 +96,14 @@ class DendriticCell:
     def __init__(self, threshold=5.0):
         self.threshold = threshold
         self.reset()
+
     def reset(self):
         self.S_pamp = 0.0
         self.S_danger = 0.0
         self.S_safe = 0.0
         self.mature_type = None
         self.indices = []
+
     def process(self, idx, pamp, danger, safe):
         if self.mature_type is not None:
             return
@@ -107,18 +115,20 @@ class DendriticCell:
         # if we exceed threshold -> mature
         if total >= self.threshold:
             if (self.S_pamp + self.S_danger) > self.S_safe:
-                self.mature_type = 'mature'  # => label=1
+                self.mature_type = "mature"  # => label=1
             else:
-                self.mature_type = 'semi'    # => label=0
+                self.mature_type = "semi"  # => label=0
 
     def is_available(self):
-        return (self.mature_type is None)
+        return self.mature_type is None
+
 
 class DendriticCellAlgorithm:
     """
     We'll feed the data multiple epochs. We define signals from the label or
     from a 'distance-based' guess to produce 'danger' or 'safe'.
     """
+
     def __init__(self, n_dcs=5, threshold=5.0, epochs=5):
         self.n_dcs = n_dcs
         self.threshold = threshold
@@ -170,7 +180,7 @@ class DendriticCellAlgorithm:
         Toy approach: If label=1 => pamp=1, danger=some function. If label=0 => safe=some function.
         In practice, you'd have domain signals for DCA.
         """
-        pamp = 1.0 if label==1 else 0.0
+        pamp = 1.0 if label == 1 else 0.0
         # "danger" if label=1, let's measure a simple amplitude of x
         danger = 0.0
         if label == 1:
@@ -179,8 +189,8 @@ class DendriticCellAlgorithm:
         safe = 0.0
         if label == 0:
             safe = 2.0 - np.abs(x).mean()  # also a toy measure
-            if safe<0:
-                safe=0
+            if safe < 0:
+                safe = 0
         return pamp, danger, safe
 
     def _finalize_and_reset(self, dcs):
@@ -189,10 +199,10 @@ class DendriticCellAlgorithm:
         """
         for dc in dcs:
             if dc.mature_type is not None:
-                if dc.mature_type == 'mature':  # => label=1
+                if dc.mature_type == "mature":  # => label=1
                     for idx in dc.indices:
                         self.assignments_[idx] = 1
-                else: # => label=0
+                else:  # => label=0
                     for idx in dc.indices:
                         self.assignments_[idx] = 0
         # no partial data carrying over
@@ -206,15 +216,31 @@ class DendriticCellAlgorithm:
         if pca_2d is not None:
             X2 = pca_2d.transform(X)
             y_pred = self.assignments_
-            plt.scatter(X2[y_pred==0,0], X2[y_pred==0,1],
-                        c='blue', alpha=0.5, label='Pred=0')
-            plt.scatter(X2[y_pred==1,0], X2[y_pred==1,1],
-                        c='red', alpha=0.5, label='Pred=1')
+            plt.scatter(
+                X2[y_pred == 0, 0],
+                X2[y_pred == 0, 1],
+                c="blue",
+                alpha=0.5,
+                label="Pred=0",
+            )
+            plt.scatter(
+                X2[y_pred == 1, 0],
+                X2[y_pred == 1, 1],
+                c="red",
+                alpha=0.5,
+                label="Pred=1",
+            )
             # highlight true anomalies
-            anom_idx = np.where(y==1)[0]
-            plt.scatter(X2[anom_idx,0], X2[anom_idx,1],
-                        facecolors='none', edgecolors='black',
-                        marker='o', s=80, label='True=1')
+            anom_idx = np.where(y == 1)[0]
+            plt.scatter(
+                X2[anom_idx, 0],
+                X2[anom_idx, 1],
+                facecolors="none",
+                edgecolors="black",
+                marker="o",
+                s=80,
+                label="True=1",
+            )
         plt.legend()
         plt.pause(0.5)
 
@@ -230,15 +256,16 @@ class DendriticCellAlgorithm:
             # guess label to compute signals? That is a catch-22 in real DCA.
             # We'll do a distance measure: if mean(|x|) is large => danger
             mean_abs = np.abs(x).mean()
-            pamp = 0.0 # we don't know real label
+            pamp = 0.0  # we don't know real label
             danger = mean_abs
             safe = 2.0 - mean_abs
-            if safe<0:
-                safe=0
+            if safe < 0:
+                safe = 0
             # if (pamp+danger)>safe => 1
             if (pamp + danger) > safe:
                 labels[i] = 1
         return labels
+
 
 ##############################################################################
 # (C) Demo
@@ -246,35 +273,32 @@ class DendriticCellAlgorithm:
 if __name__ == "__main__":
 
     # 1) Generate
-    anomaly_intervals = [(100,120), (250,270)]
+    anomaly_intervals = [(100, 120), (250, 270)]
     T, X, y, window_starts = generate_single_timeseries_with_anomalies(
         n_points=400,
         anomaly_intervals=anomaly_intervals,
         window_size=100,
         step=20,
-        random_seed=42
+        random_seed=42,
     )
     # 2) Plot
     plot_timeseries_with_windows(
-        T, 
+        T,
         anomaly_intervals,
         window_size=100,
         window_starts=window_starts,
         y=y,
-        title="Single Time Series with Marked Windows & Anomalies"
+        title="Single Time Series with Marked Windows & Anomalies",
     )
 
-
-
-
-
     # We'll do a direct train/test
-    X_train, X_test, y_train, y_test = train_test_split(X, y,
-                                                        test_size=0.3,
-                                                        random_state=999)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=999
+    )
 
     # DCA
     from sklearn.decomposition import PCA
+
     pca = PCA(n_components=2, random_state=777).fit(X)
     dca = DendriticCellAlgorithm(n_dcs=5, threshold=5.0, epochs=5)
     dca.fit(X_train, y_train, pca_2d=pca)
@@ -284,7 +308,7 @@ if __name__ == "__main__":
 
     # Loss plot
     plt.figure()
-    plt.plot(dca.loss_history_, marker='o')
+    plt.plot(dca.loss_history_, marker="o")
     plt.title("DCA: Training Loss History")
     plt.xlabel("Epoch")
     plt.ylabel("Misclassification Rate (Train)")
@@ -297,4 +321,4 @@ if __name__ == "__main__":
     cm = confusion_matrix(y_test, y_pred)
     print(cm)
     print("\nClassification Report:")
-    print(classification_report(y_test, y_pred, target_names=["Normal","Anomaly"]))
+    print(classification_report(y_test, y_pred, target_names=["Normal", "Anomaly"]))

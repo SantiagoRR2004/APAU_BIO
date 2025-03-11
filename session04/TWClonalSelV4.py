@@ -14,7 +14,7 @@ def generate_single_timeseries_with_anomalies(
     anomaly_intervals=[(100, 120), (250, 270)],
     window_size=20,
     step=20,
-    random_seed=42
+    random_seed=42,
 ):
     """
     Create a 1D time series of length n_points, with certain intervals designated as anomalies.
@@ -24,14 +24,14 @@ def generate_single_timeseries_with_anomalies(
     np.random.seed(random_seed)
 
     # 1) Build base normal wave
-    t_axis = np.linspace(0, 4*np.pi, n_points)
+    t_axis = np.linspace(0, 4 * np.pi, n_points)
     base_amp = 1.0
     wave = base_amp * np.sin(t_axis)
     noise = 0.1 * np.random.randn(n_points)
     T = wave + noise
 
     # 2) Insert anomalies in the specified intervals
-    for (start_idx, end_idx) in anomaly_intervals:
+    for start_idx, end_idx in anomaly_intervals:
         T[start_idx:end_idx] = 3.0 * base_amp * np.sin(t_axis[start_idx:end_idx])
         T[start_idx:end_idx] += 0.3 * np.random.randn(end_idx - start_idx)
 
@@ -43,7 +43,7 @@ def generate_single_timeseries_with_anomalies(
         window_data = T[ws:we]
         label = 0  # default = normal
         # If the window overlaps any anomaly interval => label=1
-        for (a_start, a_end) in anomaly_intervals:
+        for a_start, a_end in anomaly_intervals:
             if not (we <= a_start or ws >= a_end):
                 label = 1
                 break
@@ -61,7 +61,7 @@ def plot_timeseries_with_windows(
     window_size,
     window_starts,
     y,
-    title="Time Series with Windows"
+    title="Time Series with Windows",
 ):
     """
     Plot the full time series in blue, anomaly intervals in red,
@@ -71,27 +71,29 @@ def plot_timeseries_with_windows(
     plt.figure(figsize=(12, 4))
 
     # Plot entire series in blue
-    plt.plot(np.arange(n_points), T, color='blue', lw=1)
+    plt.plot(np.arange(n_points), T, color="blue", lw=1)
 
     # Overwrite anomaly intervals in red
-    for (a_start, a_end) in anomaly_intervals:
-        plt.plot(np.arange(a_start, a_end), T[a_start:a_end], color='red', lw=1)
+    for a_start, a_end in anomaly_intervals:
+        plt.plot(np.arange(a_start, a_end), T[a_start:a_end], color="red", lw=1)
 
     # Shade each window
     for i, ws in enumerate(window_starts):
         we = ws + window_size
         label = y[i]
-        color = 'orange' if label == 1 else 'green'
+        color = "orange" if label == 1 else "green"
         plt.axvspan(ws, we, color=color, alpha=0.1)
 
     plt.title(title)
     plt.xlabel("Time Index")
     plt.ylabel("Signal Amplitude")
     plt.xlim(0, n_points)
-    plt.legend([
-        "Full Series (blue=normal, red=anomaly)",
-        "Window shading (green=normal, orange=anomaly)"
-    ])
+    plt.legend(
+        [
+            "Full Series (blue=normal, red=anomaly)",
+            "Window shading (green=normal, orange=anomaly)",
+        ]
+    )
     plt.show()
 
 
@@ -114,15 +116,17 @@ class ClonalSelectionAIS:
       percentile if you wish.
     """
 
-    def __init__(self,
-                 pop_size=30,
-                 clone_factor=5,
-                 beta=1.0,
-                 mutation_std=0.1,
-                 max_gens=10,
-                 diversity_rate=0.1,
-                 threshold_percentile=1.0,  # 1.0 => max distance, e.g., 0.95 => 95th percentile
-                 random_seed=123):
+    def __init__(
+        self,
+        pop_size=30,
+        clone_factor=5,
+        beta=1.0,
+        mutation_std=0.1,
+        max_gens=10,
+        diversity_rate=0.1,
+        threshold_percentile=1.0,  # 1.0 => max distance, e.g., 0.95 => 95th percentile
+        random_seed=123,
+    ):
         """
         Parameters
         ----------
@@ -155,8 +159,8 @@ class ClonalSelectionAIS:
         if random_seed is not None:
             np.random.seed(random_seed)
 
-        self.population_ = None   # shape: (pop_size, n_features)
-        self.threshold_ = None    # distance threshold
+        self.population_ = None  # shape: (pop_size, n_features)
+        self.threshold_ = None  # distance threshold
         self.coverage_loss_history_ = []  # sum of min distances (training coverage)
         self.n_features_ = None
 
@@ -168,8 +172,9 @@ class ClonalSelectionAIS:
         mins = X.min(axis=0) - 0.5
         maxs = X.max(axis=0) + 0.5
         self.n_features_ = X.shape[1]
-        self.population_ = np.random.uniform(mins, maxs,
-                                             size=(self.pop_size, self.n_features_))
+        self.population_ = np.random.uniform(
+            mins, maxs, size=(self.pop_size, self.n_features_)
+        )
 
     def _affinity(self, center, X_normal):
         """
@@ -248,7 +253,7 @@ class ClonalSelectionAIS:
             clone_affs = np.array([self._affinity(c, X_normal) for c in clones])
             combined_pop = np.vstack([self.population_, clones])
             combined_affs = np.concatenate([affs, clone_affs])
-            best_idx = np.argsort(combined_affs)[::-1][:self.pop_size]
+            best_idx = np.argsort(combined_affs)[::-1][: self.pop_size]
             self.population_ = combined_pop[best_idx]
 
             # 5) Diversity injection
@@ -310,7 +315,7 @@ if __name__ == "__main__":
         anomaly_intervals=anomaly_intervals,
         window_size=100,
         step=20,
-        random_seed=42
+        random_seed=42,
     )
 
     # -----------------------------------------------------
@@ -322,7 +327,7 @@ if __name__ == "__main__":
         window_size=100,
         window_starts=window_starts,
         y=y,
-        title="Single Time Series with Marked Windows & Anomalies"
+        title="Single Time Series with Marked Windows & Anomalies",
     )
 
     # -----------------------------------------------------
@@ -349,7 +354,7 @@ if __name__ == "__main__":
         max_gens=10,
         diversity_rate=0.1,
         threshold_percentile=1.0,  # use max distance from normal
-        random_seed=123
+        random_seed=123,
     )
     ais.fit(X_train_normal)
 
@@ -357,7 +362,7 @@ if __name__ == "__main__":
     # 5) Coverage Loss History
     # -----------------------------------------------------
     plt.figure()
-    plt.plot(ais.coverage_loss_history_, marker='o')
+    plt.plot(ais.coverage_loss_history_, marker="o")
     plt.title("AIS Coverage Loss (Sum of Min Distances)")
     plt.xlabel("Generation")
     plt.ylabel("Coverage Loss")
@@ -372,6 +377,6 @@ if __name__ == "__main__":
     print("Confusion Matrix (Test):")
     print(cm)
     print("\nClassification Report:")
-    print(classification_report(y_test, y_pred, target_names=["Normal","Anomaly"]))
+    print(classification_report(y_test, y_pred, target_names=["Normal", "Anomaly"]))
 
     # If you want to see how many test anomalies were caught vs. missed, check the confusion matrix.
