@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, classification_report
 from scipy.spatial.distance import cdist
 
-
 class ClonalAISAnomaly:
     """
     Clonal Selection AIS for One-Class Anomaly Detection with Interactive Plotting
@@ -23,7 +22,7 @@ class ClonalAISAnomaly:
         n_generations=20,
         diversity_rate=0.1,
         visualize=True,
-        random_seed=None,
+        random_seed=None
     ):
         """
         Parameters
@@ -58,12 +57,10 @@ class ClonalAISAnomaly:
             np.random.seed(random_seed)
 
         # Internal variables
-        self.population_ = None  # shape: (pop_size, n_features)
+        self.population_ = None    # shape: (pop_size, n_features)
         self.n_features_ = None
-        self.threshold_ = None  # distance threshold for anomaly detection
-        self.loss_history_ = (
-            []
-        )  # track sum of min distances across normal data each generation
+        self.threshold_ = None     # distance threshold for anomaly detection
+        self.loss_history_ = []    # track sum of min distances across normal data each generation
 
         if self.visualize:
             plt.ion()  # enable interactive mode for real-time plotting
@@ -78,9 +75,7 @@ class ClonalAISAnomaly:
             high = X.max(axis=0)
 
         self.n_features_ = X.shape[1]
-        self.population_ = np.random.uniform(
-            low, high, size=(self.pop_size, self.n_features_)
-        )
+        self.population_ = np.random.uniform(low, high, size=(self.pop_size, self.n_features_))
 
     def _compute_affinities(self, X_normal, candidates=None):
         """
@@ -146,7 +141,7 @@ class ClonalAISAnomaly:
                 noise = np.random.normal(
                     loc=0.0,
                     scale=self.mutation_std * mutation_rate,
-                    size=self.n_features_,
+                    size=self.n_features_
                 )
                 clone += noise
                 clones_list.append(clone)
@@ -179,7 +174,7 @@ class ClonalAISAnomaly:
         merged_affs = self._compute_affinities(X_normal, merged_pop)
 
         # Retain the best pop_size from the merged set
-        top_indices = np.argsort(merged_affs)[::-1][: self.pop_size]
+        top_indices = np.argsort(merged_affs)[::-1][:self.pop_size]
         new_pop = merged_pop[top_indices]
         return new_pop
 
@@ -208,9 +203,7 @@ class ClonalAISAnomaly:
                 worst_indices = np.argsort(pop_affs)[:n_new]  # worst = ascending
                 low = X_normal.min(axis=0)
                 high = X_normal.max(axis=0)
-                new_random = np.random.uniform(
-                    low, high, size=(n_new, self.n_features_)
-                )
+                new_random = np.random.uniform(low, high, size=(n_new, self.n_features_))
                 self.population_[worst_indices] = new_random
 
             # 6) Compute & store the loss
@@ -242,17 +235,9 @@ class ClonalAISAnomaly:
         Interactive plotting of population vs. normal data each generation.
         """
         plt.clf()
-        plt.scatter(
-            X_normal[:, 0], X_normal[:, 1], c="blue", alpha=0.5, label="Normal Data"
-        )
-        plt.scatter(
-            self.population_[:, 0],
-            self.population_[:, 1],
-            facecolors="none",
-            edgecolors="red",
-            s=80,
-            label="AIS Centers",
-        )
+        plt.scatter(X_normal[:, 0], X_normal[:, 1], c='blue', alpha=0.5, label='Normal Data')
+        plt.scatter(self.population_[:, 0], self.population_[:, 1],
+                    facecolors='none', edgecolors='red', s=80, label='AIS Centers')
         plt.title(f"Generation {gen+1}/{self.n_generations}\nLoss = {loss_val:.2f}")
         plt.legend()
         plt.draw()
@@ -287,7 +272,7 @@ if __name__ == "__main__":
 
     # Two normal clusters
     X_normal_cluster1 = np.random.normal(loc=(-2.0, 0.0), scale=1.0, size=(100, 2))
-    X_normal_cluster2 = np.random.normal(loc=(2.0, 0.0), scale=1.0, size=(100, 2))
+    X_normal_cluster2 = np.random.normal(loc=( 2.0, 0.0), scale=1.0, size=(100, 2))
     X_normal = np.vstack((X_normal_cluster1, X_normal_cluster2))
 
     # Anomalies
@@ -316,7 +301,7 @@ if __name__ == "__main__":
         n_generations=25,
         diversity_rate=0.15,
         visualize=True,
-        random_seed=123,
+        random_seed=123
     )
     ais.fit(X_normal)  # train only on normal data
 
@@ -328,7 +313,7 @@ if __name__ == "__main__":
     # 3. Examine the Loss History
     # ----------------------------------------------------
     plt.figure()
-    plt.plot(ais.loss_history_, marker="o")
+    plt.plot(ais.loss_history_, marker='o')
     plt.title("AIS - Loss History")
     plt.xlabel("Generation")
     plt.ylabel("Sum of Min Distances (Loss)")
@@ -347,23 +332,12 @@ if __name__ == "__main__":
     # ----------------------------------------------------
     # 5. Final Plot of AIS vs. Data
     # ----------------------------------------------------
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(8,6))
     plt.scatter(X_normal[:, 0], X_normal[:, 1], c="blue", alpha=0.5, label="Normal")
+    plt.scatter(X_anomalies[:, 0], X_anomalies[:, 1], c="red", alpha=0.7, marker='x', label="Anomalies")
     plt.scatter(
-        X_anomalies[:, 0],
-        X_anomalies[:, 1],
-        c="red",
-        alpha=0.7,
-        marker="x",
-        label="Anomalies",
-    )
-    plt.scatter(
-        ais.population_[:, 0],
-        ais.population_[:, 1],
-        facecolors="none",
-        edgecolors="magenta",
-        s=120,
-        label="AIS Centers",
+        ais.population_[:, 0], ais.population_[:, 1],
+        facecolors='none', edgecolors='magenta', s=120, label="AIS Centers"
     )
     plt.title("Final AIS Centers vs. Data")
     plt.legend()
