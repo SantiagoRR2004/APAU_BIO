@@ -38,10 +38,23 @@ data = data.sort_values(by="timestamp")
 data = data.drop(columns="flatmiddle")
 
 
+# The Anomalies are from the 2014-04-11 9:00 to 2014-04-11 18:55
+# We mark it in a column
+data["anomaly"] = 0
+
+data.loc[
+    (data["timestamp"] >= "2014-04-11 09:00:00")
+    & (data["timestamp"] <= "2014-04-11 18:55:00"),
+    "anomaly",
+] = 1
+
 # We can plot the data
 plt.figure(figsize=(12, 6))
 
 for col in data.columns[1:]:
+
+    if col == "anomaly":
+        continue
     # plt.figure(figsize=(12, 6))
 
     plt.plot(data["timestamp"], data[col], label=col)
