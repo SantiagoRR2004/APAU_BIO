@@ -1,7 +1,10 @@
 import kagglehub
 import os
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import timeseries
+
 
 # Download latest version
 path = kagglehub.dataset_download("boltzmannbrain/nab")
@@ -12,11 +15,12 @@ correctData = pd.read_csv(
         path, "artificialNoAnomaly/artificialNoAnomaly/art_daily_small_noise.csv"
     )
 )
+correctData["anomaly"] = 0  # No anomalies
 
 anomalyPath = os.path.join(path, "artificialWithAnomaly/artificialWithAnomaly/")
 
 
-data = None
+incorrectData = None
 
 for file in os.listdir(anomalyPath):
     if file.startswith("art_daily"):
@@ -26,39 +30,75 @@ for file in os.listdir(anomalyPath):
         df.columns = ["timestamp", name]
         df["timestamp"] = pd.to_datetime(df["timestamp"])
 
-        if data is None:
-            data = df  # Initialize with the first file's DataFrame
+        if incorrectData is None:
+            incorrectData = df  # Initialize with the first file's DataFrame
         else:
-            data = pd.merge(data, df, on="timestamp", how="outer")  # Merge on timestamp
+            incorrectData = pd.merge(
+                incorrectData, df, on="timestamp", how="outer"
+            )  # Merge on timestamp
 
-data = data.sort_values(by="timestamp")
+incorrectData = incorrectData.sort_values(by="timestamp")
 
 # There is an error in flatmiddle.csv
 # Until we are able to fix it, we will drop it
-data = data.drop(columns="flatmiddle")
+incorrectData = incorrectData.drop(columns="flatmiddle")
 
 
 # The Anomalies are from the 2014-04-11 9:00 to 2014-04-11 18:55
 # We mark it in a column
-data["anomaly"] = 0
+incorrectData["anomaly"] = 0
 
-data.loc[
-    (data["timestamp"] >= "2014-04-11 09:00:00")
-    & (data["timestamp"] <= "2014-04-11 18:55:00"),
+incorrectData.loc[
+    (incorrectData["timestamp"] >= "2014-04-11 09:00:00")
+    & (incorrectData["timestamp"] <= "2014-04-11 18:55:00"),
     "anomaly",
 ] = 1
+
+####################################################################################################################################################################################
+####################################################################################################################################################################################
+####################################################################################################################################################################################
 
 # We can plot the data
 plt.figure(figsize=(12, 6))
 
-for col in data.columns[1:]:
+for col in incorrectData.columns[1:]:
 
     if col == "anomaly":
         continue
     # plt.figure(figsize=(12, 6))
 
-    plt.plot(data["timestamp"], data[col], label=col)
+    plt.plot(incorrectData["timestamp"], incorrectData[col], label=col)
 
     plt.legend()
 
-plt.show()
+# plt.show()
+
+####################################################################################################################################################################################
+####################################################################################################################################################################################
+####################################################################################################################################################################################
+
+X_TRAIN, _ = timeseries.from_data_to_timeseries(correctData)
+# Y_Train doesn't exist because the models think there is always no anomalies.
+
+X_TEST = Y_TEST = None
+
+for col in incorrectData.columns[1:]:
+    if col == "anomaly" or col == "timestamp":
+        continue
+    X, y = timeseries.from_data_to_timeseries(
+        incorrectData.rename(columns={col: "value"})
+    )
+
+    if X_TEST is None:
+        X_TEST = X
+        Y_TEST = y
+    else:
+        X_TEST = np.concatenate((X_TEST, X))
+        Y_TEST = np.concatenate((Y_TEST, y))
+
+print(f"Number of windows in the training set: {X_TRAIN.shape[0]}")
+print(f"Number of windows in the test set: {X_TEST.shape[0]}")
+
+####################################################################################################################################################################################
+####################################################################################################################################################################################
+####################################################################################################################################################################################
