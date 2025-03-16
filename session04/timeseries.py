@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 
@@ -83,3 +84,40 @@ def plot_timeseries_with_windows(
         ]
     )
     plt.show()
+
+
+def from_data_to_timeseries(
+    data: pd.DataFrame,
+    window_size: int = 100,
+    step: int = 20,
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Convert a DataFrame into a 2D array of time-series windows.
+
+    Parameters:
+        - data: DataFrame with a 'value' column and an 'anomaly' column (1 if anomaly, 0 otherwise)
+        - window_size: Size of the window
+        - step: Step size between windows
+
+    Returns:
+        - 2D array of time-series windows
+        - 1D array of anomaly labels
+    """
+    values = data["value"].values
+    anomalies = data["anomaly"].values
+
+    windows = np.array(
+        [
+            values[i : i + window_size]
+            for i in range(0, len(values) - window_size + 1, step)
+        ]
+    )
+
+    anomaly_labels = np.array(
+        [
+            1 if anomalies[i : i + window_size].sum() > 0 else 0
+            for i in range(0, len(anomalies) - window_size + 1, step)
+        ]
+    )
+
+    return windows, anomaly_labels
