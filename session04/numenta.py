@@ -4,6 +4,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import timeseries
+from sklearn.metrics import confusion_matrix, classification_report
+
+
+import AISclonalSelectionV4
+import TWClonalSelV2
+import TWClonalSelV3
+import TWClonalSelV4
+import TWNegSelectionV2
 
 
 # Download latest version
@@ -102,3 +110,33 @@ print(f"Number of windows in the test set: {X_TEST.shape[0]}")
 ####################################################################################################################################################################################
 ####################################################################################################################################################################################
 ####################################################################################################################################################################################
+
+
+models = [
+    {
+        "name": "Artificial Immune System Clonal Selection V4",
+        "model": AISclonalSelectionV4.ClonalAISAnomaly(),
+    },
+    {"name": "Clonal Selection V2", "model": TWClonalSelV2.ClonalSelectionAIS()},
+    {"name": "Clonal Selection V3", "model": TWClonalSelV3.ClonalSelectionAIS()},
+    {"name": "Clonal Selection V4", "model": TWClonalSelV4.ClonalSelectionAIS()},
+    {
+        "name": "Negative Selection V2",
+        "model": TWNegSelectionV2.NegativeSelectionVectors(),
+    },
+]
+
+
+for model in models:
+    model["model"].fit(X_TRAIN)
+
+    y_pred = model["model"].predict(X_TEST)
+
+    model["cm"] = confusion_matrix(Y_TEST, y_pred)
+    model["classification_report"] = classification_report(Y_TEST, y_pred)
+
+
+for model in models:
+    print(f"Model: {model['name']}")
+    print(f"Confusion Matrix:")
+    print(model["cm"])
