@@ -187,7 +187,7 @@ class ClonalSelectionAIS:
 
         if pca_2d is not None:
             # Turn off interactive & show final
-            plt.ioff()
+            # plt.ioff()
             plt.show()
 
     def _set_threshold(self, X_normal):

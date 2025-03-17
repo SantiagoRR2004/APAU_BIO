@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import timeseries
 from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.decomposition import PCA
 
 
 import AISclonalSelectionV4
@@ -112,23 +113,40 @@ print(f"Number of windows in the test set: {X_TEST.shape[0]}")
 ####################################################################################################################################################################################
 
 
+pca = PCA(n_components=2, random_state=777)
+pca.fit(X_TRAIN)
+
+####################################################################################################################################################################################
+####################################################################################################################################################################################
+####################################################################################################################################################################################
+seed = 42
+
 models = [
     {
         "name": "Artificial Immune System Clonal Selection V4",
         "model": AISclonalSelectionV4.ClonalAISAnomaly(),
     },
-    {"name": "Clonal Selection V2", "model": TWClonalSelV2.ClonalSelectionAIS()},
-    {"name": "Clonal Selection V3", "model": TWClonalSelV3.ClonalSelectionAIS()},
-    {"name": "Clonal Selection V4", "model": TWClonalSelV4.ClonalSelectionAIS()},
+    {
+        "name": "Clonal Selection V2",
+        "model": TWClonalSelV2.ClonalSelectionAIS(random_seed=seed),
+    },
+    {
+        "name": "Clonal Selection V3",
+        "model": TWClonalSelV3.ClonalSelectionAIS(random_seed=seed),
+    },
+    {
+        "name": "Clonal Selection V4",
+        "model": TWClonalSelV4.ClonalSelectionAIS(random_seed=seed),
+    },
     {
         "name": "Negative Selection V2",
-        "model": TWNegSelectionV2.NegativeSelectionVectors(),
+        "model": TWNegSelectionV2.NegativeSelectionVectors(random_seed=seed),
     },
 ]
 
 
 for model in models:
-    model["model"].fit(X_TRAIN)
+    model["model"].fit(X_TRAIN, pca_2d=pca)
 
     y_pred = model["model"].predict(X_TEST)
 

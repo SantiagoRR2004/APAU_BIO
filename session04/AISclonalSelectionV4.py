@@ -183,7 +183,7 @@ class ClonalAISAnomaly:
         new_pop = merged_pop[top_indices]
         return new_pop
 
-    def fit(self, X_normal):
+    def fit(self, X_normal, *args, **kwargs):
         """
         Train the AIS on normal data only.
         """
