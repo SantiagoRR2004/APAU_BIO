@@ -70,3 +70,7 @@ def main():
         print(
             f"Input: {X[i].tolist()}, Predicted: {predictions[i].item()}, Expected: {y[i].item()}"
         )
+
+
+if "__main__" == __name__:
+    main()
