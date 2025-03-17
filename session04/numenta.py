@@ -122,30 +122,48 @@ pca.fit(X_TRAIN)
 seed = 42
 generations = 10
 numIndividuals = 30
+mutationStd = 0.9
+numberOfClones = 20
 
 models = [
     {
         "name": "Artificial Immune System Clonal Selection V4",
         "model": AISclonalSelectionV4.ClonalAISAnomaly(
-            n_generations=generations, pop_size=numIndividuals, random_seed=seed
+            n_generations=generations,
+            pop_size=numIndividuals,
+            mutation_std=mutationStd,
+            clone_factor=numberOfClones,
+            random_seed=seed,
         ),
     },
     {
         "name": "Clonal Selection V2",
         "model": TWClonalSelV2.ClonalSelectionAIS(
-            max_gens=generations, pop_size=numIndividuals, random_seed=seed
+            max_gens=generations,
+            pop_size=numIndividuals,
+            mutation_std=mutationStd,
+            clone_factor=numberOfClones,
+            random_seed=seed,
         ),
     },
     {
         "name": "Clonal Selection V3",
         "model": TWClonalSelV3.ClonalSelectionAIS(
-            max_gens=generations, pop_size=numIndividuals, random_seed=seed
+            max_gens=generations,
+            pop_size=numIndividuals,
+            mutation_std=mutationStd,
+            clone_factor=numberOfClones,
+            random_seed=seed,
         ),
     },
     {
         "name": "Clonal Selection V4",
         "model": TWClonalSelV4.ClonalSelectionAIS(
-            max_gens=generations, pop_size=numIndividuals, random_seed=seed
+            max_gens=generations,
+            pop_size=numIndividuals,
+            mutation_std=mutationStd,
+            clone_factor=numberOfClones,
+            random_seed=seed,
         ),
     },
     {
