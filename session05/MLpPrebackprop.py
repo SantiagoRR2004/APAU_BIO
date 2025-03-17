@@ -1,6 +1,7 @@
 import numpy as np
 import random
 
+
 class MLPPreBackprop:
     def __init__(self, input_size=2, hidden_size=2, output_size=1, learning_rate=0.1):
         """
@@ -30,13 +31,13 @@ class MLPPreBackprop:
         hidden_layer_input = np.dot(x, self.W_input_hidden) + self.b_hidden
         hidden_layer_output = self.sigmoid(hidden_layer_input)
 
-        final_output_input = np.dot(hidden_layer_output, self.W_hidden_output) + self.b_output
+        final_output_input = (
+            np.dot(hidden_layer_output, self.W_hidden_output) + self.b_output
+        )
         final_output = self.sigmoid(final_output_input)
 
         return hidden_layer_output, final_output
-        
-        
-        
+
     def train(self, X, y, epochs=5000, error_threshold=0.1):
         """
         Training loop using a pre-backprop weight update heuristic.
@@ -54,11 +55,19 @@ class MLPPreBackprop:
 
                 # Pre-Backprop "training": Apply random weight updates if error is significant
                 if np.abs(error) > error_threshold:
-                    self.W_input_hidden += self.learning_rate * np.random.randn(*self.W_input_hidden.shape)
-                    self.b_hidden += self.learning_rate * np.random.randn(*self.b_hidden.shape)
+                    self.W_input_hidden += self.learning_rate * np.random.randn(
+                        *self.W_input_hidden.shape
+                    )
+                    self.b_hidden += self.learning_rate * np.random.randn(
+                        *self.b_hidden.shape
+                    )
 
-                    self.W_hidden_output += self.learning_rate * np.random.randn(*self.W_hidden_output.shape)
-                    self.b_output += self.learning_rate * np.random.randn(*self.b_output.shape)
+                    self.W_hidden_output += self.learning_rate * np.random.randn(
+                        *self.W_hidden_output.shape
+                    )
+                    self.b_output += self.learning_rate * np.random.randn(
+                        *self.b_output.shape
+                    )
 
             # Print progress every 500 epochs
             if epoch % 500 == 0:
@@ -71,11 +80,10 @@ class MLPPreBackprop:
         predictions = []
         for i in range(len(X)):
             _, final_output = self.forward(X[i])
-            predictions.append(final_output[0]) 
+            predictions.append(final_output[0])
         return np.round(predictions, 2)
-    
-    
-    
+
+
 def main():
     """
     Main function to train the MLP on the XOR problem and test its performance.
@@ -93,6 +101,3 @@ def main():
     predictions = mlp.predict(X)
     for i in range(len(X)):
         print(f"Input: {X[i]}, Predicted: {predictions[i]}, Expected: {y[i]}")
-        
-        
-            

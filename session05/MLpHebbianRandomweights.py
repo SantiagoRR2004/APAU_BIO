@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class MLPHebbian:
     def __init__(self, input_size=2, hidden_size=2, output_size=1, learning_rate=0.1):
         """
@@ -29,12 +30,13 @@ class MLPHebbian:
         hidden_layer_input = np.dot(x, self.W_input_hidden) + self.b_hidden
         hidden_layer_output = self.sigmoid(hidden_layer_input)
 
-        final_output_input = np.dot(hidden_layer_output, 
-                  self.W_hidden_output) + self.b_output
+        final_output_input = (
+            np.dot(hidden_layer_output, self.W_hidden_output) + self.b_output
+        )
         final_output = self.sigmoid(final_output_input)
 
         return hidden_layer_output, final_output
-        
+
     def train(self, X, y, epochs=5000):
         """
         Training loop using Hebbian Learning Rule.
@@ -49,8 +51,12 @@ class MLPHebbian:
                 error = y[i] - final_output
                 total_error += np.abs(error)
                 # Hebbian Learning Rule: Strengthen connections based on activation correlation
-                self.W_input_hidden += self.learning_rate * np.outer(X[i], hidden_layer_output)
-                self.W_hidden_output += self.learning_rate * np.outer(hidden_layer_output, final_output)
+                self.W_input_hidden += self.learning_rate * np.outer(
+                    X[i], hidden_layer_output
+                )
+                self.W_hidden_output += self.learning_rate * np.outer(
+                    hidden_layer_output, final_output
+                )
 
             # Print progress every 500 epochs
             if epoch % 500 == 0:
@@ -65,9 +71,8 @@ class MLPHebbian:
             _, final_output = self.forward(X[i])
             predictions.append(final_output[0])  # Convert to scalar value
         return np.round(predictions, 2)
-    
-    
-    
+
+
 def main():
     """
     Main function to train the MLP on the XOR problem and test its performance.

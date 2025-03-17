@@ -9,6 +9,7 @@ from collections import deque
 import matplotlib.pyplot as plt
 import time
 
+
 class DQN(nn.Module):
     def __init__(self, input_size, action_size):
         super(DQN, self).__init__()
@@ -23,8 +24,10 @@ class DQN(nn.Module):
         return self.fc3(x)  # Linear output (Q-values for each action)
 
 
-class Agent():
-    def __init__(self, env_string, batch_size=64, render_mode=None, update_target_steps=100):
+class Agent:
+    def __init__(
+        self, env_string, batch_size=64, render_mode=None, update_target_steps=100
+    ):
         self.memory = deque(maxlen=100000)
         self.env = gym.make(env_string, render_mode=render_mode)
         self.input_size = self.env.observation_space.shape[0]
@@ -33,14 +36,16 @@ class Agent():
         self.action_size = self.env.action_space.n
         print("action_size:", self.action_size)
         print("action_space:", self.env.action_space)
-        
+
         self.batch_size = batch_size
         self.gamma = 1.0
         self.epsilon = 1.0
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.update_target_steps = update_target_steps  # How often to update the target network
+        self.update_target_steps = (
+            update_target_steps  # How often to update the target network
+        )
 
         # Main network (used for action selection and learning)
         self.model = DQN(self.input_size, self.action_size).to(self.device)
@@ -50,7 +55,9 @@ class Agent():
         self.target_model = DQN(self.input_size, self.action_size).to(self.device)
         self.update_target_network()  # Initialize the target network with the same weights as the main network
 
-        self.steps_done = 0  # Keep track of steps to decide when to update the target network
+        self.steps_done = (
+            0  # Keep track of steps to decide when to update the target network
+        )
 
         self.scores = []
         self.avg_scores = []
@@ -63,16 +70,16 @@ class Agent():
     def setup_plot(self):
         plt.ion()
         self.fig, self.ax = plt.subplots()
-        self.ax.set_xlabel('Episode')
-        self.ax.set_ylabel('Mean Reward')
+        self.ax.set_xlabel("Episode")
+        self.ax.set_ylabel("Mean Reward")
         plt.show()
 
     def update_plot(self):
         self.ax.clear()
         self.ax.plot(self.avg_scores)
-        self.ax.set_xlabel('Episode')
-        self.ax.set_ylabel('Mean Reward')
-        self.ax.set_title('Mean Reward during Training')
+        self.ax.set_xlabel("Episode")
+        self.ax.set_ylabel("Mean Reward")
+        self.ax.set_title("Mean Reward during Training")
         plt.draw()
         plt.pause(0.001)
 
@@ -164,22 +171,23 @@ class Agent():
             self.update_plot()
 
             if mean_score >= threshold and len(scores) == 100:
-                print(f'Ran {epoch} episodes. Solved after {epoch - 100} trials ✔')
-                torch.save(self.model.state_dict(), 'dqn_cartpole.pth')
+                print(f"Ran {epoch} episodes. Solved after {epoch - 100} trials ✔")
+                torch.save(self.model.state_dict(), "dqn_cartpole.pth")
                 plt.ioff()
                 return self.avg_scores
 
             if epoch % 100 == 0:
-                print(f'[Episode {epoch}] - Mean survival time over last 100 episodes was {mean_score} ticks.')
+                print(
+                    f"[Episode {epoch}] - Mean survival time over last 100 episodes was {mean_score} ticks."
+                )
 
-        print(f'Did not solve after {epochs} episodes')
-        torch.save(self.model.state_dict(), 'dqn_cartpole.pth')
+        print(f"Did not solve after {epochs} episodes")
+        torch.save(self.model.state_dict(), "dqn_cartpole.pth")
         plt.ioff()
         return self.avg_scores
 
-
     def load_weights_and_visualize(self):
-        self.model.load_state_dict(torch.load('dqn_cartpole.pth'))
+        self.model.load_state_dict(torch.load("dqn_cartpole.pth"))
         self.model.eval()
 
         for episode in range(5):
@@ -203,12 +211,13 @@ class Agent():
         input()
         self.env.close()
 
+
 # Usage
 train_mode = False
 
 if train_mode:
-    agent = Agent('CartPole-v1', render_mode=None)
+    agent = Agent("CartPole-v1", render_mode=None)
     scores = agent.train_model()
 else:
-    agent = Agent('CartPole-v1', render_mode='human')
+    agent = Agent("CartPole-v1", render_mode="human")
     agent.load_weights_and_visualize()

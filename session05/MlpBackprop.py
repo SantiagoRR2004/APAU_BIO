@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class MLPBackprop:
     def __init__(self, input_size=2, hidden_size=2, output_size=1, learning_rate=0.1):
         """
@@ -33,11 +34,13 @@ class MLPBackprop:
         hidden_layer_input = np.dot(x, self.W_input_hidden) + self.b_hidden
         hidden_layer_output = self.sigmoid(hidden_layer_input)
 
-        final_output_input = np.dot(hidden_layer_output, self.W_hidden_output) + self.b_output
+        final_output_input = (
+            np.dot(hidden_layer_output, self.W_hidden_output) + self.b_output
+        )
         final_output = self.sigmoid(final_output_input)
 
         return hidden_layer_output, final_output
-    
+
     def train(self, X, y, epochs=5000):
         """
         Training loop using backpropagation and gradient descent.
@@ -54,10 +57,14 @@ class MLPBackprop:
 
                 # Backpropagation: Compute gradients
                 delta_output = error * self.sigmoid_derivative(final_output)
-                delta_hidden = (delta_output @ self.W_hidden_output.T) * self.sigmoid_derivative(hidden_layer_output)
+                delta_hidden = (
+                    delta_output @ self.W_hidden_output.T
+                ) * self.sigmoid_derivative(hidden_layer_output)
 
                 # Gradient Descent Weight Updates
-                self.W_hidden_output += self.learning_rate * np.outer(hidden_layer_output, delta_output)
+                self.W_hidden_output += self.learning_rate * np.outer(
+                    hidden_layer_output, delta_output
+                )
                 self.b_output += self.learning_rate * delta_output
 
                 self.W_input_hidden += self.learning_rate * np.outer(X[i], delta_hidden)
@@ -76,16 +83,17 @@ class MLPBackprop:
             _, final_output = self.forward(X[i])
             predictions.append(final_output[0])  # Convert to scalar value
         return np.round(predictions, 2)
-        
-    
-    
+
+
 def main():
     """
     Main function to train the MLP on the XOR problem and test its performance.
     """
     # XOR dataset
     X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-    y = np.array([[0], [1], [1], [0]])  # Expected XOR outputs (reshaped for matrix operations)
+    y = np.array(
+        [[0], [1], [1], [0]]
+    )  # Expected XOR outputs (reshaped for matrix operations)
 
     # Instantiate and train the MLP using backpropagation
     mlp = MLPBackprop()
