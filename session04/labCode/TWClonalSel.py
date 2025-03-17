@@ -128,7 +128,7 @@ def main():
         clone_factor=5,
         beta=1.0,
         mutation_std=0.2,
-        max_gens=25,
+        max_gens=50,
         diversity_rate=0.1,
         random_seed=123,
     )
