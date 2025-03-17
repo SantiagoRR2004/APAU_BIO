@@ -120,27 +120,39 @@ pca.fit(X_TRAIN)
 ####################################################################################################################################################################################
 ####################################################################################################################################################################################
 seed = 42
+generations = 10
+numIndividuals = 30
 
 models = [
     {
         "name": "Artificial Immune System Clonal Selection V4",
-        "model": AISclonalSelectionV4.ClonalAISAnomaly(),
+        "model": AISclonalSelectionV4.ClonalAISAnomaly(
+            n_generations=generations, pop_size=numIndividuals, random_seed=seed
+        ),
     },
     {
         "name": "Clonal Selection V2",
-        "model": TWClonalSelV2.ClonalSelectionAIS(random_seed=seed),
+        "model": TWClonalSelV2.ClonalSelectionAIS(
+            max_gens=generations, pop_size=numIndividuals, random_seed=seed
+        ),
     },
     {
         "name": "Clonal Selection V3",
-        "model": TWClonalSelV3.ClonalSelectionAIS(random_seed=seed),
+        "model": TWClonalSelV3.ClonalSelectionAIS(
+            max_gens=generations, pop_size=numIndividuals, random_seed=seed
+        ),
     },
     {
         "name": "Clonal Selection V4",
-        "model": TWClonalSelV4.ClonalSelectionAIS(random_seed=seed),
+        "model": TWClonalSelV4.ClonalSelectionAIS(
+            max_gens=generations, pop_size=numIndividuals, random_seed=seed
+        ),
     },
     {
         "name": "Negative Selection V2",
-        "model": TWNegSelectionV2.NegativeSelectionVectors(random_seed=seed),
+        "model": TWNegSelectionV2.NegativeSelectionVectors(
+            n_generations=generations, n_detectors=numIndividuals, random_seed=seed
+        ),
     },
 ]
 
