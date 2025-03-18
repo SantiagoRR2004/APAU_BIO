@@ -13,15 +13,18 @@ import time
 class DQN(nn.Module):
     def __init__(self, input_size, action_size):
         super(DQN, self).__init__()
-        self.fc1 = nn.Linear(input_size, 24)
-        self.fc2 = nn.Linear(24, 48)
-        self.fc3 = nn.Linear(48, action_size)
-        self.relu = nn.Tanh()
+        self.fc1 = nn.Linear(input_size, 128)
+        self.fc2 = nn.Linear(128, 128)
+        self.fc3 = nn.Linear(128, 128)
+        self.fc4 = nn.Linear(128, action_size)
+
+        self.relu = nn.LeakyReLU(0.01)
 
     def forward(self, x):
         x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
-        return self.fc3(x)  # Linear output (Q-values for each action)
+        x = self.relu(self.fc3(x))
+        return self.fc4(x)
 
 
 class Agent:
@@ -176,7 +179,9 @@ class Agent:
         return self.avg_scores
 
     def load_weights_and_visualize(self):
-        self.model.load_state_dict(torch.load("dqn_cartpole.pth"))
+        self.model.load_state_dict(
+            torch.load("dqn_cartpole.pth", map_location=torch.device("cpu"))
+        )
         self.model.eval()
 
         for episode in range(5):
@@ -202,10 +207,10 @@ class Agent:
 
 
 # Usage
-train_mode = True  # Change to True if you want to retrain
+train_mode = False  # Change to True if you want to retrain
 if train_mode:
-    agent = Agent("CartPole-v1", render_mode=None)
+    agent = Agent("LunarLander-v3", render_mode=None)
     scores = agent.train_model()
 else:
-    agent = Agent("CartPole-v1", render_mode="human")
+    agent = Agent("LunarLander-v3", render_mode="human")
     agent.load_weights_and_visualize()
