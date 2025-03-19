@@ -9,4 +9,7 @@ scikit-learn
 pandas
 tqdm
 kagglehub
+swig
 gymnasium
+gymnasium[classic-control]
+box2d
