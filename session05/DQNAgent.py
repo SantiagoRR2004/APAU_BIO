@@ -13,11 +13,12 @@ import time
 class Agent:
     def __init__(
         self,
-        env_string,
+        env_string: str,
         dqnClass: nn.Module,
-        batch_size=64,
-        render_mode=None,
-        update_target_steps=100,
+        batch_size: int = 64,
+        render_mode: str = None,
+        update_target_steps: int = 100,
+        fileName: str = None,
     ):
         self.memory = deque(maxlen=100000)
         self.env = gym.make(env_string, render_mode=render_mode)
@@ -31,6 +32,10 @@ class Agent:
         self.epsilon_decay = 0.995
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.update_target_steps = update_target_steps
+
+        if fileName is None:
+            fileName = f"dqn_{env_string}.pth"
+        self.fileName = fileName
 
         # Main network
         self.model = dqnClass(self.input_size, self.action_size).to(self.device)
@@ -152,7 +157,7 @@ class Agent:
 
             if mean_score >= threshold and len(scores) == 100:
                 print(f"Ran {epoch} episodes. Solved after {epoch - 100} trials ✔")
-                torch.save(self.model.state_dict(), "dqn_cartpole.pth")
+                torch.save(self.model.state_dict(), self.fileName)
                 plt.ioff()
                 return self.avg_scores
 
@@ -162,13 +167,13 @@ class Agent:
                 )
 
         print(f"Did not solve after {epochs} episodes")
-        torch.save(self.model.state_dict(), "dqn_cartpole.pth")
+        torch.save(self.model.state_dict(), self.fileName)
         plt.ioff()
         return self.avg_scores
 
     def load_weights_and_visualize(self):
         self.model.load_state_dict(
-            torch.load("dqn_cartpole.pth", map_location=torch.device("cpu"))
+            torch.load(self.fileName, map_location=torch.device("cpu"))
         )
         self.model.eval()
 

@@ -21,8 +21,12 @@ class DQN(nn.Module):
 train_mode = False
 
 if train_mode:
-    agent = DQNAgent.Agent("CartPole-v1", render_mode=None, dqnClass=DQN)
+    agent = DQNAgent.Agent(
+        "CartPole-v1", render_mode=None, dqnClass=DQN, fileName="dqn_cartpole.pth"
+    )
     scores = agent.train_model()
 else:
-    agent = DQNAgent.Agent("CartPole-v1", render_mode="human", dqnClass=DQN)
+    agent = DQNAgent.Agent(
+        "CartPole-v1", render_mode="human", dqnClass=DQN, fileName="dqn_cartpole.pth"
+    )
     agent.load_weights_and_visualize()
