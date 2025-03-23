@@ -13,3 +13,6 @@ swig
 gymnasium
 gymnasium[classic-control]
 box2d
+jax
+flax
+gymnasium[mujoco]
