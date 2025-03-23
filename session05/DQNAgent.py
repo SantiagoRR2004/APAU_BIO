@@ -20,10 +20,25 @@ class Agent:
         render_mode: str = None,
         update_target_steps: int = 100,
         fileName: str = None,
-    ):
+    ) -> None:
         self.memory = deque(maxlen=100000)
         self.env = gym.make(env_string, render_mode=render_mode)
+
+        if not isinstance(self.env.observation_space, gym.spaces.box.Box):
+            print("Not supported: observation space is not continuous.")
+            # If they are discrete, we can flatten, but the training needs to be modified
+            self.error = True
+            return
+        else:
+            self.error = False
         self.input_size = self.env.observation_space.shape[0]
+
+        if isinstance(self.env.action_space, gym.spaces.Box):
+            print("Continuous action space. Not supported.")
+            self.error = True
+            return
+        else:
+            self.error = False
         self.action_size = self.env.action_space.n
 
         self.batch_size = batch_size
@@ -44,6 +59,7 @@ class Agent:
             print(
                 f"Warning: No reward threshold found for {env_string}. It will be set to 95."
             )
+            self.threshold = 95
 
         if fileName is None:
             fileName = f"dqn_{env_string}.pth"
@@ -62,8 +78,10 @@ class Agent:
         self.avg_scores = []
         self.losses = []  # <--- Track losses
 
-        if render_mode and render_mode != "human":
+        if render_mode != "human":
             self.setup_plot()
+
+        return
 
     def update_target_network(self):
         """Copy weights from main network to target network."""
@@ -137,6 +155,8 @@ class Agent:
         return loss.item()
 
     def train_model(self, epochs: int = 10000, threshold: int = None):
+        if self.error:
+            return
         scores = deque(maxlen=100)
 
         if threshold is None:
@@ -189,12 +209,14 @@ class Agent:
         return self.avg_scores
 
     def load_weights_and_visualize(self):
+        if self.error:
+            return
         self.model.load_state_dict(
             torch.load(self.fileName, map_location=torch.device("cpu"))
         )
         self.model.eval()
 
-        for episode in range(5):
+        for episode in range(0):
             state = self.env.reset()
             state = self.preprocess_state(state)
             done = False
