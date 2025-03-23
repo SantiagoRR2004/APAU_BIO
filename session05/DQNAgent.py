@@ -216,7 +216,7 @@ class Agent:
         )
         self.model.eval()
 
-        for episode in range(0):
+        for episode in range(5):
             state = self.env.reset()
             state = self.preprocess_state(state)
             done = False
