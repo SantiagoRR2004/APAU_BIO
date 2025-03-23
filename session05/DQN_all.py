@@ -1,6 +1,7 @@
 import gymnasium as gym
 import DQNAgent
 import torch.nn as nn
+from collections import defaultdict
 
 
 class DQN(nn.Module):
@@ -19,6 +20,22 @@ class DQN(nn.Module):
 
 # Retrieve all environment IDs
 env_ids = list(gym.envs.registry.keys())
+
+# Organize environments by base name (without version numbers)
+env_dict = defaultdict(list)
+
+for env_id in env_ids:
+    base_name, version = env_id.rsplit("-", 1)
+    env_dict[base_name].append((int(version[1:]), env_id))  # Convert vX to integer
+
+# Keep only the latest version of each environment
+latest_envs = [max(versions, key=lambda x: x[0])[1] for versions in env_dict.values()]
+env_ids = sorted(latest_envs)
+
+# Delete GymV21Environment-v0 and GymV26Environment-v0: from the list
+env_ids.remove("GymV21Environment-v0")
+env_ids.remove("GymV26Environment-v0")
+
 
 # Print the list of environment IDs
 for env_id in env_ids:
