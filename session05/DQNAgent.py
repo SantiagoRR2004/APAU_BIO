@@ -62,7 +62,8 @@ class Agent:
         self.avg_scores = []
         self.losses = []  # <--- Track losses
 
-        self.setup_plot()
+        if render_mode and render_mode != "human":
+            self.setup_plot()
 
     def update_target_network(self):
         """Copy weights from main network to target network."""
@@ -214,13 +215,18 @@ class Agent:
 
             print(f"Total reward: {totalReward}")
 
-        print("Visualization complete. Press Enter to close.")
-        input()
+        print("Visualization complete.")
+        # input()
         self.env.close()
 
 
 def trainModel(
-    env_string: str, dqnClass: nn.Module, fileName: str, retrain: bool = False
+    env_string: str,
+    dqnClass: nn.Module,
+    fileName: str,
+    retrain: bool = False,
+    threshold: int = None,
+    epochs: int = 10000,
 ) -> None:
     """
     Trains a DQN model on the specified environment.
@@ -230,6 +236,10 @@ def trainModel(
         - dqnClass (nn.Module): The class that defines the DQN model.
         - fileName (str): The name of the file to save the model weights.
         - retrain (bool): If True, the model will be retrained from scratch.
+        - threshold (int): The reward threshold for the environment.
+        - epochs (int): The number of episodes to train the model for.
+
+    threshold and epochs are only used if the model is trained.
 
     Returns:
         - None
@@ -244,4 +254,4 @@ def trainModel(
         agent = Agent(
             env_string, render_mode=None, dqnClass=dqnClass, fileName=fileName
         )
-        scores = agent.train_model()
+        scores = agent.train_model(threshold=threshold, epochs=epochs)
