@@ -181,6 +181,7 @@ class Agent:
             state = self.env.reset()
             state = self.preprocess_state(state)
             done = False
+            totalReward = 0
             while not done:
                 self.env.render()
                 time.sleep(0.05)
@@ -193,6 +194,9 @@ class Agent:
                 done = terminated or truncated
                 next_state = self.preprocess_state(next_state)
                 state = next_state
+                totalReward += reward
+
+            print(f"Total reward: {totalReward}")
 
         print("Visualization complete. Press Enter to close.")
         input()
