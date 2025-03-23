@@ -8,6 +8,7 @@ import random
 from collections import deque
 import matplotlib.pyplot as plt
 import time
+import os
 
 
 class Agent:
@@ -201,3 +202,31 @@ class Agent:
         print("Visualization complete. Press Enter to close.")
         input()
         self.env.close()
+
+
+def trainModel(
+    env_string: str, dqnClass: nn.Module, fileName: str, retrain: bool = False
+) -> None:
+    """
+    Trains a DQN model on the specified environment.
+
+    Args:
+        - env_string (str): The name of the environment to train on.
+        - dqnClass (nn.Module): The class that defines the DQN model.
+        - fileName (str): The name of the file to save the model weights.
+        - retrain (bool): If True, the model will be retrained from scratch.
+
+    Returns:
+        - None
+    """
+    # Check if the file exists
+    if os.path.exists(fileName) and not retrain:
+        agent = Agent(
+            env_string, render_mode="human", dqnClass=dqnClass, fileName=fileName
+        )
+        agent.load_weights_and_visualize()
+    else:
+        agent = Agent(
+            env_string, render_mode=None, dqnClass=dqnClass, fileName=fileName
+        )
+        scores = agent.train_model()

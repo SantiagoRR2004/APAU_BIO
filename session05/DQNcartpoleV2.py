@@ -22,13 +22,7 @@ class DQN(nn.Module):
 
 # Usage
 train_mode = False  # Change to True if you want to retrain
-if train_mode:
-    agent = DQNAgent.Agent(
-        "LunarLander-v3", render_mode=None, dqnClass=DQN, fileName="dqn_lunar.pth"
-    )
-    scores = agent.train_model()
-else:
-    agent = DQNAgent.Agent(
-        "LunarLander-v3", render_mode="human", dqnClass=DQN, fileName="dqn_lunar.pth"
-    )
-    agent.load_weights_and_visualize()
+
+DQNAgent.trainModel(
+    "LunarLander-v3", dqnClass=DQN, fileName="dqn_lunar.pth", retrain=train_mode
+)
