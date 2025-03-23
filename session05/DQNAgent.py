@@ -34,6 +34,17 @@ class Agent:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.update_target_steps = update_target_steps
 
+        self.threshold = (
+            self.env.spec.reward_threshold
+            if self.env.spec.reward_threshold is not None
+            else float("inf")
+        )
+
+        if self.threshold == float("inf"):
+            print(
+                f"Warning: No reward threshold found for {env_string}. It will be set to 95."
+            )
+
         if fileName is None:
             fileName = f"dqn_{env_string}.pth"
         self.fileName = fileName
@@ -124,8 +135,12 @@ class Agent:
 
         return loss.item()
 
-    def train_model(self, epochs=10000, threshold=95):
+    def train_model(self, epochs: int = 10000, threshold: int = None):
         scores = deque(maxlen=100)
+
+        if threshold is None:
+            threshold = self.threshold
+            print(f"Using default threshold of {threshold}")
 
         for epoch in range(epochs):
             state = self.env.reset()
