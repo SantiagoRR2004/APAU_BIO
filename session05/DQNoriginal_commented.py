@@ -178,7 +178,8 @@ class Agent:
         self, epochs=10000, threshold=99  # epochs aka episodes aka trajectories
     ):  # FIXME: normalize for different environments
 
-        scores = deque(maxlen=100)  # FIXME : why?
+        scores = deque(maxlen=100)  # We just keep the last 100 scores
+        # Threshold needs above the average of the last 100 scores
 
         for epoch in range(epochs):
             state = self.env.reset()  # Reset the environment
