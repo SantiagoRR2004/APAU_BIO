@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from collections import deque
 import os
 
+
 class CustomLunarLanderEnv(LunarLander):
     def __init__(self, **kwargs):
         super(CustomLunarLanderEnv, self).__init__(**kwargs)
@@ -16,7 +17,9 @@ class CustomLunarLanderEnv(LunarLander):
 
     def step(self, action):
         # Call the parent class's step function to get the original outputs
-        state, reward, terminated, truncated, info = super(CustomLunarLanderEnv, self).step(action)
+        state, reward, terminated, truncated, info = super(
+            CustomLunarLanderEnv, self
+        ).step(action)
         # Modify the reward here
         reward = self.custom_reward_function(state, reward, action)
         return state, reward, terminated, truncated, info
@@ -39,6 +42,7 @@ class CustomLunarLanderEnv(LunarLander):
         reward -= fuel_penalty
         return reward
 
+
 class LunarLanderAgent:
     def __init__(self, train_mode=True):
         self.train_mode = train_mode
@@ -47,8 +51,8 @@ class LunarLanderAgent:
         self.callback = None
 
         # Create directory to store results if not exists
-        if not os.path.exists('results'):
-            os.makedirs('results')
+        if not os.path.exists("results"):
+            os.makedirs("results")
 
     def create_env(self, render_mode=None):
         # Create the custom environment
@@ -59,7 +63,7 @@ class LunarLanderAgent:
 
     def create_model(self):
         # Create the DQN model with TensorBoard logging
-        self.model = DQN('MlpPolicy', self.env, verbose=1, tensorboard_log="./logs/")
+        self.model = DQN("MlpPolicy", self.env, verbose=1, tensorboard_log="./logs/")
 
     def train(self, total_timesteps=100000):
         # Create the environment
@@ -80,7 +84,7 @@ class LunarLanderAgent:
         if self.model is None:
             self.model = DQN.load("dqn_custom_lunar_lander")
         # Create the environment with rendering
-        self.env = self.create_env(render_mode='human')
+        self.env = self.create_env(render_mode="human")
         obs, info = self.env.reset()
         done = False
 
@@ -102,12 +106,12 @@ class LunarLanderAgent:
             self.last_100_rewards = deque(maxlen=100)
 
             # Create directory to store results if not exists
-            if not os.path.exists('results'):
-                os.makedirs('results')
+            if not os.path.exists("results"):
+                os.makedirs("results")
 
             # Prepare the file for saving rewards
-            self.filepath = 'results/lunarlander_rewards.csv'
-            with open(self.filepath, 'w') as f:
+            self.filepath = "results/lunarlander_rewards.csv"
+            with open(self.filepath, "w") as f:
                 f.write("Episode,Reward,Length\n")  # Write header
 
             # Initialize the plot figure
@@ -117,12 +121,12 @@ class LunarLanderAgent:
 
         def _on_step(self) -> bool:
             # Access the 'infos' from the local variables
-            infos = self.locals.get('infos', [])
+            infos = self.locals.get("infos", [])
             for info in infos:
-                if 'episode' in info.keys():
-                    episode_info = info['episode']
-                    episode_reward = episode_info['r']
-                    episode_length = episode_info['l']
+                if "episode" in info.keys():
+                    episode_info = info["episode"]
+                    episode_reward = episode_info["r"]
+                    episode_length = episode_info["l"]
                     self.episode_rewards.append(episode_reward)
                     self.episode_lengths.append(episode_length)
                     self.episodes.append(self.episode_count)
@@ -130,11 +134,15 @@ class LunarLanderAgent:
                     self.episode_count += 1
 
                     # Save to file
-                    with open(self.filepath, 'a') as f:
-                        f.write(f"{self.episode_count},{episode_reward},{episode_length}\n")
+                    with open(self.filepath, "a") as f:
+                        f.write(
+                            f"{self.episode_count},{episode_reward},{episode_length}\n"
+                        )
 
                     # Print diagnostics
-                    print(f"Episode {self.episode_count}: Reward = {episode_reward}, Length = {episode_length}")
+                    print(
+                        f"Episode {self.episode_count}: Reward = {episode_reward}, Length = {episode_length}"
+                    )
 
                     # Update plot
                     self.ax.clear()
@@ -143,9 +151,10 @@ class LunarLanderAgent:
                     self.ax.plot(self.episodes, self.episode_rewards)
 
                     # Save the plot to a PNG file
-                    plt.savefig(f'results/reward_plot.png')
+                    plt.savefig(f"results/reward_plot.png")
 
             return True
+
 
 if __name__ == "__main__":
     # Set train_mode to True to train, or False to evaluate

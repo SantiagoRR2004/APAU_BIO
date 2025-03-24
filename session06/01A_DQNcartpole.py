@@ -9,6 +9,7 @@ from collections import deque
 import matplotlib.pyplot as plt
 import time
 
+
 class DQN(nn.Module):
     def __init__(self, input_size, action_size):
         super(DQN, self).__init__()
@@ -22,8 +23,11 @@ class DQN(nn.Module):
         x = self.relu(self.fc2(x))
         return self.fc3(x)  # Linear output (Q-values for each action)
 
-class Agent():
-    def __init__(self, env_string, batch_size=64, render_mode=None, update_target_steps=100):
+
+class Agent:
+    def __init__(
+        self, env_string, batch_size=64, render_mode=None, update_target_steps=100
+    ):
         self.memory = deque(maxlen=100000)
         self.env = gym.make(env_string, render_mode=render_mode)
         self.input_size = self.env.observation_space.shape[0]
@@ -59,18 +63,18 @@ class Agent():
     def setup_plot(self):
         plt.ion()
         self.fig, self.ax = plt.subplots()
-        self.ax.set_xlabel('Episode')
-        self.ax.set_ylabel('Mean Reward')
+        self.ax.set_xlabel("Episode")
+        self.ax.set_ylabel("Mean Reward")
         plt.show()
 
     def update_plot(self):
         self.ax.clear()
         # Plot the average score
-        self.ax.plot(self.avg_scores, label='Avg Reward')
+        self.ax.plot(self.avg_scores, label="Avg Reward")
         # Plot the loss on the same axis (optional, may have different scale)
-        self.ax.plot(self.losses, label='Loss', color='red')
-        self.ax.set_xlabel('Episode')
-        self.ax.set_title('Mean Reward and Loss during Training')
+        self.ax.plot(self.losses, label="Loss", color="red")
+        self.ax.set_xlabel("Episode")
+        self.ax.set_title("Mean Reward and Loss during Training")
         self.ax.legend()
         plt.draw()
         plt.pause(0.001)
@@ -156,21 +160,23 @@ class Agent():
             self.update_plot()
 
             if mean_score >= threshold and len(scores) == 100:
-                print(f'Ran {epoch} episodes. Solved after {epoch - 100} trials ✔')
-                torch.save(self.model.state_dict(), 'dqn_cartpole.pth')
+                print(f"Ran {epoch} episodes. Solved after {epoch - 100} trials ✔")
+                torch.save(self.model.state_dict(), "dqn_cartpole.pth")
                 plt.ioff()
                 return self.avg_scores
 
             if epoch % 100 == 0:
-                print(f'[Episode {epoch}] - Mean survival time over last 100 episodes: {mean_score:.2f}')
+                print(
+                    f"[Episode {epoch}] - Mean survival time over last 100 episodes: {mean_score:.2f}"
+                )
 
-        print(f'Did not solve after {epochs} episodes')
-        torch.save(self.model.state_dict(), 'dqn_cartpole.pth')
+        print(f"Did not solve after {epochs} episodes")
+        torch.save(self.model.state_dict(), "dqn_cartpole.pth")
         plt.ioff()
         return self.avg_scores
 
     def load_weights_and_visualize(self):
-        self.model.load_state_dict(torch.load('dqn_cartpole.pth'))
+        self.model.load_state_dict(torch.load("dqn_cartpole.pth"))
         self.model.eval()
 
         for episode in range(5):
@@ -198,9 +204,8 @@ class Agent():
 # Usage
 train_mode = True  # Change to True if you want to retrain
 if train_mode:
-    agent = Agent('CartPole-v1', render_mode=None)
+    agent = Agent("CartPole-v1", render_mode=None)
     scores = agent.train_model()
 else:
-    agent = Agent('CartPole-v1', render_mode='human')
+    agent = Agent("CartPole-v1", render_mode="human")
     agent.load_weights_and_visualize()
-

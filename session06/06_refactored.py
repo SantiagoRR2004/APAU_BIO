@@ -16,6 +16,7 @@ from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.monitor import Monitor
 
+
 ###############################################################################
 # 1) Custom Environment: Subclassing LunarLander with a Fuel Penalty
 ###############################################################################
@@ -47,6 +48,7 @@ class CustomLunarLanderEnv(LunarLander):
         reward -= self.fuel_penalty_multiplier * fuel_usage
         return reward
 
+
 ###############################################################################
 # 2) DQN Approach (Stable-Baselines3)
 ###############################################################################
@@ -54,7 +56,8 @@ class RewardTrackingCallback(BaseCallback):
     """
     A custom callback to log and plot episode rewards during DQN training.
     """
-    def __init__(self, save_path='results/lunarlander_rewards.csv', verbose=0):
+
+    def __init__(self, save_path="results/lunarlander_rewards.csv", verbose=0):
         super().__init__(verbose)
         self.episode_rewards = []
         self.episode_lengths = []
@@ -64,9 +67,9 @@ class RewardTrackingCallback(BaseCallback):
 
         # File for saving rewards
         self.filepath = save_path
-        if not os.path.exists('results'):
-            os.makedirs('results')
-        with open(self.filepath, 'w') as f:
+        if not os.path.exists("results"):
+            os.makedirs("results")
+        with open(self.filepath, "w") as f:
             f.write("Episode,Reward,Length\n")
 
         # Setup plotting
@@ -77,11 +80,11 @@ class RewardTrackingCallback(BaseCallback):
 
     def _on_step(self) -> bool:
         # Collect episode info from 'infos'
-        infos = self.locals.get('infos', [])
+        infos = self.locals.get("infos", [])
         for info in infos:
-            if 'episode' in info:
-                ep_reward = info['episode']['r']
-                ep_length = info['episode']['l']
+            if "episode" in info:
+                ep_reward = info["episode"]["r"]
+                ep_length = info["episode"]["l"]
                 self.episode_rewards.append(ep_reward)
                 self.episode_lengths.append(ep_length)
                 self.episodes.append(self.episode_count)
@@ -89,33 +92,38 @@ class RewardTrackingCallback(BaseCallback):
                 self.episode_count += 1
 
                 # Save to CSV
-                with open(self.filepath, 'a') as f:
+                with open(self.filepath, "a") as f:
                     f.write(f"{self.episode_count},{ep_reward},{ep_length}\n")
 
-                print(f"Episode {self.episode_count}: Reward={ep_reward:.2f}, Length={ep_length}")
+                print(
+                    f"Episode {self.episode_count}: Reward={ep_reward:.2f}, Length={ep_length}"
+                )
 
                 # Update live plot
                 self.ax.clear()
                 self.ax.set_xlabel("Episode")
                 self.ax.set_ylabel("Reward")
-                self.ax.plot(self.episodes, self.episode_rewards, label="Episode Reward")
+                self.ax.plot(
+                    self.episodes, self.episode_rewards, label="Episode Reward"
+                )
                 self.ax.legend()
                 plt.draw()
                 plt.pause(0.001)
 
                 # Save figure
-                plt.savefig('results/reward_plot.png')
+                plt.savefig("results/reward_plot.png")
 
         return True
+
 
 class DQNTrainer:
     """
     Encapsulates training/evaluation of a DQN on CustomLunarLanderEnv.
     """
-    def __init__(self,
-                 fuel_penalty_multiplier=2.0,
-                 render_mode=None,
-                 total_timesteps=100_000):
+
+    def __init__(
+        self, fuel_penalty_multiplier=2.0, render_mode=None, total_timesteps=100_000
+    ):
         self.fuel_penalty_multiplier = fuel_penalty_multiplier
         self.render_mode = render_mode
         self.total_timesteps = total_timesteps
@@ -123,8 +131,10 @@ class DQNTrainer:
         self.model = None
 
     def create_env(self):
-        env = CustomLunarLanderEnv(fuel_penalty_multiplier=self.fuel_penalty_multiplier,
-                                   render_mode=self.render_mode)
+        env = CustomLunarLanderEnv(
+            fuel_penalty_multiplier=self.fuel_penalty_multiplier,
+            render_mode=self.render_mode,
+        )
         env = Monitor(env)
         return env
 
@@ -133,10 +143,7 @@ class DQNTrainer:
         from stable_baselines3 import DQN
 
         self.model = DQN(
-            policy='MlpPolicy',
-            env=self.env,
-            verbose=1,
-            tensorboard_log="./logs/"
+            policy="MlpPolicy", env=self.env, verbose=1, tensorboard_log="./logs/"
         )
 
         callback = RewardTrackingCallback()
@@ -148,9 +155,10 @@ class DQNTrainer:
     def evaluate(self, deterministic=True):
         # Re-create env with human rendering
         self.env = self.create_env()
-        self.env.render_mode = 'human'
+        self.env.render_mode = "human"
 
         from stable_baselines3 import DQN
+
         if self.model is None:
             self.model = DQN.load("dqn_custom_lunar_lander")
 
@@ -164,6 +172,7 @@ class DQNTrainer:
 
         self.env.close()
 
+
 ###############################################################################
 # 3) Policy Gradient (REINFORCE) Approach
 ###############################################################################
@@ -173,6 +182,7 @@ class PolicyNet(nn.Module):
     Observations: shape (8,) for LunarLander
     Outputs: action_probs of shape (4,)
     """
+
     def __init__(self, input_size=8, action_size=4, hidden_size=128):
         super().__init__()
         self.fc1 = nn.Linear(input_size, hidden_size)
@@ -181,6 +191,7 @@ class PolicyNet(nn.Module):
     def forward(self, x):
         x = torch.relu(self.fc1(x))
         return torch.softmax(self.fc2(x), dim=-1)
+
 
 def generate_trajectory(env, policy):
     """
@@ -204,6 +215,7 @@ def generate_trajectory(env, policy):
         state = next_state
     return trajectory
 
+
 def compute_returns(trajectory, gamma=0.99):
     """
     Compute discounted returns G_t from the final step backward.
@@ -215,17 +227,21 @@ def compute_returns(trajectory, gamma=0.99):
         returns.insert(0, G)
     return returns
 
+
 class REINFORCETrainer:
     """
     Manual REINFORCE approach on the same CustomLunarLanderEnv.
     """
-    def __init__(self,
-                 fuel_penalty_multiplier=2.0,
-                 render_mode=None,
-                 lr=1e-3,
-                 gamma=0.99,
-                 num_iterations=5000,
-                 batch_size_episodes=5):
+
+    def __init__(
+        self,
+        fuel_penalty_multiplier=2.0,
+        render_mode=None,
+        lr=1e-3,
+        gamma=0.99,
+        num_iterations=5000,
+        batch_size_episodes=5,
+    ):
         """
         :param batch_size_episodes: Number of episodes per policy update
         """
@@ -241,8 +257,8 @@ class REINFORCETrainer:
         self.optimizer = None
 
         # Logging
-        if not os.path.exists('results'):
-            os.makedirs('results')
+        if not os.path.exists("results"):
+            os.makedirs("results")
         self.rewards_log = []
         self.fig, self.ax = plt.subplots()
         plt.ion()
@@ -250,7 +266,7 @@ class REINFORCETrainer:
     def create_env(self):
         env = CustomLunarLanderEnv(
             fuel_penalty_multiplier=self.fuel_penalty_multiplier,
-            render_mode=self.render_mode
+            render_mode=self.render_mode,
         )
         return Monitor(env)
 
@@ -267,7 +283,7 @@ class REINFORCETrainer:
         act_space = self.env.action_space
 
         input_size = obs_space.shape[0]  # e.g. 8 for LunarLander
-        action_size = act_space.n        # e.g. 4
+        action_size = act_space.n  # e.g. 4
         self.policy = PolicyNet(input_size, action_size)
         self.optimizer = optim.Adam(self.policy.parameters(), lr=self.lr)
 
@@ -300,13 +316,17 @@ class REINFORCETrainer:
 
             # 3) Logging
             # Average reward across the batch
-            avg_return = np.mean([sum([r for (_,_,_, r) in traj]) for traj in batch_trajectories])
+            avg_return = np.mean(
+                [sum([r for (_, _, _, r) in traj]) for traj in batch_trajectories]
+            )
             iteration_rewards.append(avg_return)
             self.rewards_log.append(avg_return)
 
-            if (iteration+1) % 10 == 0:
-                print(f"Iteration {iteration+1}/{self.num_iterations}, "
-                      f"AvgReturn={avg_return:.2f}, Loss={loss.item():.3f}")
+            if (iteration + 1) % 10 == 0:
+                print(
+                    f"Iteration {iteration+1}/{self.num_iterations}, "
+                    f"AvgReturn={avg_return:.2f}, Loss={loss.item():.3f}"
+                )
 
             # 4) Update live plot
             self.ax.clear()
@@ -316,7 +336,7 @@ class REINFORCETrainer:
             self.ax.plot(range(len(iteration_rewards)), iteration_rewards)
             plt.draw()
             plt.pause(0.001)
-            plt.savefig('results/reinforce_reward_plot.png')
+            plt.savefig("results/reinforce_reward_plot.png")
 
         plt.ioff()
         plt.show()
@@ -337,7 +357,7 @@ class REINFORCETrainer:
             self.policy = PolicyNet()
             self.policy.load_state_dict(torch.load("reinforce_lunar_lander.pth"))
         self.env = self.create_env()
-        self.env.render_mode = 'human'
+        self.env.render_mode = "human"
 
         for ep in range(episodes):
             state, _ = self.env.reset()
@@ -349,12 +369,15 @@ class REINFORCETrainer:
                     action_probs = self.policy(state_tensor).squeeze(0)
                 dist = torch.distributions.Categorical(action_probs)
                 action = dist.sample()
-                state, reward, terminated, truncated, info = self.env.step(action.item())
+                state, reward, terminated, truncated, info = self.env.step(
+                    action.item()
+                )
                 done = terminated or truncated
                 self.env.render()
                 total_reward += reward
             print(f"Episode {ep+1} ended with reward={total_reward:.2f}")
         self.env.close()
+
 
 ###############################################################################
 # 4) Main: Select DQN or REINFORCE
@@ -371,20 +394,20 @@ if __name__ == "__main__":
         agent = DQNTrainer(fuel_penalty_multiplier=2.0)
         train_mode = True
         if train_mode:
-            agent.train()       # Train DQN
+            agent.train()  # Train DQN
         else:
-            agent.evaluate()    # Evaluate DQN
+            agent.evaluate()  # Evaluate DQN
     else:
         # Policy Gradient approach
         pg_agent = REINFORCETrainer(
             fuel_penalty_multiplier=2.0,
             lr=1e-3,
             gamma=0.99,
-            num_iterations=500,      # Increase for better results
-            batch_size_episodes=5
+            num_iterations=500,  # Increase for better results
+            batch_size_episodes=5,
         )
         train_mode = True
         if train_mode:
-            pg_agent.train()    # Train REINFORCE
+            pg_agent.train()  # Train REINFORCE
         else:
             pg_agent.evaluate(episodes=5)  # Evaluate REINFORCE

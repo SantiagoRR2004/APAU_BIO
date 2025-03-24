@@ -16,10 +16,11 @@ env_name = "CartPole-v1"
 
 # Define thresholds for “solving” each environment
 ENV_THRESHOLDS = {
-    "CartPole-v1": 195,       # Often used as a "solved" threshold
-    "LunarLander-v2": 200,    # Example threshold
-    "MountainCar-v0": -110    # Example threshold
+    "CartPole-v1": 195,  # Often used as a "solved" threshold
+    "LunarLander-v2": 200,  # Example threshold
+    "MountainCar-v0": -110,  # Example threshold
 }
+
 
 # Step 1: Define a custom callback to track rewards and stop when the problem is solved
 class RewardTrackingCallback(BaseCallback):
@@ -29,7 +30,9 @@ class RewardTrackingCallback(BaseCallback):
         self.run_number = run_number
 
         # Retrieve the threshold from our dictionary
-        self.threshold = ENV_THRESHOLDS.get(env_name, 195)  # default=195 if env not listed
+        self.threshold = ENV_THRESHOLDS.get(
+            env_name, 195
+        )  # default=195 if env not listed
 
         self.episode_rewards = []
         self.episode_lengths = []
@@ -38,7 +41,7 @@ class RewardTrackingCallback(BaseCallback):
         self.episode_count = 0
 
         # Number of consecutive episodes to average for 'solved' condition
-        self.solved_episodes = 100  
+        self.solved_episodes = 100
         self.last_100_rewards = deque(maxlen=self.solved_episodes)
 
         self.solved = False  # Flag to indicate if environment has been solved
@@ -50,19 +53,19 @@ class RewardTrackingCallback(BaseCallback):
         self.ax.set_ylabel("Reward")
 
         # Create directory to store results if not exists
-        if not os.path.exists('results'):
-            os.makedirs('results')
+        if not os.path.exists("results"):
+            os.makedirs("results")
 
         # Prepare the file for saving rewards (with env_name and run_number in the filename)
         self.filepath = f"results/{self.env_name}_rewards_run_{self.run_number}.csv"
-        with open(self.filepath, 'w') as f:
+        with open(self.filepath, "w") as f:
             f.write("Episode,Reward,Length\n")  # Write header
 
     def _on_step(self) -> bool:
         # Retrieve current rewards from the environment
         # For vectorized env, we typically look at self.locals['rewards'][0]
-        reward = self.locals['rewards'][0]
-        done = self.locals['dones'][0]
+        reward = self.locals["rewards"][0]
+        done = self.locals["dones"][0]
 
         # Accumulate rewards for the current episode
         self.current_rewards.append(reward)
@@ -78,20 +81,24 @@ class RewardTrackingCallback(BaseCallback):
             self.episode_count += 1
 
             # Save to CSV
-            with open(self.filepath, 'a') as f:
+            with open(self.filepath, "a") as f:
                 f.write(f"{self.episode_count},{episode_reward},{episode_length}\n")
 
             # Print diagnostics
-            print(f"Episode {self.episode_count}: "
-                  f"Reward = {episode_reward:.2f}, "
-                  f"Total Timesteps = {episode_length}")
+            print(
+                f"Episode {self.episode_count}: "
+                f"Reward = {episode_reward:.2f}, "
+                f"Total Timesteps = {episode_length}"
+            )
 
             # Check if the problem is solved (average over last 100 episodes)
             if len(self.last_100_rewards) == self.solved_episodes:
                 mean_score = np.mean(self.last_100_rewards)
                 if mean_score >= self.threshold:
-                    print(f"\n{self.env_name} solved after {self.episode_count} episodes "
-                          f"with average reward: {mean_score:.2f} ✔")
+                    print(
+                        f"\n{self.env_name} solved after {self.episode_count} episodes "
+                        f"with average reward: {mean_score:.2f} ✔"
+                    )
                     self.solved = True
                     return False  # Stop training
 
@@ -109,6 +116,7 @@ class RewardTrackingCallback(BaseCallback):
             plt.pause(0.001)
 
         return True  # Continue training
+
 
 ################################################################################
 # MAIN: Train or Load

@@ -21,11 +21,11 @@ model = PPO.load("ppo_cartpole", env=env)
 # 6. Evaluate or run the environment with the trained model
 obs = env.reset()
 
-for _ in range(1000):  
-    action, _states = model.predict(obs)  
+for _ in range(1000):
+    action, _states = model.predict(obs)
     obs, reward, done, truncated, info = env.step(action)
     env.render()
     if done or truncated:
-        obs = env.reset()  
+        obs = env.reset()
 
 env.close()
