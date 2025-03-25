@@ -180,6 +180,8 @@ def run_human_mode(env, policy_net):
     env.render()
     done = False
 
+    total_reward = 0
+
     while not done:
         state_tensor = torch.tensor(state, dtype=torch.float32)
         action_probs = policy_net(state_tensor)
@@ -188,6 +190,9 @@ def run_human_mode(env, policy_net):
         state, reward, terminated, truncated, _ = env.step(action)
         done = terminated or truncated
         env.render()
+        total_reward += reward
+
+    print(f"Total reward: {total_reward}/{env.spec.reward_threshold}")
 
 
 # -----------------------------------------------------------------------------
