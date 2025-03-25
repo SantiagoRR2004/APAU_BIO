@@ -15,17 +15,21 @@ model.learn(total_timesteps=10000)
 model.save("ppo_cartpole")
 del model  # Remove model from memory
 
+del env  # Remove environment from memory
+env = gym.make("CartPole-v1", render_mode="human")
+
 # 5. Load the trained model
 model = PPO.load("ppo_cartpole", env=env)
 
 # 6. Evaluate or run the environment with the trained model
-obs = env.reset()
+obs, _ = env.reset()
 
 for _ in range(1000):
-    action, _states = model.predict(obs)
+    action, _states = model.predict(obs.reshape(1, -1))
+    action = int(action.item())  # Convert action to scalar integer
     obs, reward, done, truncated, info = env.step(action)
     env.render()
     if done or truncated:
-        obs = env.reset()
+        obs, _ = env.reset()
 
 env.close()
