@@ -23,13 +23,17 @@ model = PPO.load("ppo_cartpole", env=env)
 
 # 6. Evaluate or run the environment with the trained model
 obs, _ = env.reset()
+total_reward = 0
 
 for _ in range(1000):
     action, _states = model.predict(obs.reshape(1, -1))
     action = int(action.item())  # Convert action to scalar integer
     obs, reward, done, truncated, info = env.step(action)
+    total_reward += reward
     env.render()
     if done or truncated:
         obs, _ = env.reset()
+        print(f"Total reward: {total_reward}/{env.spec.reward_threshold}")
+        total_reward = 0
 
 env.close()
