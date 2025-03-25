@@ -155,7 +155,7 @@ class DQNTrainer:
     def evaluate(self, deterministic=True):
         # Re-create env with human rendering
         self.env = self.create_env()
-        self.env.render_mode = "human"
+        # self.env.render_mode = "human" Sale error de que no tiene setter el render_mode
 
         from stable_baselines3 import DQN
 
@@ -391,11 +391,12 @@ if __name__ == "__main__":
     method = "dqn"  # or "pg"
 
     if method == "dqn":
-        agent = DQNTrainer(fuel_penalty_multiplier=2.0)
-        train_mode = True
+        train_mode = False
         if train_mode:
+            agent = DQNTrainer(fuel_penalty_multiplier=2.0)
             agent.train()  # Train DQN
         else:
+            agent = DQNTrainer(fuel_penalty_multiplier=2.0, render_mode="human")
             agent.evaluate()  # Evaluate DQN
     else:
         # Policy Gradient approach
