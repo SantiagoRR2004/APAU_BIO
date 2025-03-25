@@ -16,3 +16,4 @@ box2d
 jax
 flax
 gymnasium[mujoco]
+stable_baselines3
