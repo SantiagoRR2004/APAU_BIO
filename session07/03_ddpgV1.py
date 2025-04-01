@@ -7,6 +7,7 @@ import torch.nn.functional as F
 import random
 import matplotlib.pyplot as plt
 
+
 # -------------------------------------------------
 # 1) Replay Buffer
 # -------------------------------------------------
@@ -15,6 +16,7 @@ class ReplayBuffer:
     Stores tuples of (state, action, reward, next_state, done)
     for training the DDPG agent.
     """
+
     def __init__(self, max_size, state_dim, action_dim):
         self.max_size = max_size
         self.ptr = 0
@@ -67,6 +69,7 @@ class ActorNetwork(nn.Module):
     For Pendulum, the action space is 1D within [-2, 2].
     We'll multiply the tanh output by max_action in the forward() method.
     """
+
     def __init__(self, state_dim, action_dim, max_action):
         super(ActorNetwork, self).__init__()
         self.fc1 = nn.Linear(state_dim, 256)
@@ -89,6 +92,7 @@ class CriticNetwork(nn.Module):
     Maps (state, action) -> Q-value.
     We'll concatenate state and action at the first layer.
     """
+
     def __init__(self, state_dim, action_dim):
         super(CriticNetwork, self).__init__()
         self.fc1 = nn.Linear(state_dim + action_dim, 256)
@@ -115,6 +119,7 @@ class DDPGAgent:
       - Hyperparameters for training
       - Noise (exploration)
     """
+
     def __init__(
         self,
         state_dim,
@@ -125,7 +130,7 @@ class DDPGAgent:
         gamma=0.99,
         tau=0.005,
         buffer_size=1000000,
-        batch_size=64
+        batch_size=64,
     ):
         self.state_dim = state_dim
         self.action_dim = action_dim
@@ -235,7 +240,9 @@ class DDPGAgent:
         """
         θ_target = τ*θ_source + (1 - τ)*θ_target
         """
-        for target_param, source_param in zip(target_net.parameters(), source_net.parameters()):
+        for target_param, source_param in zip(
+            target_net.parameters(), source_net.parameters()
+        ):
             target_param.data.copy_(
                 self.tau * source_param.data + (1.0 - self.tau) * target_param.data
             )
@@ -245,10 +252,7 @@ class DDPGAgent:
 # 4) Training Loop (Gymnasium) + Plot
 # -------------------------------------------------
 def train_ddpg_on_pendulum(
-    env_name="Pendulum-v1",
-    num_episodes=200,
-    max_steps=200,
-    render=False
+    env_name="Pendulum-v1", num_episodes=200, max_steps=200, render=False
 ):
     """
     Train a DDPG agent on the given Gymnasium continuous-control environment.
@@ -309,8 +313,5 @@ def train_ddpg_on_pendulum(
 # -------------------------------------------------
 if __name__ == "__main__":
     train_ddpg_on_pendulum(
-        env_name="Pendulum-v1", 
-        num_episodes=200, 
-        max_steps=200, 
-        render=False
+        env_name="Pendulum-v1", num_episodes=200, max_steps=200, render=False
     )

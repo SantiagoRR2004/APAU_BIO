@@ -6,6 +6,7 @@ import torch.optim as optim
 from torch.distributions import Categorical
 import matplotlib.pyplot as plt
 
+
 # ------------------------------------------------------------
 # 1) Actor (Policy) and Critic (Value) Networks
 # ------------------------------------------------------------
@@ -16,7 +17,7 @@ class PolicyNetwork(nn.Module):
             nn.Linear(state_dim, 64),
             nn.ReLU(),
             nn.Linear(64, action_dim),
-            nn.Softmax(dim=-1)
+            nn.Softmax(dim=-1),
         )
 
     def forward(self, x):
@@ -26,11 +27,7 @@ class PolicyNetwork(nn.Module):
 class ValueNetwork(nn.Module):
     def __init__(self, state_dim):
         super().__init__()
-        self.fc = nn.Sequential(
-            nn.Linear(state_dim, 64),
-            nn.ReLU(),
-            nn.Linear(64, 1)
-        )
+        self.fc = nn.Sequential(nn.Linear(state_dim, 64), nn.ReLU(), nn.Linear(64, 1))
 
     def forward(self, x):
         return self.fc(x).squeeze(-1)
@@ -86,7 +83,7 @@ def compute_returns_and_advantages(rewards, values, gamma=0.99, lam=0.95):
         if t == T - 1:
             values_next = 0.0
         else:
-            values_next = values[t+1].item()
+            values_next = values[t + 1].item()
         delta = rewards[t] + gamma * values_next - values[t].item()
         A = delta + gamma * lam * A
         advantages[t] = A
@@ -109,7 +106,7 @@ def train_ppo(
     ppo_clip=0.2,
     epochs=10,
     lr_policy=3e-4,
-    lr_value=1e-3
+    lr_value=1e-3,
 ):
     """
     Collects one entire episode of data each iteration, then performs
@@ -187,7 +184,9 @@ def train_ppo(
         )
 
         # Normalize advantages (common trick in PPO)
-        advantages_t = (advantages_t - advantages_t.mean()) / (advantages_t.std() + 1e-8)
+        advantages_t = (advantages_t - advantages_t.mean()) / (
+            advantages_t.std() + 1e-8
+        )
 
         # -----------------------------
         # (C) PPO Updates (multiple epochs)
@@ -197,7 +196,12 @@ def train_ppo(
         for _ in range(epochs):
             # 1) Policy update (clipped objective)
             policy_loss = ppo_clip_loss(
-                policy, states_t, actions_t, old_log_probs_t, advantages_t, eps_clip=ppo_clip
+                policy,
+                states_t,
+                actions_t,
+                old_log_probs_t,
+                advantages_t,
+                eps_clip=ppo_clip,
             )
             policy_optimizer.zero_grad()
             policy_loss.backward()
@@ -230,7 +234,7 @@ if __name__ == "__main__":
     # Use Gymnasium's CartPole
     env = gym.make("CartPole-v1")
     state_dim = env.observation_space.shape[0]  # 4 for CartPole
-    action_dim = env.action_space.n            # 2 for CartPole
+    action_dim = env.action_space.n  # 2 for CartPole
 
     # Instantiate policy & value networks
     policy = PolicyNetwork(state_dim, action_dim)

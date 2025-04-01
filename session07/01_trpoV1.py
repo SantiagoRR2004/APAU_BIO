@@ -6,6 +6,7 @@ from torch.distributions import Categorical
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 # -----------------
 # Policy Network
 # -----------------
@@ -16,7 +17,7 @@ class PolicyNetwork(nn.Module):
             nn.Linear(state_dim, 64),
             nn.ReLU(),
             nn.Linear(64, action_dim),
-            nn.Softmax(dim=-1)
+            nn.Softmax(dim=-1),
         )
 
     def forward(self, x):
@@ -29,11 +30,7 @@ class PolicyNetwork(nn.Module):
 class ValueNetwork(nn.Module):
     def __init__(self, state_dim):
         super().__init__()
-        self.fc = nn.Sequential(
-            nn.Linear(state_dim, 64),
-            nn.ReLU(),
-            nn.Linear(64, 1)
-        )
+        self.fc = nn.Sequential(nn.Linear(state_dim, 64), nn.ReLU(), nn.Linear(64, 1))
 
     def forward(self, x):
         return self.fc(x).squeeze(-1)
@@ -52,7 +49,7 @@ def set_params(model, new_params):
     idx = 0
     for p in model.parameters():
         size = p.numel()
-        p.data.copy_(new_params[idx:idx+size].view(p.size()))
+        p.data.copy_(new_params[idx : idx + size].view(p.size()))
         idx += size
 
 
@@ -114,7 +111,9 @@ def kl_divergence(old_probs, new_probs):
 # -----------------
 # TRPO Training
 # -----------------
-def train_trpo(env, policy, value_net, max_episodes=500, gamma=0.99, lam=0.95, max_kl=0.01):
+def train_trpo(
+    env, policy, value_net, max_episodes=500, gamma=0.99, lam=0.95, max_kl=0.01
+):
     """
     Uses the new Gymnasium API, includes plotting, and carefully constrains the KL.
     """
@@ -152,9 +151,11 @@ def train_trpo(env, policy, value_net, max_episodes=500, gamma=0.99, lam=0.95, m
             obs = next_obs
 
         # Convert collected lists to tensors
-        states_t = torch.from_numpy(np.array(states, dtype=np.float32))   # shape (T, state_dim)
-        actions_t = torch.from_numpy(np.array(actions, dtype=np.int64))   # shape (T,)
-        rewards_t = torch.from_numpy(np.array(rewards, dtype=np.float32)) # shape (T,)
+        states_t = torch.from_numpy(
+            np.array(states, dtype=np.float32)
+        )  # shape (T, state_dim)
+        actions_t = torch.from_numpy(np.array(actions, dtype=np.int64))  # shape (T,)
+        rewards_t = torch.from_numpy(np.array(rewards, dtype=np.float32))  # shape (T,)
 
         # -------------------------------------
         # 2) Compute returns (rewards-to-go)
@@ -169,7 +170,7 @@ def train_trpo(env, policy, value_net, max_episodes=500, gamma=0.99, lam=0.95, m
         # -------------------------------------
         # 3) Compute advantages (GAE)
         # -------------------------------------
-        values = value_net(states_t)                   # shape (T,)
+        values = value_net(states_t)  # shape (T,)
         values_next = torch.cat([values[1:], torch.tensor([0.0])])
         deltas = rewards_t + gamma * values_next - values
 
@@ -185,7 +186,9 @@ def train_trpo(env, policy, value_net, max_episodes=500, gamma=0.99, lam=0.95, m
         # -------------------------------------
         with torch.no_grad():
             old_probs = policy(states_t).clamp(min=1e-8)
-            old_log_probs = torch.log(old_probs.gather(1, actions_t.unsqueeze(-1)).squeeze(-1))
+            old_log_probs = torch.log(
+                old_probs.gather(1, actions_t.unsqueeze(-1)).squeeze(-1)
+            )
 
         # -------------------------------------
         # 5) Compute gradient of the surrogate
@@ -246,10 +249,16 @@ def train_trpo(env, policy, value_net, max_episodes=500, gamma=0.99, lam=0.95, m
                 new_probs = policy(states_t).clamp(min=1e-8)
                 actual_kl = kl_divergence(old_probs, new_probs)
                 # Surrogate
-                new_surr = surrogate_loss(policy, states_t, actions_t, advantages_t, old_log_probs)
+                new_surr = surrogate_loss(
+                    policy, states_t, actions_t, advantages_t, old_log_probs
+                )
 
             # Check conditions
-            if torch.isnan(new_probs).any() or torch.isnan(actual_kl) or torch.isnan(new_surr):
+            if (
+                torch.isnan(new_probs).any()
+                or torch.isnan(actual_kl)
+                or torch.isnan(new_surr)
+            ):
                 # Something blew up -> reduce alpha
                 alpha *= 0.5
                 continue

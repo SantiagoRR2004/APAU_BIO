@@ -7,16 +7,18 @@ import multiprocessing as mp
 import matplotlib.pyplot as plt
 import os
 
+
 # Actor Network
 class ActorNetwork(nn.Module):
     def __init__(self, state_size, action_size):
         super(ActorNetwork, self).__init__()
         self.fc1 = nn.Linear(state_size, 128)
         self.fc2 = nn.Linear(128, action_size)  # Actor output
-    
+
     def forward(self, x):
         x = torch.relu(self.fc1(x))
         return torch.softmax(self.fc2(x), dim=-1)
+
 
 # Critic Network
 class CriticNetwork(nn.Module):
@@ -24,13 +26,25 @@ class CriticNetwork(nn.Module):
         super(CriticNetwork, self).__init__()
         self.fc1 = nn.Linear(state_size, 128)
         self.fc2 = nn.Linear(128, 1)  # Critic output
-    
+
     def forward(self, x):
         x = torch.relu(self.fc1(x))
         return self.fc2(x)
 
+
 # Worker Process
-def worker_process(actor_net, critic_net, actor_optimizer, critic_optimizer, env_name, gamma, worker_id, update_freq, actor_losses, critic_losses):
+def worker_process(
+    actor_net,
+    critic_net,
+    actor_optimizer,
+    critic_optimizer,
+    env_name,
+    gamma,
+    worker_id,
+    update_freq,
+    actor_losses,
+    critic_losses,
+):
     env = gym.make(env_name)
     local_actor = ActorNetwork(env.observation_space.shape[0], env.action_space.n)
     local_critic = CriticNetwork(env.observation_space.shape[0])
@@ -50,7 +64,7 @@ def worker_process(actor_net, critic_net, actor_optimizer, critic_optimizer, env
         action_dist = torch.distributions.Categorical(policy)
         action = action_dist.sample()
         log_prob = action_dist.log_prob(action)
-        
+
         next_state, reward, terminated, truncated, _ = env.step(action.item())
         done = terminated or truncated
         states.append(state)
@@ -63,7 +77,9 @@ def worker_process(actor_net, critic_net, actor_optimizer, critic_optimizer, env
             # Compute returns
             if not done:
                 with torch.no_grad():
-                    next_value = local_critic(torch.tensor(next_state, dtype=torch.float32))
+                    next_value = local_critic(
+                        torch.tensor(next_state, dtype=torch.float32)
+                    )
                     rewards[-1] += gamma * next_value.item()
 
             returns = []
@@ -94,9 +110,13 @@ def worker_process(actor_net, critic_net, actor_optimizer, critic_optimizer, env
             actor_loss.backward()
             critic_loss.backward()
 
-            for global_param, local_param in zip(actor_net.parameters(), local_actor.parameters()):
+            for global_param, local_param in zip(
+                actor_net.parameters(), local_actor.parameters()
+            ):
                 global_param._grad = local_param.grad
-            for global_param, local_param in zip(critic_net.parameters(), local_critic.parameters()):
+            for global_param, local_param in zip(
+                critic_net.parameters(), local_critic.parameters()
+            ):
                 global_param._grad = local_param.grad
 
             actor_optimizer.step()
@@ -113,8 +133,17 @@ def worker_process(actor_net, critic_net, actor_optimizer, critic_optimizer, env
                 state, _ = env.reset()
                 done = False
 
+
 # Main A3C Algorithm
-def a3c(env_name, num_workers, gamma=0.99, num_episodes=5000, update_freq=5, lr=0.001, save_path=None):
+def a3c(
+    env_name,
+    num_workers,
+    gamma=0.99,
+    num_episodes=5000,
+    update_freq=5,
+    lr=0.001,
+    save_path=None,
+):
     env = gym.make(env_name)
     state_size = env.observation_space.shape[0]
     action_size = env.action_space.n
@@ -136,8 +165,21 @@ def a3c(env_name, num_workers, gamma=0.99, num_episodes=5000, update_freq=5, lr=
     # Spawn worker processes
     processes = []
     for worker_id in range(num_workers):
-        process = mp.Process(target=worker_process, args=(
-            actor_net, critic_net, actor_optimizer, critic_optimizer, env_name, gamma, worker_id, update_freq, actor_losses, critic_losses))
+        process = mp.Process(
+            target=worker_process,
+            args=(
+                actor_net,
+                critic_net,
+                actor_optimizer,
+                critic_optimizer,
+                env_name,
+                gamma,
+                worker_id,
+                update_freq,
+                actor_losses,
+                critic_losses,
+            ),
+        )
         processes.append(process)
         process.start()
 
@@ -147,10 +189,10 @@ def a3c(env_name, num_workers, gamma=0.99, num_episodes=5000, update_freq=5, lr=
 
     # Save trained parameters
     if save_path:
-        torch.save({
-            "actor": actor_net.state_dict(),
-            "critic": critic_net.state_dict()
-        }, save_path)
+        torch.save(
+            {"actor": actor_net.state_dict(), "critic": critic_net.state_dict()},
+            save_path,
+        )
         print(f"Model saved to {save_path}")
 
     # Plot results
@@ -162,6 +204,7 @@ def a3c(env_name, num_workers, gamma=0.99, num_episodes=5000, update_freq=5, lr=
     plt.title("Actor and Critic Losses Over Time")
     plt.legend()
     plt.show()
+
 
 # Run in Human Mode
 def run_human_mode(env_name, save_path):
@@ -184,6 +227,7 @@ def run_human_mode(env_name, save_path):
         state, _, terminated, truncated, _ = env.step(action)
         done = terminated or truncated
         env.render()
+
 
 # Main Entry Point
 if __name__ == "__main__":
