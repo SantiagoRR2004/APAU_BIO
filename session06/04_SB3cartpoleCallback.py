@@ -156,12 +156,16 @@ else:
     # Step 6: Run the environment with the trained model, in a window
     env = gym.make(env_name, render_mode="human")
     obs, _ = env.reset()
+    total_reward = 0
 
     for _ in range(1000):  # Run for a fixed number of steps
         action, _states = loaded_model.predict(obs)
         obs, reward, done, truncated, info = env.step(action)
+        total_reward += reward
         # If the environment says the episode is finished, reset
         if done or truncated:
             obs, _ = env.reset()
+            print(f"Total reward: {total_reward}/{env.spec.reward_threshold}")
+            total_reward = 0
 
     env.close()
