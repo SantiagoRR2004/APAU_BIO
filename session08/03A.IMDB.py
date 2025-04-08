@@ -1,4 +1,3 @@
-
 from keras.preprocessing import sequence
 from keras.datasets import imdb
 
@@ -11,34 +10,36 @@ print()
 print("------------------------------------")
 
 if torch.cuda.is_available():
-    device = torch.device('cuda:0')
+    device = torch.device("cuda:0")
     print("GPU available:", torch.cuda.get_device_name(0))
 else:
     print("ERROR: no GPU available")
     sys.exit(0)
-    #device = torch.device('cpu')
+    # device = torch.device('cpu')
 
-num_words = 20000 # vocabulary size
+num_words = 20000  # vocabulary size
 maxlen = 80  # max length of reviews
 batch_size = 512
 num_epochs = 20
-random_index = np.random.randint(0,5000)
+random_index = np.random.randint(0, 5000)
 
 # --------------------------------------------------
 # Load dataset
 # --------------------------------------------------
 
-print('Loading data...')
-(x_train_orig, y_train_orig), (x_test_orig, y_test_orig) = imdb.load_data(num_words=num_words)
-print(len(x_train_orig), 'train sequences')
-print(len(x_test_orig), 'test sequences')
-print('Original train set shape:', x_train_orig.shape)
-print('Original test set shape:', x_test_orig.shape)
+print("Loading data...")
+(x_train_orig, y_train_orig), (x_test_orig, y_test_orig) = imdb.load_data(
+    num_words=num_words
+)
+print(len(x_train_orig), "train sequences")
+print(len(x_test_orig), "test sequences")
+print("Original train set shape:", x_train_orig.shape)
+print("Original test set shape:", x_test_orig.shape)
 print("Tokenized review: ", x_train_orig[random_index])
 
-print('Pad sequences (samples x time)')
+print("Pad sequences (samples x time)")
 x_train_padded = sequence.pad_sequences(x_train_orig, maxlen=maxlen)
-print('Padded train set shape:', x_train_padded.shape)
+print("Padded train set shape:", x_train_padded.shape)
 print("Padded review: ", x_train_padded[random_index])
 
 x_train = x_train_padded[:15000]
@@ -47,10 +48,8 @@ x_val = x_train_padded[15000:]
 y_val = y_train_orig[15000:]
 
 
-print('No. of train samples:', len(x_train))
-print('No. of validation samples:', len(x_val))
-
-
+print("No. of train samples:", len(x_train))
+print("No. of validation samples:", len(x_val))
 
 
 # --------------------------------------------------
@@ -72,18 +71,19 @@ print('No. of validation samples:', len(x_val))
 # Change labels data types
 # --------------------------------------------------
 
-def vectorize_sequences(sequences, dimension = num_words):
+
+def vectorize_sequences(sequences, dimension=num_words):
     results = np.zeros((len(sequences), dimension))
-    
+
     for i, sequence in enumerate(sequences):
-        results[i, sequence] = 1.
+        results[i, sequence] = 1.0
     return results
+
 
 x_train2 = vectorize_sequences(x_train)
 x_val2 = vectorize_sequences(x_val)
-y_train2 = np.asarray(y_train).astype('float32')
-y_val2 = np.asarray(y_val).astype('float32')
-
+y_train2 = np.asarray(y_train).astype("float32")
+y_val2 = np.asarray(y_val).astype("float32")
 
 
 # --------------------------------------------------
@@ -91,15 +91,15 @@ y_val2 = np.asarray(y_val).astype('float32')
 # --------------------------------------------------
 
 net = torch.nn.Sequential(
-      torch.nn.Linear(num_words, 16),
-      torch.nn.ReLU(),
-      torch.nn.Linear(16, 16),
-      torch.nn.ReLU(),
-      torch.nn.Linear(16, 1),
-      torch.nn.Sigmoid()
-      ).to(device)
+    torch.nn.Linear(num_words, 16),
+    torch.nn.ReLU(),
+    torch.nn.Linear(16, 16),
+    torch.nn.ReLU(),
+    torch.nn.Linear(16, 1),
+    torch.nn.Sigmoid(),
+).to(device)
 
-optimizer = torch.optim.RMSprop(net.parameters(), lr = 0.001)
+optimizer = torch.optim.RMSprop(net.parameters(), lr=0.001)
 criterion = torch.nn.BCELoss()
 
 
@@ -124,11 +124,15 @@ for epoch in range(num_epochs):
 
     net.train()
     for i in range(num_batches):
-        
+
         batch_start = i * batch_size
         batch_end = (i + 1) * batch_size
-        inputs = torch.tensor(x_train2[batch_start:batch_end], dtype=torch.float32).to(device)
-        labels = torch.tensor(y_train2[batch_start:batch_end], dtype=torch.float32).to(device)
+        inputs = torch.tensor(x_train2[batch_start:batch_end], dtype=torch.float32).to(
+            device
+        )
+        labels = torch.tensor(y_train2[batch_start:batch_end], dtype=torch.float32).to(
+            device
+        )
 
         # forward + backward + optimize
         outputs = net(inputs).flatten()
@@ -139,30 +143,36 @@ for epoch in range(num_epochs):
 
         # statistics
         total_loss += loss.item()
-        mask1 = (outputs>0.5) & (labels>0.5)
+        mask1 = (outputs > 0.5) & (labels > 0.5)
         correct_predictions += sum(mask1)
-        mask2 = (outputs<=0.5) & (labels<=0.5)
+        mask2 = (outputs <= 0.5) & (labels <= 0.5)
         correct_predictions += sum(mask2)
         total_samples += len(inputs)
 
-    
     net.eval()
     with torch.no_grad():
         outputs_val = net(input_val).flatten()
         loss_val_v[epoch] = criterion(outputs_val, labels_val).item()
 
     correct_predictions_val = 0
-    mask_val1 = (outputs_val>0.5) & (labels_val>0.5)
+    mask_val1 = (outputs_val > 0.5) & (labels_val > 0.5)
     correct_predictions_val += sum(mask_val1)
-    mask_val2 = (outputs_val<=0.5) & (labels_val<=0.5)
+    mask_val2 = (outputs_val <= 0.5) & (labels_val <= 0.5)
     correct_predictions_val += sum(mask_val2)
     accuracy_val_v[epoch] = correct_predictions_val / len(input_val)
 
-        
     loss_v[epoch] = total_loss / num_batches
     accuracy_v[epoch] = correct_predictions / total_samples
-    
-    print("Epoch {:02d}: loss {:.4e} - accuracy {:.4f} - val. loss {:.4e} - val. accuracy {:.4f}".format(epoch+1, loss_v[epoch], 100*accuracy_v[epoch], loss_val_v[epoch], 100*accuracy_val_v[epoch]))
+
+    print(
+        "Epoch {:02d}: loss {:.4e} - accuracy {:.4f} - val. loss {:.4e} - val. accuracy {:.4f}".format(
+            epoch + 1,
+            loss_v[epoch],
+            100 * accuracy_v[epoch],
+            loss_val_v[epoch],
+            100 * accuracy_val_v[epoch],
+        )
+    )
 
 
 import matplotlib.pyplot as plt
@@ -170,17 +180,17 @@ import matplotlib.pyplot as plt
 epochs = range(1, num_epochs + 1)
 
 plt.figure()
-plt.plot(epochs, loss_v, 'b-o', label='Training ')
-plt.plot(epochs, loss_val_v, 'r-o', label='Validation ') 
-plt.title('Training and validation loss')
-plt.xlabel('Epochs')
+plt.plot(epochs, loss_v, "b-o", label="Training ")
+plt.plot(epochs, loss_val_v, "r-o", label="Validation ")
+plt.title("Training and validation loss")
+plt.xlabel("Epochs")
 plt.legend()
 plt.savefig("03A.IMDB.Loss.png")
 
 plt.figure()
-plt.plot(epochs, accuracy_v, 'b-o', label='Training ')
-plt.plot(epochs, accuracy_val_v, 'r-o', label='Validation ') 
-plt.title('Training and validation accuracy')
-plt.xlabel('Epochs')
+plt.plot(epochs, accuracy_v, "b-o", label="Training ")
+plt.plot(epochs, accuracy_val_v, "r-o", label="Validation ")
+plt.title("Training and validation accuracy")
+plt.xlabel("Epochs")
 plt.legend()
 plt.savefig("03A.IMDB.Accuracy.png")
