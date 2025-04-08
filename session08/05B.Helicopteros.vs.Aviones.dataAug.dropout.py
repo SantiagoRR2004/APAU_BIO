@@ -25,7 +25,7 @@ def CreateMosaic(inputs, filename="helicoptersvsplanes.png"):
     grid_image.save(filename)
 
 
-dataset_dir = "/home/leandro/datasets/plane-helicopter"
+dataset_dir = "helicopter-vs-plane"
 num_classes = 2
 img_dim = 180
 num_epochs = 50
@@ -99,7 +99,6 @@ for epoch in range(num_epochs):
     correct_predictions = 0
     total_samples = 0
     for i, data in enumerate(train_loader, 0):
-
         # get the inputs; data is a list of [inputs, labels]
         inputs, labels = data
         if epoch == 0 and i == 0:
@@ -148,6 +147,9 @@ for epoch in range(num_epochs):
     loss_val_v = np.append(loss_val_v, val_loss)
     accuracy_v = np.append(accuracy_v, accuracy)
     accuracy_val_v = np.append(accuracy_val_v, val_accuracy)
+
+torch.save(net.state_dict(), "helicopters-planes-droptout.pth")
+print("modelo saved")
 
 import matplotlib.pyplot as plt
 
