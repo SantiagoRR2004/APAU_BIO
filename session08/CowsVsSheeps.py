@@ -163,4 +163,5 @@ class CowsVsSheeps:
             accuracy_val_v = np.append(accuracy_val_v, val_accuracy)
 
 
-CowsVsSheeps().train()
+if __name__ == "__main__":
+    CowsVsSheeps().train()
