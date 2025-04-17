@@ -2,7 +2,7 @@ import os
 import kagglehub
 import numpy as np
 from matplotlib import pyplot as plt
-from tensorflow import keras
+import kerasReplacement
 
 
 # --------------------------------
@@ -80,7 +80,7 @@ raw_data /= std
 # Prueba de dataset sencillo
 
 # int_sequence = np.arange(10)  # Our raw data [0 1 2 3 4 5 6 7 8 9]
-# dummy_dataset = keras.utils.timeseries_dataset_from_array(
+# dummy_dataset = kerasReplacement.utils.timeseries_dataset_from_array(
 #     data=int_sequence[:-3],   # it will be [0 1 2 3 4 5 6] excluding the last three
 #     targets=int_sequence[3:], # Target for the sequence that starts at data[N] will be data[N+3]
 #     sequence_length=3,        # The sequences will be 3 steps long: [0 1 2], [1 2 3], [2 3 4], ...
@@ -98,7 +98,7 @@ sequence_length = 120
 delay = sampling_rate * (sequence_length + 24 - 1)
 batch_size = 256
 
-train_dataset = keras.utils.timeseries_dataset_from_array(
+train_dataset = kerasReplacement.timeseries_dataset_from_array(
     raw_data[:-delay],
     targets=temperature[delay:],
     sampling_rate=sampling_rate,
@@ -109,7 +109,7 @@ train_dataset = keras.utils.timeseries_dataset_from_array(
     end_index=num_train_samples,
 )
 
-val_dataset = keras.utils.timeseries_dataset_from_array(
+val_dataset = kerasReplacement.timeseries_dataset_from_array(
     raw_data[:-delay],
     targets=temperature[delay:],
     sampling_rate=sampling_rate,
@@ -120,7 +120,7 @@ val_dataset = keras.utils.timeseries_dataset_from_array(
     end_index=num_train_samples + num_val_samples,
 )
 
-# test_dataset = keras.utils.timeseries_dataset_from_array(
+# test_dataset = kerasReplacementutils.timeseries_dataset_from_array(
 #     raw_data[:-delay],
 #     targets=temperature[delay:],
 #     sampling_rate=sampling_rate,
