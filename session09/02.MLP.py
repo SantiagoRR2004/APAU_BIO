@@ -6,7 +6,7 @@ from tensorflow import keras
 import sys
 
 if torch.cuda.is_available():
-    device = torch.device('cuda:0')
+    device = torch.device("cuda:0")
     print("GPU available:", torch.cuda.get_device_name(0))
 else:
     print("ERROR: no GPU available")
@@ -17,22 +17,24 @@ else:
 # --------------------------------
 
 fname = os.path.join("/home/leandro/datasets/jena_climate_2009_2016.csv")
-  
+
 with open(fname) as f:
     data = f.read()
 
 lines = data.split("\n")
 header = lines[0].split(",")
-lines = lines[1:] 
-print("Campos:",header) 
-print("Número de registros:",len(lines))
+lines = lines[1:]
+print("Campos:", header)
+print("Número de registros:", len(lines))
 
 temperature = np.zeros((len(lines),))
-raw_data = np.zeros((len(lines), len(header) - 1)) 
+raw_data = np.zeros((len(lines), len(header) - 1))
 for i, line in enumerate(lines):
     values = [float(x) for x in line.split(",")[1:]]
-    temperature[i] = values[1] # Column 1 is the temperature array
-    raw_data[i, :] = values[:] # All columns (including temperature) is the "raw_data" array
+    temperature[i] = values[1]  # Column 1 is the temperature array
+    raw_data[i, :] = values[
+        :
+    ]  # All columns (including temperature) is the "raw_data" array
 print("Valores temperatura:", temperature)
 print("Dimensión valores temperatura:", temperature.shape)
 print("Dimensión valores datos:", raw_data.shape)
@@ -90,18 +92,18 @@ raw_data /= std
 #     sequence_length=3,        # The sequences will be 3 steps long: [0 1 2], [1 2 3], [2 3 4], ...
 #     batch_size=2,             # The sequences will be batched in batches of size 2
 # )
- 
+
 # for inputs, targets in dummy_dataset:
 #     for i in range(inputs.shape[0]):
 #         print([int(x) for x in inputs[i]], int(targets[i]))
 
 # Construcción de train, test y val datasets
 
-sampling_rate = 6 
-sequence_length = 120 
+sampling_rate = 6
+sequence_length = 120
 delay = sampling_rate * (sequence_length + 24 - 1)
-batch_size = 256 
-  
+batch_size = 256
+
 train_dataset = keras.utils.timeseries_dataset_from_array(
     raw_data[:-delay],
     targets=temperature[delay:],
@@ -110,7 +112,8 @@ train_dataset = keras.utils.timeseries_dataset_from_array(
     shuffle=True,
     batch_size=batch_size,
     start_index=0,
-    end_index=num_train_samples)
+    end_index=num_train_samples,
+)
 
 val_dataset = keras.utils.timeseries_dataset_from_array(
     raw_data[:-delay],
@@ -120,8 +123,9 @@ val_dataset = keras.utils.timeseries_dataset_from_array(
     shuffle=False,
     batch_size=num_val_samples,
     start_index=num_train_samples,
-    end_index=num_train_samples + num_val_samples)
-  
+    end_index=num_train_samples + num_val_samples,
+)
+
 # test_dataset = keras.utils.timeseries_dataset_from_array(
 #     raw_data[:-delay],
 #     targets=temperature[delay:],
@@ -144,10 +148,8 @@ val_dataset = keras.utils.timeseries_dataset_from_array(
 
 
 net = torch.nn.Sequential(
-      torch.nn.Linear(sequence_length*14, 16),
-      torch.nn.ReLU(),
-      torch.nn.Linear(16, 1)
-      ).to(device)
+    torch.nn.Linear(sequence_length * 14, 16), torch.nn.ReLU(), torch.nn.Linear(16, 1)
+).to(device)
 
 print(net)
 
@@ -155,7 +157,7 @@ total_params = sum(p.numel() for p in net.parameters())
 print(f"Number of parameters: {total_params}")
 
 num_epochs = 10
-optimizer = torch.optim.RMSprop(net.parameters(), lr = 0.001)
+optimizer = torch.optim.RMSprop(net.parameters(), lr=0.001)
 criterion = torch.nn.MSELoss()
 
 loss_v = np.empty(0)
@@ -172,8 +174,8 @@ for epoch in range(num_epochs):
     net.train()
     for samples, targets in train_dataset:
         # print(samples.shape)
-        samples_flat = samples.numpy().reshape(samples.shape[0],-1)
-        targets_flat = targets.numpy().reshape(targets.shape[0],1)
+        samples_flat = samples.numpy().reshape(samples.shape[0], -1)
+        targets_flat = targets.numpy().reshape(targets.shape[0], 1)
         # print(samples_flat.shape)
         torch_samples = torch.from_numpy(samples_flat).float().to(device)
         torch_targets = torch.from_numpy(targets_flat).float().to(device)
@@ -184,31 +186,39 @@ for epoch in range(num_epochs):
         optimizer.step()
 
         train_loss += loss.item()
-        train_mae += np.sum(np.abs(targets.numpy().flatten() - outputs.detach().cpu().numpy().flatten()))
+        train_mae += np.sum(
+            np.abs(targets.numpy().flatten() - outputs.detach().cpu().numpy().flatten())
+        )
         samples_seen_train += len(targets.numpy())
         # print(samples_seen)
 
     net.eval()
     with torch.no_grad():
-        for samples, targets in val_dataset: # batch_size = size(val_dataset)
-            samples_flat = samples.numpy().reshape(samples.shape[0],-1)
-            targets_flat = targets.numpy().reshape(targets.shape[0],1)
+        for samples, targets in val_dataset:  # batch_size = size(val_dataset)
+            samples_flat = samples.numpy().reshape(samples.shape[0], -1)
+            targets_flat = targets.numpy().reshape(targets.shape[0], 1)
             torch_samples = torch.from_numpy(samples_flat).float().to(device)
             torch_targets = torch.from_numpy(targets_flat).float().to(device)
             outputs = net(torch_samples)
             loss = criterion(outputs, torch_targets)
             val_loss = loss.item()
-            val_mae += np.sum(np.abs(targets.numpy().flatten() - outputs.detach().cpu().numpy().flatten()))
+            val_mae += np.sum(
+                np.abs(
+                    targets.numpy().flatten() - outputs.detach().cpu().numpy().flatten()
+                )
+            )
             samples_seen_val += len(targets.numpy())
-        
 
-    
     train_loss = train_loss / len(train_dataset)
     train_mae = train_mae / samples_seen_train
     val_loss = val_loss / len(val_dataset)
     val_mae = val_mae / samples_seen_val
-    
-    print("Epoch {:02d}: loss {:.4f} - train mae {:.4f} - val. loss {:.4f} - val. mae {:.4f}".format(epoch+1, train_loss, train_mae, val_loss, val_mae))
+
+    print(
+        "Epoch {:02d}: loss {:.4f} - train mae {:.4f} - val. loss {:.4f} - val. mae {:.4f}".format(
+            epoch + 1, train_loss, train_mae, val_loss, val_mae
+        )
+    )
 
     loss_v = np.append(loss_v, train_loss)
     loss_val_v = np.append(loss_val_v, val_loss)
@@ -217,22 +227,22 @@ for epoch in range(num_epochs):
 
 import matplotlib.pyplot as plt
 
-epochs = range(1, num_epochs+1)
+epochs = range(1, num_epochs + 1)
 
 plt.figure()
-plt.plot(epochs, loss_v, 'b-o', label='Training ')
-plt.plot(epochs, loss_val_v, 'r-o', label='Validation ') 
-plt.title('Training and validation loss')
-plt.xlabel('Epochs')
+plt.plot(epochs, loss_v, "b-o", label="Training ")
+plt.plot(epochs, loss_val_v, "r-o", label="Validation ")
+plt.title("Training and validation loss")
+plt.xlabel("Epochs")
 plt.legend()
 plt.tight_layout()
 plt.savefig("02.MLP.Loss.png")
 
 plt.figure()
-plt.plot(epochs, mae_v, 'b-o', label='Training ')
-plt.plot(epochs, mae_val_v, 'r-o', label='Validation ') 
-plt.title('Training and validation MAE')
-plt.xlabel('Epochs')
+plt.plot(epochs, mae_v, "b-o", label="Training ")
+plt.plot(epochs, mae_val_v, "r-o", label="Validation ")
+plt.title("Training and validation MAE")
+plt.xlabel("Epochs")
 plt.legend()
 plt.tight_layout()
 plt.savefig("02.MLP.MAE.png")
