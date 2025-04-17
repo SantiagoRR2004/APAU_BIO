@@ -1,4 +1,5 @@
 import os
+import kagglehub
 import numpy as np
 from matplotlib import pyplot as plt
 from tensorflow import keras
@@ -8,7 +9,9 @@ from tensorflow import keras
 # Carga de datos
 # --------------------------------
 
-fname = os.path.join("/home/leandro/datasets/jena_climate_2009_2016.csv")
+fname = kagglehub.dataset_download("stytch16/jena-climate-2009-2016")
+fname = os.path.join(fname, "jena_climate_2009_2016.csv")
+
 
 with open(fname) as f:
     data = f.read()
