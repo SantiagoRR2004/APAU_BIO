@@ -20,12 +20,7 @@ class CowsVsSheeps:
         else:
             self.device = torch.device("cpu")
 
-        custom_transform = transforms.Compose(
-            [
-                transforms.Resize((self.img_dim, self.img_dim)),
-                transforms.ToTensor(),
-            ]
-        )
+        custom_transform = self.get_transform()
 
         train_dataset_orig = datasets.ImageFolder(
             self.dataset_dir, transform=custom_transform
@@ -42,6 +37,14 @@ class CowsVsSheeps:
         print("Length of validation dataset:", len(self.val_dataset), "samples")
 
         self.net = self.getCNN()
+
+    def get_transform(self):
+        return transforms.Compose(
+            [
+                transforms.Resize((self.img_dim, self.img_dim)),
+                transforms.ToTensor(),
+            ]
+        )
 
     def eliminateClasses(
         self, train_dataset_orig: datasets.ImageFolder
@@ -162,6 +165,5 @@ class CowsVsSheeps:
             accuracy_v = np.append(accuracy_v, accuracy)
             accuracy_val_v = np.append(accuracy_val_v, val_accuracy)
 
-
-if __name__ == "__main__":
-    CowsVsSheeps().train()
+    def save_model(self, name: str = "CowVsSheep.pth"):
+        torch.save(self.net.state_dict(), name)
