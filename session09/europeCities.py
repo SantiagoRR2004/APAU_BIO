@@ -3,6 +3,7 @@ import os
 import kagglehub
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
@@ -83,7 +84,7 @@ class MyModel(torch.nn.Module):
 
 
 # Usage
-num_epochs = 2
+num_epochs = 20
 
 for city in city_names:
 
@@ -169,3 +170,92 @@ for city in city_names:
         loss_val_v = np.append(loss_val_v, val_loss)
         mae_v = np.append(mae_v, train_mae)
         mae_val_v = np.append(mae_val_v, val_mae)
+
+    cities[city]["loss"] = loss_v
+    cities[city]["loss_val"] = loss_val_v
+    cities[city]["mae"] = mae_v
+    cities[city]["mae_val"] = mae_val_v
+
+# Now we graph
+epochs = range(1, num_epochs + 1)
+
+# MAE for training
+plt.figure()
+for city in city_names:
+    plt.plot(epochs, cities[city]["mae"], "-o", label=city)
+
+    plt.text(0, cities[city]["mae"][0], city, va="center", ha="right")
+
+    plt.text(
+        len(cities[city]["mae"]) - 1,
+        cities[city]["mae"][-1],
+        f"{city}",
+        va="center",
+        ha="left",
+    )
+
+plt.title("MAE Training")
+plt.xlabel("Epoch")
+plt.ylabel("MAE")
+plt.savefig("EuropeCities.MAE.Training.png")
+
+# MAE for validation
+plt.figure()
+for city in city_names:
+    plt.plot(cities[city]["mae_val"], "-o", label=city)
+
+    plt.text(0, cities[city]["mae_val"][0], city, va="center", ha="right")
+
+    plt.text(
+        len(cities[city]["mae_val"]) - 1,
+        cities[city]["mae_val"][-1],
+        f"{city}V",
+        va="center",
+        ha="left",
+    )
+
+plt.title("MAE Validation")
+plt.xlabel("Epoch")
+plt.ylabel("MAE")
+plt.savefig("EuropeCities.MAE.Validation.png")
+
+# Loss for training
+plt.figure()
+for city in city_names:
+    plt.plot(epochs, cities[city]["loss"], "-o", label=city)
+
+    plt.text(0, cities[city]["loss"][0], city, va="center", ha="right")
+
+    plt.text(
+        len(cities[city]["loss"]) - 1,
+        cities[city]["loss"][-1],
+        f"{city}",
+        va="center",
+        ha="left",
+    )
+plt.title("Loss Training")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.savefig("EuropeCities.Loss.Training.png")
+
+# Loss for validation
+plt.figure()
+for city in city_names:
+    plt.plot(cities[city]["loss_val"], "-o", label=city)
+
+    plt.text(0, cities[city]["loss_val"][0], city, va="center", ha="right")
+
+    plt.text(
+        len(cities[city]["loss_val"]) - 1,
+        cities[city]["loss_val"][-1],
+        f"{city}V",
+        va="center",
+        ha="left",
+    )
+plt.title("Loss Validation")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.savefig("EuropeCities.Loss.Validation.png")
+
+
+plt.show()
