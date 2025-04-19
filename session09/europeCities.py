@@ -1,7 +1,11 @@
+import torch
 import os
 import kagglehub
 import pandas as pd
 import numpy as np
+
+if torch.cuda.is_available():
+    device = torch.device("cuda:0")
 
 
 folder = kagglehub.dataset_download("orvile/european-cities-weather-prediction-dataset")
@@ -58,3 +62,108 @@ for city in city_names:
     cities[city]["trainY"] = targetsT
     cities[city]["valX"] = windowsV
     cities[city]["valY"] = targetsV
+
+
+# --------------------------------
+# RNN
+# --------------------------------
+
+
+class MyModel(torch.nn.Module):
+    def __init__(self):
+        super(MyModel, self).__init__()
+        self.rnn = torch.nn.RNN(9, 16, batch_first=True)
+        self.fc = torch.nn.Linear(16, 1)
+
+    def forward(self, x):
+        _, h_n = self.rnn(x)  # h_n has shape (1, batch_size, hidden_size)
+        h_n = h_n.squeeze(0)  # Now shape is (batch_size, hidden_size)
+        out = self.fc(h_n)  # Output shape is (batch_size, 1)
+        return out
+
+
+# Usage
+net = MyModel().to(device)
+
+
+num_epochs = 20
+optimizer = torch.optim.RMSprop(net.parameters(), lr=0.01)
+criterion = torch.nn.MSELoss()
+
+loss_v = np.empty(0)
+loss_val_v = np.empty(0)
+mae_v = np.empty(0)
+mae_val_v = np.empty(0)
+
+for city in city_names:
+
+    for epoch in range(num_epochs):
+        train_loss = 0.0
+        train_mae = 0.0
+        val_mae = 0.0
+        val_loss = 0.0
+        batches_train = 0
+        batches_val = 0
+
+        net.train()
+        for samples_train, targets_train in zip(
+            cities[city]["trainX"],
+            cities[city]["trainY"],
+        ):
+            targets_flat_train = np.reshape(targets_train, (-1, 1))
+            torch_samples_train = torch.from_numpy(samples_train).float().to(device)
+            torch_targets_train = (
+                torch.from_numpy(targets_flat_train).float().to(device)
+            )
+            optimizer.zero_grad()
+            outputs_train = net(torch_samples_train)
+            loss = criterion(outputs_train, torch_targets_train)
+            loss.backward()
+            optimizer.step()
+
+            train_loss += loss.item()
+            train_mae += np.mean(
+                np.abs(
+                    targets_train.flatten()
+                    - outputs_train.detach().cpu().numpy().flatten()
+                )
+            )
+            batches_train += 1
+
+        net.eval()
+        with torch.no_grad():
+            for samples_val, targets_val in zip(
+                cities[city]["valX"],
+                cities[city]["valY"],
+            ):
+                targets_flat_val = np.reshape(targets_val, (-1, 1))
+                torch_samples_val = torch.from_numpy(samples_val).float().to(device)
+                torch_targets_val = (
+                    torch.from_numpy(targets_flat_val).float().to(device)
+                )
+                outputs_val = net(torch_samples_val)
+                loss = criterion(outputs_val, torch_targets_val)
+                val_loss += loss.item()
+                val_mae += np.mean(
+                    np.abs(
+                        targets_val.flatten()
+                        - outputs_val.detach().cpu().numpy().flatten()
+                    )
+                )
+                batches_val += 1
+
+        train_loss = train_loss / batches_train
+        val_loss = val_loss / batches_val
+        train_mae = train_mae / batches_train  # samples_seen_train
+        val_mae = val_mae / batches_val  # samples_seen_val
+
+        print(
+            "Epoch {:02d}: loss {:.4f} - train mae {:.4f} - val. loss {:.4f} - val. mae {:.4f}".format(
+                epoch + 1, train_loss, train_mae, val_loss, val_mae
+            )
+        )
+
+        loss_v = np.append(loss_v, train_loss)
+        loss_val_v = np.append(loss_val_v, val_loss)
+        mae_v = np.append(mae_v, train_mae)
+        mae_val_v = np.append(mae_val_v, val_mae)
