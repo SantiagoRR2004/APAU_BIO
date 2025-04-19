@@ -70,9 +70,9 @@ for city in city_names:
 
 
 class MyModel(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, nInputs: int):
         super(MyModel, self).__init__()
-        self.rnn = torch.nn.RNN(9, 16, batch_first=True)
+        self.rnn = torch.nn.RNN(nInputs, 16, batch_first=True)
         self.fc = torch.nn.Linear(16, 1)
 
     def forward(self, x):
@@ -83,19 +83,21 @@ class MyModel(torch.nn.Module):
 
 
 # Usage
-net = MyModel().to(device)
-
-
-num_epochs = 20
-optimizer = torch.optim.RMSprop(net.parameters(), lr=0.01)
-criterion = torch.nn.MSELoss()
-
-loss_v = np.empty(0)
-loss_val_v = np.empty(0)
-mae_v = np.empty(0)
-mae_val_v = np.empty(0)
+num_epochs = 2
 
 for city in city_names:
+
+    net = MyModel(nInputs=cities[city]["trainX"].shape[2]).to(
+        device
+    )  # Number of features in the input
+
+    optimizer = torch.optim.RMSprop(net.parameters(), lr=0.01)
+    criterion = torch.nn.MSELoss()
+
+    loss_v = np.empty(0)
+    loss_val_v = np.empty(0)
+    mae_v = np.empty(0)
+    mae_val_v = np.empty(0)
 
     for epoch in range(num_epochs):
         train_loss = 0.0
