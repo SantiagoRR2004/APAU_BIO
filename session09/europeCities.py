@@ -115,7 +115,7 @@ for city in city_names:
             targets_flat_train = np.reshape(targets_train, (-1, 1))
             torch_samples_train = torch.from_numpy(samples_train).float().to(device)
             torch_targets_train = (
-                torch.from_numpy(targets_flat_train).float().to(device)
+                torch.from_numpy(targets_flat_train).float().view(-1).to(device)
             )
             optimizer.zero_grad()
             outputs_train = net(torch_samples_train)
@@ -141,7 +141,7 @@ for city in city_names:
                 targets_flat_val = np.reshape(targets_val, (-1, 1))
                 torch_samples_val = torch.from_numpy(samples_val).float().to(device)
                 torch_targets_val = (
-                    torch.from_numpy(targets_flat_val).float().to(device)
+                    torch.from_numpy(targets_flat_val).float().view(-1).to(device)
                 )
                 outputs_val = net(torch_samples_val)
                 loss = criterion(outputs_val, torch_targets_val)
