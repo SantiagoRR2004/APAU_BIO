@@ -1,6 +1,7 @@
 import torch
 import os
 import kagglehub
+import copy
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -64,6 +65,14 @@ for city in city_names:
     cities[city]["valX"] = windowsV
     cities[city]["valY"] = targetsV
 
+# The closest cities are DUSSELDORF and MAASTRICHT
+cities["DUSSELDORF+"] = copy.deepcopy(cities["DUSSELDORF"])
+cities["DUSSELDORF+"]["trainX"] = np.concatenate(
+    (cities["DUSSELDORF"]["trainX"], cities["MAASTRICHT"]["trainX"]), axis=1
+)
+cities["DUSSELDORF+"]["valX"] = np.concatenate(
+    (cities["DUSSELDORF"]["valX"], cities["MAASTRICHT"]["valX"]), axis=1
+)
 
 # --------------------------------
 # RNN
@@ -183,7 +192,7 @@ epochs = range(1, num_epochs + 1)
 
 # MAE for training
 plt.figure()
-for city in city_names:
+for city in cities.keys():
     plt.plot(epochs, cities[city]["mae"], "-o", label=city)
 
     plt.text(0, cities[city]["mae"][0], city, va="center", ha="right")
@@ -203,7 +212,7 @@ plt.savefig("EuropeCities.MAE.Training.png")
 
 # MAE for validation
 plt.figure()
-for city in city_names:
+for city in cities.keys():
     plt.plot(cities[city]["mae_val"], "-o", label=city)
 
     plt.text(0, cities[city]["mae_val"][0], city, va="center", ha="right")
@@ -211,7 +220,7 @@ for city in city_names:
     plt.text(
         len(cities[city]["mae_val"]) - 1,
         cities[city]["mae_val"][-1],
-        f"{city}V",
+        f"{city}",
         va="center",
         ha="left",
     )
@@ -223,7 +232,7 @@ plt.savefig("EuropeCities.MAE.Validation.png")
 
 # Loss for training
 plt.figure()
-for city in city_names:
+for city in cities.keys():
     plt.plot(epochs, cities[city]["loss"], "-o", label=city)
 
     plt.text(0, cities[city]["loss"][0], city, va="center", ha="right")
@@ -242,7 +251,7 @@ plt.savefig("EuropeCities.Loss.Training.png")
 
 # Loss for validation
 plt.figure()
-for city in city_names:
+for city in cities.keys():
     plt.plot(cities[city]["loss_val"], "-o", label=city)
 
     plt.text(0, cities[city]["loss_val"][0], city, va="center", ha="right")
@@ -250,7 +259,7 @@ for city in city_names:
     plt.text(
         len(cities[city]["loss_val"]) - 1,
         cities[city]["loss_val"][-1],
-        f"{city}V",
+        f"{city}",
         va="center",
         ha="left",
     )
