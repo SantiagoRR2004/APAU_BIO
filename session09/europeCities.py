@@ -91,12 +91,14 @@ for city in cities.keys():
 class MyModel(torch.nn.Module):
     def __init__(self, nInputs: int):
         super(MyModel, self).__init__()
-        self.rnn = torch.nn.RNN(nInputs, 16, batch_first=True)
+        self.lstm = torch.nn.LSTM(nInputs, 16, batch_first=True)
+        self.dropout = torch.nn.Dropout(0.25)
         self.fc = torch.nn.Linear(16, 1)
 
     def forward(self, x):
-        _, h_n = self.rnn(x)  # h_n has shape (1, batch_size, hidden_size)
+        _, (h_n, _) = self.lstm(x)  # h_n has shape (1, batch_size, hidden_size)
         h_n = h_n.squeeze(0)  # Now shape is (batch_size, hidden_size)
+        h_n = self.dropout(h_n)
         out = self.fc(h_n)  # Output shape is (batch_size, 1)
         return out
 
