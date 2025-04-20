@@ -204,10 +204,10 @@ plt.figure()
 for city in cities.keys():
     plt.plot(epochs, cities[city]["mae"], "-o", label=city)
 
-    plt.text(0, cities[city]["mae"][0], city, va="center", ha="right")
+    plt.text(1, cities[city]["mae"][0], city, va="center", ha="right")
 
     plt.text(
-        len(cities[city]["mae"]) - 1,
+        len(cities[city]["mae"]),
         cities[city]["mae"][-1],
         f"{city}",
         va="center",
@@ -222,12 +222,12 @@ plt.savefig("EuropeCities.MAE.Training.png")
 # MAE for validation
 plt.figure()
 for city in cities.keys():
-    plt.plot(cities[city]["mae_val"], "-o", label=city)
+    plt.plot(epochs, cities[city]["mae_val"], "-o", label=city)
 
-    plt.text(epochs, 0, cities[city]["mae_val"][0], city, va="center", ha="right")
+    plt.text(1, cities[city]["mae_val"][0], city, va="center", ha="right")
 
     plt.text(
-        len(cities[city]["mae_val"]) - 1,
+        len(cities[city]["mae_val"]),
         cities[city]["mae_val"][-1],
         f"{city}",
         va="center",
@@ -244,10 +244,10 @@ plt.figure()
 for city in cities.keys():
     plt.plot(epochs, cities[city]["loss"], "-o", label=city)
 
-    plt.text(0, cities[city]["loss"][0], city, va="center", ha="right")
+    plt.text(1, cities[city]["loss"][0], city, va="center", ha="right")
 
     plt.text(
-        len(cities[city]["loss"]) - 1,
+        len(cities[city]["loss"]),
         cities[city]["loss"][-1],
         f"{city}",
         va="center",
@@ -263,10 +263,10 @@ plt.figure()
 for city in cities.keys():
     plt.plot(epochs, cities[city]["loss_val"], "-o", label=city)
 
-    plt.text(0, cities[city]["loss_val"][0], city, va="center", ha="right")
+    plt.text(1, cities[city]["loss_val"][0], city, va="center", ha="right")
 
     plt.text(
-        len(cities[city]["loss_val"]) - 1,
+        len(cities[city]["loss_val"]),
         cities[city]["loss_val"][-1],
         f"{city}",
         va="center",
