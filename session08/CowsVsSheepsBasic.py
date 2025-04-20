@@ -36,4 +36,10 @@ class CowsVsSheepsBasic(CowsVsSheeps):
 
 
 if __name__ == "__main__":
-    CowsVsSheepsBasic().train()
+    train = False
+    cowVsSheep = CowsVsSheepsBasic()
+    if train:
+        cowVsSheep.train()
+        cowVsSheep.save_model(name="CowVsSheep.pth")
+    else:
+        cowVsSheep.test()

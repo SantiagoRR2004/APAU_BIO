@@ -1,6 +1,7 @@
 import torch
 from torchvision import datasets, transforms
 from torch.utils.data import random_split, DataLoader
+import matplotlib.pyplot as plt
 import os
 import numpy as np
 
@@ -168,3 +169,36 @@ class CowsVsSheeps:
 
     def save_model(self, name: str = "CowVsSheep.pth"):
         torch.save(self.net.state_dict(), name)
+
+    def plot_image(self, image: torch.Tensor):
+        # Convert the tensor to a numpy array
+        image = image.cpu().numpy()
+        plt.imshow(image.permute(1, 2, 0))
+
+    def load_model(self, path: str = "CowVsSheep.pth"):
+        self.net.load_state_dict(torch.load(path, map_location=self.device))
+        self.net.eval()
+
+    def test(self):
+        self.load_model()
+        test_loader = DataLoader(
+            self.val_dataset, len(self.val_dataset), shuffle=False, num_workers=1
+        )
+
+        with torch.no_grad():
+            data_iter = iter(test_loader)
+            inputs_val, labels_val = next(data_iter)
+            inputs_val = inputs_val.to(self.device)
+            labels_val = labels_val.to(self.device)
+            outputs_val = self.net(inputs_val)
+            _, predicted = torch.max(outputs_val, 1)
+            correct_predictions_val = (predicted == labels_val).sum().item()
+            total_samples_val = labels_val.size(0)
+
+        accuracy_val = correct_predictions_val / total_samples_val
+        print("Test accuracy: {:.4f}".format(accuracy_val))
+
+        # Plot the first image in the batch
+        self.plot_image(inputs_val[0])
+        plt.title(f"Predicted: {predicted[0].item()}, Actual: {labels_val[0].item()}")
+        plt.show()
