@@ -102,7 +102,7 @@ class MyModel(torch.nn.Module):
 
 
 # Usage
-num_epochs = 3
+num_epochs = 20
 numCities = len(cities.keys())
 
 for i, city in enumerate(cities.keys(), start=1):
@@ -224,7 +224,7 @@ plt.figure()
 for city in cities.keys():
     plt.plot(cities[city]["mae_val"], "-o", label=city)
 
-    plt.text(0, cities[city]["mae_val"][0], city, va="center", ha="right")
+    plt.text(epochs, 0, cities[city]["mae_val"][0], city, va="center", ha="right")
 
     plt.text(
         len(cities[city]["mae_val"]) - 1,
@@ -261,7 +261,7 @@ plt.savefig("EuropeCities.Loss.Training.png")
 # Loss for validation
 plt.figure()
 for city in cities.keys():
-    plt.plot(cities[city]["loss_val"], "-o", label=city)
+    plt.plot(epochs, cities[city]["loss_val"], "-o", label=city)
 
     plt.text(0, cities[city]["loss_val"][0], city, va="center", ha="right")
 
