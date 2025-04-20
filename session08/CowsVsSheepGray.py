@@ -23,6 +23,11 @@ class CowsVsSheepsGray(CowsVsSheepsBasic):
 
 
 if __name__ == "__main__":
-    cowVsSheepGray = CowsVsSheepsGray()
-    cowVsSheepGray.train()
-    cowVsSheepGray.save_model(name="CowVsSheepGrey.pth")
+    train = False
+    cowVsSheep = CowsVsSheepsGray()
+    if train:
+        cowVsSheep.train()
+        cowVsSheep.save_model(name="CowVsSheepGray.pth")
+    else:
+        cowVsSheep.load_model(path="CowVsSheepGray.pth")
+        cowVsSheep.test()
