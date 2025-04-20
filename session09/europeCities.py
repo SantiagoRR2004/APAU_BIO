@@ -85,8 +85,10 @@ class MyModel(torch.nn.Module):
 
 # Usage
 num_epochs = 20
+numCities = len(cities.keys())
 
-for city in city_names:
+for i, city in enumerate(cities.keys(), start=1):
+    print(f"Processing {i}/{numCities}: {city}")
 
     net = MyModel(nInputs=cities[city]["trainX"].shape[2]).to(
         device
@@ -161,8 +163,8 @@ for city in city_names:
         val_mae = val_mae / batches_val  # samples_seen_val
 
         print(
-            "Epoch {:02d}: loss {:.4f} - train mae {:.4f} - val. loss {:.4f} - val. mae {:.4f}".format(
-                epoch + 1, train_loss, train_mae, val_loss, val_mae
+            "Epoch {:02d}/{:02d}: loss {:.4f} - train mae {:.4f} - val. loss {:.4f} - val. mae {:.4f}".format(
+                epoch + 1, num_epochs, train_loss, train_mae, val_loss, val_mae
             )
         )
 
