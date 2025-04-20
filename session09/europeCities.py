@@ -74,6 +74,15 @@ cities["DUSSELDORF+"]["valX"] = np.concatenate(
     (cities["DUSSELDORF"]["valX"], cities["MAASTRICHT"]["valX"]), axis=1
 )
 
+# We shuffle the data
+for city in cities.keys():
+    permutationTrain = np.random.permutation(len(cities[city]["trainX"]))
+    cities[city]["trainX"] = cities[city]["trainX"][permutationTrain]
+    cities[city]["trainY"] = cities[city]["trainY"][permutationTrain]
+    permutationVal = np.random.permutation(len(cities[city]["valX"]))
+    cities[city]["valX"] = cities[city]["valX"][permutationVal]
+    cities[city]["valY"] = cities[city]["valY"][permutationVal]
+
 # --------------------------------
 # RNN
 # --------------------------------
@@ -93,7 +102,7 @@ class MyModel(torch.nn.Module):
 
 
 # Usage
-num_epochs = 20
+num_epochs = 3
 numCities = len(cities.keys())
 
 for i, city in enumerate(cities.keys(), start=1):
