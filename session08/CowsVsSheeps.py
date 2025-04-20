@@ -10,6 +10,7 @@ class CowsVsSheeps:
     img_dim = 180
     num_epochs = 50
     batch_size = 64
+    nChannels = 3
     currentDir = os.path.dirname(os.path.abspath(__file__))
 
     dataset_dir = os.path.join(currentDir, "animals10", "raw-img")
@@ -85,7 +86,7 @@ class CowsVsSheeps:
 
     def getCNN(self) -> torch.nn.Sequential:
         # Calculate the number of input features after flattening (channels * height * width)
-        num_features = 3 * self.img_dim * self.img_dim
+        num_features = self.nChannels * self.img_dim * self.img_dim
 
         # Create the sequential model
         net = torch.nn.Sequential(

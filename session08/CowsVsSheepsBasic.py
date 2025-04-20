@@ -5,10 +5,12 @@ from CowsVsSheeps import CowsVsSheeps
 class CowsVsSheepsBasic(CowsVsSheeps):
     def getCNN(self) -> torch.nn.Sequential:
         # Calculate the number of input features after flattening (channels * height * width)
-        num_features = 3 * self.img_dim * self.img_dim
+        num_features = self.nChannels * self.img_dim * self.img_dim
 
         net = torch.nn.Sequential(
-            torch.nn.Conv2d(3, 32, kernel_size=3),  # 32 × 3 × 3 × 3 + 32
+            torch.nn.Conv2d(
+                self.nChannels, 32, kernel_size=3
+            ),  # self.nChannels × 32 × 3 × 3 + 32
             # (32, self.img_dim - 2, self.img_dim - 2)
             torch.nn.ReLU(),
             torch.nn.MaxPool2d(kernel_size=2),
