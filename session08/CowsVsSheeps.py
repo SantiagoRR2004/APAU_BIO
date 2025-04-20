@@ -173,14 +173,15 @@ class CowsVsSheeps:
     def plot_image(self, image: torch.Tensor):
         # Convert the tensor to a numpy array
         image = image.cpu().numpy()
-        plt.imshow(image.permute(1, 2, 0))
+        # Transpose the dimensions to (height, width, channels)
+        image = np.transpose(image, (1, 2, 0))
+        plt.imshow(image)
 
     def load_model(self, path: str = "CowVsSheep.pth"):
         self.net.load_state_dict(torch.load(path, map_location=self.device))
         self.net.eval()
 
     def test(self):
-        self.load_model()
         test_loader = DataLoader(
             self.val_dataset, len(self.val_dataset), shuffle=False, num_workers=1
         )
