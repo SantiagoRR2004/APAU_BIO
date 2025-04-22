@@ -203,3 +203,15 @@ class CowsVsSheeps:
         self.plot_image(inputs_val[0])
         plt.title(f"Predicted: {predicted[0].item()}, Actual: {labels_val[0].item()}")
         plt.show()
+
+
+if __name__ == "__main__":
+    train = False
+    cowVsSheep = CowsVsSheeps()
+    modelPath = os.path.join(cowVsSheep.currentDir, "CowVsSheepLineal.pth")
+    if train or not os.path.exists(modelPath):
+        cowVsSheep.train()
+        cowVsSheep.save_model(name=modelPath)
+    else:
+        cowVsSheep.load_model(path=modelPath)
+        cowVsSheep.test()
