@@ -30,6 +30,8 @@ class CowsVsSheeps:
 
         train_dataset_orig = self.eliminateClasses(train_dataset_orig)
 
+        self.class_names = train_dataset_orig.classes
+
         self.train_dataset, self.val_dataset = random_split(
             train_dataset_orig, [0.8, 0.2]
         )
@@ -201,7 +203,9 @@ class CowsVsSheeps:
 
         # Plot the first image in the batch
         self.plot_image(inputs_val[0])
-        plt.title(f"Predicted: {predicted[0].item()}, Actual: {labels_val[0].item()}")
+        predicted_class = self.class_names[predicted[0].item()]
+        actual_class = self.class_names[labels_val[0].item()]
+        plt.title(f"Predicted: {predicted_class}, Actual: {actual_class}")
         plt.show()
 
 
