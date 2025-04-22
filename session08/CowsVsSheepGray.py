@@ -23,11 +23,14 @@ class CowsVsSheepsGray(CowsVsSheepsBasic):
 
 
 if __name__ == "__main__":
+    import os
+
     train = False
     cowVsSheep = CowsVsSheepsGray()
-    if train:
+    modelPath = os.path.join(cowVsSheep.currentDir, "CowVsSheepGray.pth")
+    if train or not os.path.exists(modelPath):
         cowVsSheep.train()
-        cowVsSheep.save_model(name="CowVsSheepGray.pth")
+        cowVsSheep.save_model(name=modelPath)
     else:
-        cowVsSheep.load_model(path="CowVsSheepGray.pth")
+        cowVsSheep.load_model(path=modelPath)
         cowVsSheep.test()

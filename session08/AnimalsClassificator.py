@@ -45,6 +45,16 @@ class AnimalsClassificator(CowsVsSheepsBasic):
 
 
 if __name__ == "__main__":
+    import os
+
+    train = False
     animalsClassificator = AnimalsClassificator()
-    animalsClassificator.train()
-    animalsClassificator.save_model(name="AnimalsClassificator.pth")
+    modelPath = os.path.join(
+        animalsClassificator.currentDir, "AnimalsClassificator.pth"
+    )
+    if train or not os.path.exists(modelPath):
+        animalsClassificator.train()
+        animalsClassificator.save_model(name=modelPath)
+    else:
+        animalsClassificator.load_model(path=modelPath)
+        animalsClassificator.test()
