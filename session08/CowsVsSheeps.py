@@ -175,7 +175,7 @@ class CowsVsSheeps:
         image = image.cpu().numpy()
         # Transpose the dimensions to (height, width, channels)
         image = np.transpose(image, (1, 2, 0))
-        plt.imshow(image)
+        plt.imshow(image, cmap="gray" if self.nChannels == 1 else None)
 
     def load_model(self, path: str = "CowVsSheep.pth"):
         self.net.load_state_dict(torch.load(path, map_location=self.device))
