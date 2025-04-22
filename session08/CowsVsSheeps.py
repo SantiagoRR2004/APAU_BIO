@@ -1,7 +1,9 @@
 import torch
 from torchvision import datasets, transforms
 from torch.utils.data import random_split, DataLoader
+from collections import Counter
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import os
 import numpy as np
 
@@ -201,11 +203,37 @@ class CowsVsSheeps:
         accuracy_val = correct_predictions_val / total_samples_val
         print("Test accuracy: {:.4f}".format(accuracy_val))
 
+        # Compute prediction percentages
+        predicted_counts = Counter(predicted.cpu().numpy())
+        class_percentages = {
+            self.class_names[i]: (predicted_counts.get(i, 0) / total_samples_val) * 100
+            for i in range(len(self.class_names))
+        }
+
+        # Prepare legend text
+        legend_lines = [
+            f"{class_name}: {percentage:.1f}%"
+            for class_name, percentage in class_percentages.items()
+        ]
+
+        # Create fake legend handles
+        legend_patches = [
+            mpatches.Patch(color="none", label=line) for line in legend_lines
+        ]
+
         # Plot the first image in the batch
         self.plot_image(inputs_val[0])
         predicted_class = self.class_names[predicted[0].item()]
         actual_class = self.class_names[labels_val[0].item()]
         plt.title(f"Predicted: {predicted_class}, Actual: {actual_class}")
+        plt.legend(
+            handles=legend_patches,
+            loc="center left",
+            bbox_to_anchor=(1.05, 0.5),
+            handlelength=0,
+            handletextpad=0,
+        )
+        plt.tight_layout()
         plt.show()
 
 
