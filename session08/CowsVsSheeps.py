@@ -106,7 +106,7 @@ class CowsVsSheeps:
             self.train_dataset, self.batch_size, shuffle=True, num_workers=4
         )
         val_loader = DataLoader(
-            self.val_dataset, len(self.val_dataset), shuffle=False, num_workers=4
+            self.val_dataset, self.batch_size, shuffle=False, num_workers=4
         )
 
         # loss_fn = torch.nn.CrossEntropyLoss()
@@ -144,21 +144,29 @@ class CowsVsSheeps:
                 correct_predictions += (predicted == labels).sum().item()
                 total_samples += labels.size(0)
 
-            self.net.eval()
-            with torch.no_grad():
-                data_iter = iter(val_loader)
-                inputs_val, labels_val = next(data_iter)
-                inputs_val = inputs_val.to(self.device)
-                labels_val = labels_val.to(self.device)
-                outputs_val = self.net(inputs_val)
-                _, predicted = torch.max(outputs_val, 1)
-                correct_predictions_val = (predicted == labels_val).sum().item()
-                total_samples_val = labels_val.size(0)
-                val_loss = criterion(outputs_val, labels_val).item() / len(val_loader)
-
             accuracy = correct_predictions / total_samples
+
+            self.net.eval()
+            val_loss_total = 0
+            correct_predictions_val = 0
+            total_samples_val = 0
+
+            with torch.no_grad():
+                for data in val_loader:
+                    inputs_val, labels_val = data
+                    inputs_val = inputs_val.to(self.device)
+                    labels_val = labels_val.to(self.device)
+
+                    outputs_val = self.net(inputs_val)
+                    batch_loss = criterion(outputs_val, labels_val)
+                    val_loss_total += batch_loss.item()
+
+                    _, predicted = torch.max(outputs_val, 1)
+                    correct_predictions_val += (predicted == labels_val).sum().item()
+                    total_samples_val += labels_val.size(0)
+
+            val_loss = val_loss_total / len(val_loader)
             val_accuracy = correct_predictions_val / total_samples_val
-            train_loss = train_loss / len(train_loader)
 
             print(
                 "Epoch {:02d}: loss {:.4f} - accuracy {:.4f} - val. loss {:.4f} - val. acc. {:.4f}".format(
@@ -186,19 +194,36 @@ class CowsVsSheeps:
         self.net.eval()
 
     def test(self):
+        torch.manual_seed(0)
         test_loader = DataLoader(
-            self.val_dataset, len(self.val_dataset), shuffle=False, num_workers=1
+            self.val_dataset, self.batch_size, shuffle=False, num_workers=1
         )
 
+        correct_predictions_val = 0
+        total_samples_val = 0
+        inputs_val = []
+        labels_val = []
+        outputs_val = []
+        predicted_val = []
+
         with torch.no_grad():
-            data_iter = iter(test_loader)
-            inputs_val, labels_val = next(data_iter)
-            inputs_val = inputs_val.to(self.device)
-            labels_val = labels_val.to(self.device)
-            outputs_val = self.net(inputs_val)
-            _, predicted = torch.max(outputs_val, 1)
-            correct_predictions_val = (predicted == labels_val).sum().item()
-            total_samples_val = labels_val.size(0)
+            for data in test_loader:
+                inputs, labels = data
+                inputs_val.append(inputs)
+                inputs = inputs.to(self.device)
+                labels_val.append(labels)
+                labels = labels.to(self.device)
+                outputs = self.net(inputs)
+                outputs_val.append(outputs)
+                _, predicted = torch.max(outputs, 1)
+                predicted_val.append(predicted)
+                correct_predictions_val += (predicted == labels).sum().item()
+                total_samples_val += labels.size(0)
+
+        inputs_val = torch.cat(inputs_val, dim=0)
+        labels_val = torch.cat(labels_val, dim=0)
+        outputs_val = torch.cat(outputs_val, dim=0)
+        predicted_val = torch.cat(predicted_val, dim=0)
 
         accuracy_val = correct_predictions_val / total_samples_val
         print("Test accuracy: {:.4f}".format(accuracy_val))
@@ -211,7 +236,7 @@ class CowsVsSheeps:
         for i in range(len(inputs_val)):
             ax.clear()  # Clear previous plot
             self.plot_image(inputs_val[i])  # Pass ax to your plot_image function
-            predicted_class = self.class_names[predicted[i].item()]
+            predicted_class = self.class_names[predicted_val[i].item()]
             actual_class = self.class_names[labels_val[i].item()]
             ax.set_title(f"Predicted: {predicted_class}, Actual: {actual_class}")
 
