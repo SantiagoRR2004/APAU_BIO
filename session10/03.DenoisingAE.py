@@ -12,40 +12,47 @@ myNoiseFactor = 0.4
 # Code to add noise to a batch of images
 # ------------------------------------------
 
+
 def add_noise_to_batch(images, noise_factor=0.5):
-    noise = torch.randn_like(images) * noise_factor  # Generate noise for the entire batch
+    noise = (
+        torch.randn_like(images) * noise_factor
+    )  # Generate noise for the entire batch
     noisy_images = images + noise  # Add noise to the batch of images
-    noisy_images = torch.clamp(noisy_images, 0., 1.)  # Clamp values to be between 0 and 1
+    noisy_images = torch.clamp(
+        noisy_images, 0.0, 1.0
+    )  # Clamp values to be between 0 and 1
     return noisy_images
-    
+
+
 # ------------------------------------------
 
 
 if torch.cuda.is_available():
-    device = torch.device('cuda:0')
+    device = torch.device("cuda:0")
     print("GPU available:", torch.cuda.get_device_name(0))
 else:
     print("ERROR: no GPU available")
     sys.exit(0)
 
-custom_transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Lambda(lambda x: x.view(-1))
-])
+custom_transform = transforms.Compose(
+    [transforms.ToTensor(), transforms.Lambda(lambda x: x.view(-1))]
+)
 
-mnist_dataset = datasets.MNIST(root='/tmp/data', download=True, transform = custom_transform)
+mnist_dataset = datasets.MNIST(
+    root="/tmp/data", download=True, transform=custom_transform
+)
 print("Length of dataset:", len(mnist_dataset))
 
 train_data = Subset(mnist_dataset, list(range(0, 50000)))
-val_data = Subset(mnist_dataset, list(range(50000,len(mnist_dataset))))
+val_data = Subset(mnist_dataset, list(range(50000, len(mnist_dataset))))
 ## Print the length of train and validation datasets
 print("Length of train Dataset: ", len(train_data))
 print("Length of validation Dataset: ", len(val_data))
 
 batch_size = 128
 
-train_loader = DataLoader(train_data, batch_size, shuffle = True)
-val_loader = DataLoader(val_data, batch_size , shuffle = False)
+train_loader = DataLoader(train_data, batch_size, shuffle=True)
+val_loader = DataLoader(val_data, batch_size, shuffle=False)
 
 
 # ---------------------------------------------
@@ -54,19 +61,19 @@ val_loader = DataLoader(val_data, batch_size , shuffle = False)
 
 n_to_show = 10
 input_idx = np.random.choice(range(len(train_data)), n_to_show)
-input_images = [ train_data[i][0] for i in input_idx ]
-input_labels = [ train_data[i][1] for i in input_idx ]
+input_images = [train_data[i][0] for i in input_idx]
+input_labels = [train_data[i][1] for i in input_idx]
 val_imgs_to_show = torch.stack(input_images)
 
 fig = plt.figure(figsize=(15, 2))
 fig.subplots_adjust(hspace=0.1, wspace=0.4)
 for i in range(n_to_show):
-    img = val_imgs_to_show[i].reshape((28,28))
-    ax = fig.add_subplot(1, n_to_show, i+1)
-    ax.axis('off')
+    img = val_imgs_to_show[i].reshape((28, 28))
+    ax = fig.add_subplot(1, n_to_show, i + 1)
+    ax.axis("off")
     ax.set_title(input_labels[i])
-    fig.suptitle('Train original digits')
-    ax.imshow(img, cmap='binary')
+    fig.suptitle("Train original digits")
+    ax.imshow(img, cmap="binary")
 fig.tight_layout()
 fig.savefig("03.TrainCleanDigits.png")
 
@@ -74,12 +81,12 @@ val_imgs_to_show_noisy = add_noise_to_batch(val_imgs_to_show, myNoiseFactor)
 fig = plt.figure(figsize=(15, 2))
 fig.subplots_adjust(hspace=0.1, wspace=0.4)
 for i in range(n_to_show):
-    img = val_imgs_to_show_noisy[i].reshape((28,28))
-    ax = fig.add_subplot(1, n_to_show, i+1)
-    ax.axis('off')
+    img = val_imgs_to_show_noisy[i].reshape((28, 28))
+    ax = fig.add_subplot(1, n_to_show, i + 1)
+    ax.axis("off")
     ax.set_title(input_labels[i])
-    fig.suptitle('Train noisy digits')
-    ax.imshow(img, cmap='binary')
+    fig.suptitle("Train noisy digits")
+    ax.imshow(img, cmap="binary")
 fig.tight_layout()
 fig.savefig("03.TrainNoisyDigits.png")
 
@@ -88,21 +95,20 @@ fig.savefig("03.TrainNoisyDigits.png")
 # AE definition
 # --------------------------------
 
-model =  torch.nn.Sequential(
-            torch.nn.Linear(784, 300),
-            torch.nn.ReLU(),
-            torch.nn.Linear(300, 100),
-            torch.nn.ReLU(),
-            torch.nn.Linear(100, 300),
-            torch.nn.ReLU(),
-            torch.nn.Linear(300, 784),
-            torch.nn.Sigmoid()
-        ).to(device)
+model = torch.nn.Sequential(
+    torch.nn.Linear(784, 300),
+    torch.nn.ReLU(),
+    torch.nn.Linear(300, 100),
+    torch.nn.ReLU(),
+    torch.nn.Linear(100, 300),
+    torch.nn.ReLU(),
+    torch.nn.Linear(300, 784),
+    torch.nn.Sigmoid(),
+).to(device)
 
 print(model)
 total_params = sum(p.numel() for p in model.parameters())
 print(f"Number of parameters: {total_params}")
-
 
 
 # --------------------------------
@@ -110,7 +116,7 @@ print(f"Number of parameters: {total_params}")
 # --------------------------------
 
 criterion = torch.nn.BCELoss()
-optimizer = torch.optim.RMSprop(model.parameters(), lr = 0.001)
+optimizer = torch.optim.RMSprop(model.parameters(), lr=0.001)
 num_epochs = 30
 
 loss_v = np.empty(0)
@@ -153,8 +159,11 @@ for epoch in range(num_epochs):
     loss_v = np.append(loss_v, average_loss)
     loss_val_v = np.append(loss_val_v, average_loss_val)
 
-
-    print("Epoch {:02d}: loss {:.4f} - val. loss {:.4f}".format(epoch+1, average_loss, average_loss_val))
+    print(
+        "Epoch {:02d}: loss {:.4f} - val. loss {:.4f}".format(
+            epoch + 1, average_loss, average_loss_val
+        )
+    )
 
 torch.save(model.state_dict(), "/home/leandro/models/AutoEncoders/03.DenoisingAE.pth")
 
@@ -163,18 +172,16 @@ torch.save(model.state_dict(), "/home/leandro/models/AutoEncoders/03.DenoisingAE
 # Plot loss
 # --------------------------------
 
-epochs = range(1, num_epochs+1)
+epochs = range(1, num_epochs + 1)
 plt.figure()
-plt.plot(epochs, loss_v, 'b-o', label='Training ')
-plt.plot(epochs, loss_val_v, 'r-o', label='Validation ') 
-plt.title('Training and validation loss')
-plt.xlabel('Epochs')
+plt.plot(epochs, loss_v, "b-o", label="Training ")
+plt.plot(epochs, loss_val_v, "r-o", label="Validation ")
+plt.title("Training and validation loss")
+plt.xlabel("Epochs")
 plt.legend()
 plt.tight_layout()
 
 plt.savefig("03.DenoisingAE.Loss.png")
-
-
 
 
 # ----------------------------------------------------
@@ -183,19 +190,19 @@ plt.savefig("03.DenoisingAE.Loss.png")
 
 n_to_show = 10
 input_idx = np.random.choice(range(len(val_data)), n_to_show)
-input_images = [ val_data[i][0] for i in input_idx ]
-input_labels = [ val_data[i][1] for i in input_idx ]
+input_images = [val_data[i][0] for i in input_idx]
+input_labels = [val_data[i][1] for i in input_idx]
 val_imgs_to_show = torch.stack(input_images)
 
 fig = plt.figure(figsize=(15, 2))
 fig.subplots_adjust(hspace=0.1, wspace=0.4)
 for i in range(n_to_show):
-    img = val_imgs_to_show[i].reshape((28,28))
-    ax = fig.add_subplot(1, n_to_show, i+1)
-    ax.axis('off')
+    img = val_imgs_to_show[i].reshape((28, 28))
+    ax = fig.add_subplot(1, n_to_show, i + 1)
+    ax.axis("off")
     ax.set_title(input_labels[i])
-    fig.suptitle('Validation original digits')
-    ax.imshow(img, cmap='binary')
+    fig.suptitle("Validation original digits")
+    ax.imshow(img, cmap="binary")
 fig.tight_layout()
 fig.savefig("03.ValCleanDigits.png")
 
@@ -203,12 +210,12 @@ val_imgs_to_show_noisy = add_noise_to_batch(val_imgs_to_show, myNoiseFactor)
 fig = plt.figure(figsize=(15, 2))
 fig.subplots_adjust(hspace=0.1, wspace=0.4)
 for i in range(n_to_show):
-    img = val_imgs_to_show_noisy[i].reshape((28,28))
-    ax = fig.add_subplot(1, n_to_show, i+1)
-    ax.axis('off')
+    img = val_imgs_to_show_noisy[i].reshape((28, 28))
+    ax = fig.add_subplot(1, n_to_show, i + 1)
+    ax.axis("off")
     ax.set_title(input_labels[i])
-    fig.suptitle('Validation noisy digits')
-    ax.imshow(img, cmap='binary')
+    fig.suptitle("Validation noisy digits")
+    ax.imshow(img, cmap="binary")
 fig.tight_layout()
 fig.savefig("03.ValNoisyDigits.png")
 
@@ -217,18 +224,13 @@ val_imgs_to_show_cleaned = model(val_imgs_to_show_noisy.to(device))
 fig = plt.figure(figsize=(15, 2))
 fig.subplots_adjust(hspace=0.1, wspace=0.4)
 for i in range(n_to_show):
-    img = val_imgs_to_show_cleaned[i].cpu().detach().numpy().reshape((28,28))
-    ax = fig.add_subplot(1, n_to_show, i+1)
-    ax.axis('off')
+    img = val_imgs_to_show_cleaned[i].cpu().detach().numpy().reshape((28, 28))
+    ax = fig.add_subplot(1, n_to_show, i + 1)
+    ax.axis("off")
     ax.set_title(input_labels[i])
-    fig.suptitle('Validation cleaned digits')
-    ax.imshow(img, cmap='binary')
+    fig.suptitle("Validation cleaned digits")
+    ax.imshow(img, cmap="binary")
 fig.tight_layout()
 fig.savefig("03.ValCleanedDigits.png")
 
 sys.exit(0)
-
-
-
-
-
