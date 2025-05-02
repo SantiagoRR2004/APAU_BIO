@@ -2,6 +2,7 @@ import medmnist
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
+import numpy as np
 
 print(medmnist.__version__)
 from medmnist import PneumoniaMNIST
@@ -24,6 +25,14 @@ transform = transforms.Compose(
 train_dataset = DataClass(split="train", transform=transform, download=download)
 val_dataset = DataClass(split="val", transform=transform, download=download)
 test_dataset = DataClass(split="test", transform=transform, download=download)
+
+labels_train = [label for img, label in train_dataset]
+labels_val = [label for img, label in val_dataset]
+labels_test = [label for img, label in test_dataset]
+
+print(f"Casos de nuemonia en train: {np.sum(labels_train)}")
+print(f"En val: {np.sum(labels_val)}")
+print(f"En test: {np.sum(labels_test)}")
 
 ##################################################################################################################
 ##################################################################################################################
