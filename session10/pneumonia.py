@@ -4,10 +4,21 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+import sys
+import os
 
 print(medmnist.__version__)
 from medmnist import PneumoniaMNIST
 
+# Check if GPU is available
+if torch.cuda.is_available():
+    device = torch.device("cuda:0")
+    print("GPU available:", torch.cuda.get_device_name(0))
+else:
+    print("ERROR: no GPU available")
+    sys.exit(0)
+
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
 
 # Dataset info
 download = True
@@ -94,17 +105,86 @@ class AE(torch.nn.Module):
         # Decoder (4x4x8)
         self.decoder = torch.nn.Sequential(
             torch.nn.Upsample(scale_factor=2),  # (8x8x8)
-            torch.nn.ConvTranspose2d(8, 8, kernel_size=3, padding="same"),  # (8x8x8)
+            torch.nn.ConvTranspose2d(8, 8, kernel_size=3, padding=(1, 1)),  # (8x8x8)
             torch.nn.Upsample(scale_factor=2),  # (16x16x8)
             torch.nn.ConvTranspose2d(8, 16, kernel_size=3),  # (14x14x16)
             torch.nn.Upsample(scale_factor=2),  # (28x28x16)
-            torch.nn.ConvTranspose2d(16, 1, kernel_size=3, padding="same"),  # (28x28x1)
+            torch.nn.ConvTranspose2d(16, 1, kernel_size=3, padding=(1, 1)),  # (28x28x1)
+            torch.nn.Sigmoid(),  # Necessary to have the same range as the input
         )
 
     def forward(self, x):
         encoded = self.encoder(x)
         decoded = self.decoder(encoded)
         return decoded
+
+
+modelAE = AE().to(device)
+
+##################################################################################################################
+##################################################################################################################
+##################################################################################################################
+
+criterion = torch.nn.BCELoss()
+optimizer = torch.optim.Adam(modelAE.parameters())
+num_epochs = 25
+batch_size = 60
+
+train_loader = DataLoader(train_dataset, batch_size, shuffle=True, num_workers=2)
+val_loader = DataLoader(val_dataset, batch_size, shuffle=False, num_workers=2)
+
+
+##################################################################################################################
+##################################################################################################################
+##################################################################################################################
+# --------------------------------
+# AE training
+# --------------------------------
+
+
+loss_v = np.empty(0)
+loss_val_v = np.empty(0)
+
+for epoch in range(num_epochs):
+    modelAE.train()
+    total_loss = 0.0
+    total_loss_val = 0.0
+    for i, data in enumerate(train_loader, 0):
+        # get the inputs; data is a list of [inputs, labels]
+        inputs, _ = data
+        inputs = inputs.to(device)
+
+        # forward + backward + optimize
+        optimizer.zero_grad()
+        outputs = modelAE(inputs)
+        loss = criterion(outputs, inputs)
+        loss.backward()
+        optimizer.step()
+
+        # # statistics after a batch
+        total_loss += loss.item()
+
+    modelAE.eval()
+    with torch.no_grad():
+        for i, data in enumerate(val_loader, 0):
+            inputs_val, _ = data
+            inputs_val = inputs_val.to(device)
+            outputs_val = modelAE(inputs_val)
+            loss_val = criterion(outputs_val, inputs_val)
+            total_loss_val += loss_val.item()
+
+    average_loss = total_loss / len(train_loader)
+    average_loss_val = total_loss_val / len(val_loader)
+    loss_v = np.append(loss_v, average_loss)
+    loss_val_v = np.append(loss_val_v, average_loss_val)
+
+    print(
+        "Epoch {:02d}: loss {:.4f} - val. loss {:.4f}".format(
+            epoch + 1, average_loss, average_loss_val
+        )
+    )
+
+torch.save(modelAE.state_dict(), os.path.join(currentDirectory, "PneumoniaAE.pth"))
 
 
 ##################################################################################################################
