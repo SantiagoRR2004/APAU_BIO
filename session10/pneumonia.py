@@ -22,6 +22,8 @@ transform = transforms.Compose(
 
 # Load data
 train_dataset = DataClass(split="train", transform=transform, download=download)
+val_dataset = DataClass(split="val", transform=transform, download=download)
+test_dataset = DataClass(split="test", transform=transform, download=download)
 
 healthy_images = []
 pneumonia_images = []
@@ -48,7 +50,7 @@ plt.tight_layout()
 
 # Create mosaic
 fig, axes = plt.subplots(3, 4, figsize=(5, 4))
-fig.suptitle("Non-healthy (Label = 0) Images from PneumoniaMNIST", fontsize=16)
+fig.suptitle("Non-healthy (Label = 1) Images from PneumoniaMNIST", fontsize=16)
 for i, ax in enumerate(axes.flat):
     ax.imshow(pneumonia_images[i], cmap="gray")
     ax.axis("off")
