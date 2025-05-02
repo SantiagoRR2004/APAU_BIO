@@ -4,6 +4,9 @@ from torchvision import datasets, transforms
 import sys, random
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
 
 
 if torch.cuda.is_available():
@@ -44,7 +47,7 @@ val_loader = DataLoader(val_data, len(val_data), shuffle=False, num_workers=2)
 # ax.imshow(train_data[num][0].reshape((28,28)), cmap='binary')
 # ax.set_title("Digit: {}".format(train_data[num][1]))
 # plt.tight_layout()
-# plt.savefig("01.RandomDigit.png")
+# plt.savefig(os.path.join(currentDirectory, "01.RandomDigit.png"))
 
 # --------------------------------
 # AE definition
@@ -173,7 +176,7 @@ for epoch in range(num_epochs):
     )
 
 
-torch.save(model.state_dict(), "/home/leandro/models/AutoEncoders/04.VAE.pth")
+torch.save(model.state_dict(), os.path.join(currentDirectory, "04.VAE.pth"))
 
 
 # --------------------------------
@@ -189,7 +192,7 @@ plt.xlabel("Epochs")
 plt.legend()
 plt.tight_layout()
 
-plt.savefig("04.VariationalAE.Loss.png")
+plt.savefig(os.path.join(currentDirectory, "04.VariationalAE.Loss.png"))
 
 
 # ---------------------------------------------
@@ -217,7 +220,7 @@ for i in range(n_to_show):
     fig.suptitle("Original digits")
     ax.imshow(img, cmap="binary")
 fig.tight_layout()
-fig.savefig("04.OriginalDigits.png")
+fig.savefig(os.path.join(currentDirectory, "04.OriginalDigits.png"))
 
 
 fig = plt.figure(figsize=(15, 2))
@@ -230,7 +233,7 @@ for i in range(n_to_show):
     fig.suptitle("Reconstructed digits")
     ax.imshow(img, cmap="binary")
 fig.tight_layout()
-fig.savefig("04.ReconstructedDigits.png")
+fig.savefig(os.path.join(currentDirectory, "04.ReconstructedDigits.png"))
 
 
 # ---------------------------------------------
@@ -258,6 +261,6 @@ plt.scatter(
 )
 plt.colorbar(values=range(10), ticks=range(10))
 plt.tight_layout()
-plt.savefig("04.LatentSpace.png")
+plt.savefig(os.path.join(currentDirectory, "04.LatentSpace.png"))
 
 sys.exit(0)

@@ -4,6 +4,9 @@ from torchvision import datasets, transforms
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
 
 myNoiseFactor = 0.4
 
@@ -75,7 +78,7 @@ for i in range(n_to_show):
     fig.suptitle("Train original digits")
     ax.imshow(img, cmap="binary")
 fig.tight_layout()
-fig.savefig("03.TrainCleanDigits.png")
+fig.savefig(os.path.join(currentDirectory, "03.TrainCleanDigits.png"))
 
 val_imgs_to_show_noisy = add_noise_to_batch(val_imgs_to_show, myNoiseFactor)
 fig = plt.figure(figsize=(15, 2))
@@ -88,7 +91,7 @@ for i in range(n_to_show):
     fig.suptitle("Train noisy digits")
     ax.imshow(img, cmap="binary")
 fig.tight_layout()
-fig.savefig("03.TrainNoisyDigits.png")
+fig.savefig(os.path.join(currentDirectory, "03.TrainNoisyDigits.png"))
 
 
 # --------------------------------
@@ -165,7 +168,7 @@ for epoch in range(num_epochs):
         )
     )
 
-torch.save(model.state_dict(), "/home/leandro/models/AutoEncoders/03.DenoisingAE.pth")
+torch.save(model.state_dict(), os.path.join(currentDirectory, "03.DenoisingAE.pth"))
 
 
 # --------------------------------
@@ -181,7 +184,7 @@ plt.xlabel("Epochs")
 plt.legend()
 plt.tight_layout()
 
-plt.savefig("03.DenoisingAE.Loss.png")
+plt.savefig(os.path.join(currentDirectory, "03.DenoisingAE.Loss.png"))
 
 
 # ----------------------------------------------------
@@ -204,7 +207,7 @@ for i in range(n_to_show):
     fig.suptitle("Validation original digits")
     ax.imshow(img, cmap="binary")
 fig.tight_layout()
-fig.savefig("03.ValCleanDigits.png")
+fig.savefig(os.path.join(currentDirectory, "03.ValCleanDigits.png"))
 
 val_imgs_to_show_noisy = add_noise_to_batch(val_imgs_to_show, myNoiseFactor)
 fig = plt.figure(figsize=(15, 2))
@@ -217,7 +220,7 @@ for i in range(n_to_show):
     fig.suptitle("Validation noisy digits")
     ax.imshow(img, cmap="binary")
 fig.tight_layout()
-fig.savefig("03.ValNoisyDigits.png")
+fig.savefig(os.path.join(currentDirectory, "03.ValNoisyDigits.png"))
 
 val_imgs_to_show_cleaned = model(val_imgs_to_show_noisy.to(device))
 
@@ -231,6 +234,6 @@ for i in range(n_to_show):
     fig.suptitle("Validation cleaned digits")
     ax.imshow(img, cmap="binary")
 fig.tight_layout()
-fig.savefig("03.ValCleanedDigits.png")
+fig.savefig(os.path.join(currentDirectory, "03.ValCleanedDigits.png"))
 
 sys.exit(0)

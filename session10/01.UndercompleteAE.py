@@ -4,6 +4,7 @@ from torchvision import datasets, transforms
 import sys, random
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 
 if torch.cuda.is_available():
@@ -12,6 +13,8 @@ if torch.cuda.is_available():
 else:
     print("ERROR: no GPU available")
     sys.exit(0)
+
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
 
 custom_transform = transforms.Compose(
     [transforms.ToTensor(), transforms.Lambda(lambda x: x.view(-1))]
@@ -142,7 +145,7 @@ for epoch in range(num_epochs):
         )
     )
 
-torch.save(model.state_dict(), "/home/leandro/models/AutoEncoders/01.AE.pth")
+torch.save(model.state_dict(), os.path.join(currentDirectory, "01.AE.pth"))
 
 # --------------------------------
 # Plot loss
@@ -157,7 +160,7 @@ plt.xlabel("Epochs")
 plt.legend()
 plt.tight_layout()
 
-plt.savefig("01.UndercompleteAE.Loss.png")
+plt.savefig(os.path.join(currentDirectory, "01.UndercompleteAE.Loss.png"))
 
 
 # ---------------------------------------------
@@ -185,7 +188,7 @@ for i in range(n_to_show):
     fig.suptitle("Original digits")
     ax.imshow(img, cmap="binary")
 fig.tight_layout()
-fig.savefig("01.OriginalDigits.png")
+fig.savefig(os.path.join(currentDirectory, "01.OriginalDigits.png"))
 
 
 fig = plt.figure(figsize=(15, 2))
@@ -198,7 +201,7 @@ for i in range(n_to_show):
     fig.suptitle("Reconstructed digits")
     ax.imshow(img, cmap="binary")
 fig.tight_layout()
-fig.savefig("01.ReconstructedDigits.png")
+fig.savefig(os.path.join(currentDirectory, "01.ReconstructedDigits.png"))
 
 
 # ---------------------------------------------
@@ -226,4 +229,4 @@ plt.scatter(
 )
 plt.colorbar(values=range(10), ticks=range(10))
 plt.tight_layout()
-plt.savefig("01.LatentSpace.png")
+plt.savefig(os.path.join(currentDirectory, "01.LatentSpace.png"))
