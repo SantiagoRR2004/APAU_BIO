@@ -3,6 +3,7 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 
 print(medmnist.__version__)
 from medmnist import PneumoniaMNIST
@@ -73,5 +74,42 @@ plt.tight_layout()
 ##################################################################################################################
 ##################################################################################################################
 ##################################################################################################################
+
+
+class AE(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        # Encoder (28x28x1)
+        self.encoder = torch.nn.Sequential(
+            torch.nn.Conv2d(1, 16, kernel_size=3, padding="same"),  # (28x28x16)
+            torch.nn.MaxPool2d(kernel_size=2),  # (14x14x16)
+            torch.nn.Conv2d(16, 8, kernel_size=3, padding="same"),  # (14x14x8)
+            torch.nn.MaxPool2d(kernel_size=2),  # (7x7x8)
+            torch.nn.Conv2d(8, 8, kernel_size=3, padding="same"),  # (7x7x8)
+            torch.nn.MaxPool2d(kernel_size=2),  # (4x4x8)
+            torch.nn.Conv2d(8, 8, kernel_size=3, padding="same"),  # (4x4x8)
+        )
+
+        # Decoder (4x4x8)
+        self.decoder = torch.nn.Sequential(
+            torch.nn.Upsample(scale_factor=2),  # (8x8x8)
+            torch.nn.ConvTranspose2d(8, 8, kernel_size=3, padding="same"),  # (8x8x8)
+            torch.nn.Upsample(scale_factor=2),  # (16x16x8)
+            torch.nn.ConvTranspose2d(8, 16, kernel_size=3),  # (14x14x16)
+            torch.nn.Upsample(scale_factor=2),  # (28x28x16)
+            torch.nn.ConvTranspose2d(16, 1, kernel_size=3, padding="same"),  # (28x28x1)
+        )
+
+    def forward(self, x):
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        return decoded
+
+
+##################################################################################################################
+##################################################################################################################
+##################################################################################################################
+
 
 plt.show()
