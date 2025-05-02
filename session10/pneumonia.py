@@ -3,6 +3,7 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import numpy as np
+import random
 import torch
 import sys
 import os
@@ -91,6 +92,24 @@ plt.tight_layout()
 train_dataset = [img for img in train_dataset if img[1] == 0]
 print(f"Casos sin neumonía en train: {len(train_dataset)}")
 
+# We divide validation and test sets into healthy and pneumonia
+val_HealthyDataset = [img for img in val_dataset if img[1] == 0]
+val_PneumoniaDataset = [img for img in val_dataset if img[1] == 1]
+test_HealthyDataset = [img for img in test_dataset if img[1] == 0]
+test_PneumoniaDataset = [img for img in test_dataset if img[1] == 1]
+
+# We balance the datasets
+minVal = min(len(val_HealthyDataset), len(val_PneumoniaDataset))
+minTest = min(len(test_HealthyDataset), len(test_PneumoniaDataset))
+val_HealthyDataset = random.sample(val_HealthyDataset, minVal)
+val_PneumoniaDataset = random.sample(val_PneumoniaDataset, minVal)
+test_HealthyDataset = random.sample(test_HealthyDataset, minTest)
+test_PneumoniaDataset = random.sample(test_PneumoniaDataset, minTest)
+
+print(f"Casos sin neumonía en val: {len(val_HealthyDataset)}")
+print(f"Casos con neumonía en val: {len(val_PneumoniaDataset)}")
+print(f"Casos sin neumonía en test: {len(test_HealthyDataset)}")
+print(f"Casos con neumonía en test: {len(test_PneumoniaDataset)}")
 
 ##################################################################################################################
 ##################################################################################################################
