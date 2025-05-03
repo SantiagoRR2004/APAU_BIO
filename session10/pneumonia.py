@@ -1,6 +1,7 @@
 import medmnist
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
+from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 import numpy as np
 import random
@@ -178,6 +179,8 @@ test_loader = DataLoader(test_dataset, batch_size, shuffle=False, num_workers=2)
 
 loss_v = np.empty(0)
 loss_val_v = np.empty(0)
+val_healthy_distances = np.empty(0)
+val_pneumonia_distances = np.empty(0)
 
 for epoch in range(num_epochs):
     modelAE.train()
@@ -217,6 +220,14 @@ for epoch in range(num_epochs):
             total_difference_val_healthy += torch.sum(
                 torch.abs(outputs_val - inputs_val)
             ).item()
+            # Distances for the threshold
+            if epoch == num_epochs - 1:
+                val_healthy_distances = np.append(
+                    val_healthy_distances,
+                    torch.sum(torch.abs(outputs_val - inputs_val), dim=(1, 2, 3))
+                    .cpu()
+                    .numpy(),
+                )
 
         # Evaluamos con los de validación anómalos para encontrar el umbral
         for _, data in enumerate(val_loader_pneumonia, 0):
@@ -230,6 +241,14 @@ for epoch in range(num_epochs):
             total_difference_val_anomaly += torch.sum(
                 torch.abs(outputs_val - inputs_val)
             ).item()
+            # Distances for the threshold
+            if epoch == num_epochs - 1:
+                val_pneumonia_distances = np.append(
+                    val_pneumonia_distances,
+                    torch.sum(torch.abs(outputs_val - inputs_val), dim=(1, 2, 3))
+                    .cpu()
+                    .numpy(),
+                )
 
     # Calculate the loss by averaging over the batches
     average_loss = total_loss / len(train_loader)
@@ -261,8 +280,39 @@ for epoch in range(num_epochs):
         )
     )
 
+labels = [0] * len(val_healthy_distances) + [1] * len(val_pneumonia_distances)
+scores = np.concatenate((val_healthy_distances, val_pneumonia_distances), axis=0)
+
+fpr, tpr, thresholds = roc_curve(labels, scores)
+j_scores = tpr - fpr
+best_threshold = thresholds[np.argmax(j_scores)]
+print("Best threshold:", best_threshold)
+
 torch.save(modelAE.state_dict(), os.path.join(currentDirectory, "PneumoniaAE.pth"))
 
+
+##################################################################################################################
+##################################################################################################################
+##################################################################################################################
+# Plotting the ROC Curve
+roc_auc = auc(fpr, tpr)
+plt.figure()
+plt.plot(fpr, tpr, color="blue", lw=2, label=f"ROC curve (AUC = {roc_auc:.2f})")
+plt.plot([0, 1], [0, 1], color="gray", linestyle="--")  # Diagonal line
+plt.scatter(
+    fpr[np.argmax(tpr - fpr)],
+    tpr[np.argmax(tpr - fpr)],
+    marker="o",
+    color="red",
+    label="Best Threshold",
+)
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.title("Receiver Operating Characteristic (ROC)")
+plt.legend(loc="lower right")
+plt.grid()
 
 ##################################################################################################################
 ##################################################################################################################
