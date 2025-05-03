@@ -160,8 +160,13 @@ num_epochs = 25
 batch_size = 60
 
 train_loader = DataLoader(train_dataset, batch_size, shuffle=True, num_workers=2)
-val_loader = DataLoader(val_dataset, batch_size, shuffle=False, num_workers=2)
-
+val_loader_healty = DataLoader(
+    val_HealthyDataset, batch_size, shuffle=False, num_workers=2
+)
+val_loader_pneumonia = DataLoader(
+    val_PneumoniaDataset, batch_size, shuffle=False, num_workers=2
+)
+test_loader = DataLoader(test_dataset, batch_size, shuffle=False, num_workers=2)
 
 ##################################################################################################################
 ##################################################################################################################
@@ -177,7 +182,11 @@ loss_val_v = np.empty(0)
 for epoch in range(num_epochs):
     modelAE.train()
     total_loss = 0.0
-    total_loss_val = 0.0
+    total_loss_val_healthy = 0.0
+    total_loss_val_anomaly = 0.0
+    total_difference = 0.0
+    total_difference_val_healthy = 0.0
+    total_difference_val_anomaly = 0.0
     for i, data in enumerate(train_loader, 0):
         # get the inputs; data is a list of [inputs, labels]
         inputs, _ = data
@@ -192,24 +201,63 @@ for epoch in range(num_epochs):
 
         # # statistics after a batch
         total_loss += loss.item()
+        total_difference += torch.sum(torch.abs(outputs - inputs)).item()
 
     modelAE.eval()
     with torch.no_grad():
-        for i, data in enumerate(val_loader, 0):
+        # Evaluamos con los de validación sanos para encontrar el umbral
+        for _, data in enumerate(val_loader_healty, 0):
             inputs_val, _ = data
             inputs_val = inputs_val.to(device)
             outputs_val = modelAE(inputs_val)
             loss_val = criterion(outputs_val, inputs_val)
-            total_loss_val += loss_val.item()
 
+            # Statistics for healthy validation
+            total_loss_val_healthy += loss_val.item()
+            total_difference_val_healthy += torch.sum(
+                torch.abs(outputs_val - inputs_val)
+            ).item()
+
+        # Evaluamos con los de validación anómalos para encontrar el umbral
+        for _, data in enumerate(val_loader_pneumonia, 0):
+            inputs_val, _ = data
+            inputs_val = inputs_val.to(device)
+            outputs_val = modelAE(inputs_val)
+            loss_val = criterion(outputs_val, inputs_val)
+
+            # Statistics for pneumonia validation
+            total_loss_val_anomaly += loss_val.item()
+            total_difference_val_anomaly += torch.sum(
+                torch.abs(outputs_val - inputs_val)
+            ).item()
+
+    # Calculate the loss by averaging over the batches
     average_loss = total_loss / len(train_loader)
-    average_loss_val = total_loss_val / len(val_loader)
+    average_loss_val_healthy = total_loss_val_healthy / len(val_loader_healty)
+    average_loss_val_anomaly = total_loss_val_anomaly / len(val_loader_pneumonia)
+
+    # Calculate the difference by averaging over each image
+    average_difference = total_difference / len(train_dataset)
+    average_difference_val_healthy = total_difference_val_healthy / len(
+        val_HealthyDataset
+    )
+    average_difference_val_anomaly = total_difference_val_anomaly / len(
+        val_PneumoniaDataset
+    )
+
+    # Store in the lists
     loss_v = np.append(loss_v, average_loss)
-    loss_val_v = np.append(loss_val_v, average_loss_val)
+    loss_val_v = np.append(loss_val_v, average_loss_val_healthy)
 
     print(
-        "Epoch {:02d}: loss {:.4f} - val. loss {:.4f}".format(
-            epoch + 1, average_loss, average_loss_val
+        "Epoch {:02d}: loss {:.4f} - val. healthy loss {:.4f} - val. pneumonia loss {:.4f} - MAE {:.4f} - val. healthy MAE {:.4f} - val. pneumonia MAE {:.4f}".format(
+            epoch + 1,
+            average_loss,
+            average_loss_val_healthy,
+            average_loss_val_anomaly,
+            average_difference,
+            average_difference_val_healthy,
+            average_difference_val_anomaly,
         )
     )
 
