@@ -155,8 +155,70 @@ modelAE = AE().to(device)
 ##################################################################################################################
 ##################################################################################################################
 
+
+class VAE(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        # Encoder (28x28x1)
+        self.encoder = torch.nn.Sequential(
+            torch.nn.Conv2d(1, 16, kernel_size=3, padding="same"),  # (28x28x16)
+            torch.nn.MaxPool2d(kernel_size=2),  # (14x14x16)
+            torch.nn.Conv2d(16, 8, kernel_size=3, padding="same"),  # (14x14x8)
+            torch.nn.MaxPool2d(kernel_size=2),  # (7x7x8)
+            torch.nn.Conv2d(8, 8, kernel_size=3, padding="same"),  # (7x7x8)
+            torch.nn.MaxPool2d(kernel_size=2),  # (4x4x8)
+            torch.nn.Conv2d(8, 8, kernel_size=3, padding="same"),  # (4x4x8)
+        )
+
+        self.mean_layer = torch.nn.Conv2d(
+            8, 8, kernel_size=3, padding="same"
+        )  # (4x4x8)
+        self.logvar_layer = torch.nn.Conv2d(
+            8, 8, kernel_size=3, padding="same"
+        )  # (4x4x8)
+
+        # Decoder (4x4x8)
+        self.decoder = torch.nn.Sequential(
+            torch.nn.Upsample(scale_factor=2),  # (8x8x8)
+            torch.nn.ConvTranspose2d(8, 8, kernel_size=3, padding=(1, 1)),  # (8x8x8)
+            torch.nn.Upsample(scale_factor=2),  # (16x16x8)
+            torch.nn.ConvTranspose2d(8, 16, kernel_size=3),  # (14x14x16)
+            torch.nn.Upsample(scale_factor=2),  # (28x28x16)
+            torch.nn.ConvTranspose2d(16, 1, kernel_size=3, padding=(1, 1)),  # (28x28x1)
+            torch.nn.Sigmoid(),  # Necessary to have the same range as the input
+        )
+
+    def encode(self, x):
+        x = self.encoder(x)
+        mean, logvar = self.mean_layer(x), self.logvar_layer(x)
+        return mean, logvar
+
+    def reparameterization(self, mean, logvar):
+        std = torch.exp(0.5 * logvar)
+        epsilon = torch.randn_like(std)
+        z = mean + std * epsilon
+        return z
+
+    def decode(self, x):
+        return self.decoder(x)
+
+    def forward(self, x):
+        mean, logvar = self.encode(x)
+        z = self.reparameterization(mean, logvar)
+        x_hat = self.decode(z)
+        return x_hat, mean, logvar
+
+
+modelVAE = VAE().to(device)
+
+##################################################################################################################
+##################################################################################################################
+##################################################################################################################
+
 criterion = torch.nn.BCELoss()
-optimizer = torch.optim.Adam(modelAE.parameters())
+optimizerAE = torch.optim.Adam(modelAE.parameters())
+optimizerVAE = torch.optim.Adam(modelVAE.parameters())
 num_epochs = 25
 batch_size = 60
 
@@ -200,11 +262,11 @@ for epoch in range(num_epochs):
         inputs = inputs.to(device)
 
         # forward + backward + optimize
-        optimizer.zero_grad()
+        optimizerAE.zero_grad()
         outputs = modelAE(inputs)
         loss = criterion(outputs, inputs)
         loss.backward()
-        optimizer.step()
+        optimizerAE.step()
 
         # # statistics after a batch
         total_loss += loss.item()
