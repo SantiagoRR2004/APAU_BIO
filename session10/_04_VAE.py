@@ -6,9 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-currentDirectory = os.path.dirname(os.path.abspath(__file__))
-
-
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
     print("GPU available:", torch.cuda.get_device_name(0))
@@ -16,41 +13,9 @@ else:
     print("ERROR: no GPU available")
     sys.exit(0)
 
-custom_transform = transforms.Compose(
-    [transforms.ToTensor(), transforms.Lambda(lambda x: x.view(-1))]
-)
-
-mnist_dataset = datasets.MNIST(
-    root="/tmp/data", download=True, transform=custom_transform
-)
-print("Length of dataset:", len(mnist_dataset))
-print("Length of first vector in dataset: ", mnist_dataset[0][0].shape)
-print("Label of first vector in dataset: ", mnist_dataset[0][1])
-
-train_data = Subset(mnist_dataset, list(range(0, 50000)))
-val_data = Subset(mnist_dataset, list(range(50000, len(mnist_dataset))))
-## Print the length of train and validation datasets
-print("Length of train Dataset: ", len(train_data))
-print("Length of validation Dataset: ", len(val_data))
-
-batch_size = 128
-
-train_loader = DataLoader(train_data, batch_size, shuffle=True, num_workers=2)
-val_loader = DataLoader(val_data, len(val_data), shuffle=False, num_workers=2)
 
 # --------------------------------
-# Shows a random image
-# --------------------------------
-
-# num = random.randrange(len(train_data))
-# fig, ax = plt.subplots( nrows=1, ncols=1 )
-# ax.imshow(train_data[num][0].reshape((28,28)), cmap='binary')
-# ax.set_title("Digit: {}".format(train_data[num][1]))
-# plt.tight_layout()
-# plt.savefig(os.path.join(currentDirectory, "_01_RandomDigit.png"))
-
-# --------------------------------
-# AE definition
+# VAE definition
 # --------------------------------
 
 
@@ -60,6 +25,7 @@ class VAE(torch.nn.Module):
 
         # Encoder 784 -> 256 -> 48
         self.encoder = torch.nn.Sequential(
+            torch.nn.Flatten(),
             torch.nn.Linear(784, 256),
             torch.nn.ReLU(),
             torch.nn.Linear(256, 48),
@@ -100,167 +66,198 @@ class VAE(torch.nn.Module):
         return x_hat, mean, logvar
 
 
-model = VAE().to(device)
+if __name__ == "__main__":
 
-print("\nENCODER:")
-print(model.encoder)
-print(model.mean_layer)
-print(model.logvar_layer)
+    currentDirectory = os.path.dirname(os.path.abspath(__file__))
 
-
-print("\nDECODER:")
-print(model.decoder)
-total_params = sum(p.numel() for p in model.decoder.parameters())
-print(f"Number of parameters: {total_params}")
-
-
-# --------------------------------
-# AE training
-# --------------------------------
-def loss_function(recon_x, x, mu, log_var):
-    recon_loss = torch.nn.BCELoss()(recon_x, x)
-    # print(recon_loss)
-    # KL divergence
-    kl_loss = -0.5 * torch.mean(1 + log_var - mu.pow(2) - log_var.exp())
-    # print(recon_loss)
-    # print(kl_loss)
-    # sys.exit(0)
-    # Total loss: reconstruction + KL regularization
-    return recon_loss + 0.01 * kl_loss
-
-
-# criterion = torch.nn.BCELoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-num_epochs = 10
-
-loss_v = np.empty(0)
-loss_val_v = np.empty(0)
-
-for epoch in range(num_epochs):
-    model.train()
-    total_loss = 0.0
-    total_loss_val = 0.0
-    for i, data in enumerate(train_loader, 0):
-        # get the inputs; data is a list of [inputs, labels]
-        inputs, _ = data
-        inputs = inputs.to(device)
-
-        # forward + backward + optimize
-        optimizer.zero_grad()
-        outputs, mu, log_var = model(inputs)
-        loss = loss_function(outputs, inputs, mu, log_var)
-        loss.backward()
-        optimizer.step()
-
-        # # statistics after a batch
-        total_loss += loss.item()
-
-    model.eval()
-    with torch.no_grad():
-        for i, data in enumerate(val_loader, 0):
-            inputs_val, _ = data
-            inputs_val = inputs_val.to(device)
-            outputs_val, mu, log_var = model(inputs_val)
-            loss_val = loss_function(outputs_val, inputs_val, mu, log_var)
-            total_loss_val += loss_val.item()
-
-    average_loss = total_loss / len(train_loader)
-    average_loss_val = total_loss_val / len(val_loader)
-    loss_v = np.append(loss_v, average_loss)
-    loss_val_v = np.append(loss_val_v, average_loss_val)
-
-    print(
-        "Epoch {:02d}: loss {:.4f} - val. loss {:.4f}".format(
-            epoch + 1, average_loss, average_loss_val
-        )
+    custom_transform = transforms.Compose(
+        [transforms.ToTensor(), transforms.Lambda(lambda x: x.view(-1))]
     )
 
+    mnist_dataset = datasets.MNIST(
+        root="/tmp/data", download=True, transform=custom_transform
+    )
+    print("Length of dataset:", len(mnist_dataset))
+    print("Length of first vector in dataset: ", mnist_dataset[0][0].shape)
+    print("Label of first vector in dataset: ", mnist_dataset[0][1])
 
-torch.save(model.state_dict(), os.path.join(currentDirectory, "_04_VAE.pth"))
+    train_data = Subset(mnist_dataset, list(range(0, 50000)))
+    val_data = Subset(mnist_dataset, list(range(50000, len(mnist_dataset))))
+    ## Print the length of train and validation datasets
+    print("Length of train Dataset: ", len(train_data))
+    print("Length of validation Dataset: ", len(val_data))
 
+    batch_size = 128
 
-# --------------------------------
-# Plot loss
-# --------------------------------
+    train_loader = DataLoader(train_data, batch_size, shuffle=True, num_workers=2)
+    val_loader = DataLoader(val_data, len(val_data), shuffle=False, num_workers=2)
 
-epochs = range(1, num_epochs + 1)
-plt.figure()
-plt.plot(epochs, loss_v, "b-o", label="Training ")
-plt.plot(epochs, loss_val_v, "r-o", label="Validation ")
-plt.title("Training and validation loss")
-plt.xlabel("Epochs")
-plt.legend()
-plt.tight_layout()
+    # --------------------------------
+    # Shows a random image
+    # --------------------------------
 
-plt.savefig(os.path.join(currentDirectory, "_04_VariationalAE.Loss.png"))
+    # num = random.randrange(len(train_data))
+    # fig, ax = plt.subplots( nrows=1, ncols=1 )
+    # ax.imshow(train_data[num][0].reshape((28,28)), cmap='binary')
+    # ax.set_title("Digit: {}".format(train_data[num][1]))
+    # plt.tight_layout()
+    # plt.savefig(os.path.join(currentDirectory, "_01_RandomDigit.png"))
 
+    model = VAE().to(device)
 
-# ---------------------------------------------
-# Show some original and reconstructed digits
-# ---------------------------------------------
+    print("\nENCODER:")
+    print(model.encoder)
+    print(model.mean_layer)
+    print(model.logvar_layer)
 
-n_to_show = 10
-input_idx = np.random.choice(range(len(val_data)), n_to_show)
-input_images = [val_data[i][0] for i in input_idx]
-input_labels = [val_data[i][1] for i in input_idx]
+    print("\nDECODER:")
+    print(model.decoder)
+    total_params = sum(p.numel() for p in model.decoder.parameters())
+    print(f"Number of parameters: {total_params}")
 
-input_batch = torch.stack(input_images).to(device)
-output_batch, _, _ = model(input_batch)
+    # --------------------------------
+    # AE training
+    # --------------------------------
+    def loss_function(recon_x, x, mu, log_var):
+        recon_loss = torch.nn.BCELoss()(recon_x, x)
+        # print(recon_loss)
+        # KL divergence
+        kl_loss = -0.5 * torch.mean(1 + log_var - mu.pow(2) - log_var.exp())
+        # print(recon_loss)
+        # print(kl_loss)
+        # sys.exit(0)
+        # Total loss: reconstruction + KL regularization
+        return recon_loss + 0.01 * kl_loss
 
-# print(input_labels)
-# print(len(output_batch))
+    # criterion = torch.nn.BCELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    num_epochs = 10
 
-fig = plt.figure(figsize=(15, 2))
-fig.subplots_adjust(hspace=0.1, wspace=0.4)
-for i in range(n_to_show):
-    img = input_batch[i].cpu().reshape((28, 28))
-    ax = fig.add_subplot(1, n_to_show, i + 1)
-    ax.axis("off")
-    ax.set_title(input_labels[i])
-    fig.suptitle("Original digits")
-    ax.imshow(img, cmap="binary")
-fig.tight_layout()
-fig.savefig(os.path.join(currentDirectory, "_04_OriginalDigits.png"))
+    loss_v = np.empty(0)
+    loss_val_v = np.empty(0)
 
+    for epoch in range(num_epochs):
+        model.train()
+        total_loss = 0.0
+        total_loss_val = 0.0
+        for i, data in enumerate(train_loader, 0):
+            # get the inputs; data is a list of [inputs, labels]
+            inputs, _ = data
+            inputs = inputs.to(device)
 
-fig = plt.figure(figsize=(15, 2))
-fig.subplots_adjust(hspace=0.4, wspace=0.4)
-for i in range(n_to_show):
-    img = output_batch[i].detach().cpu().reshape((28, 28))
-    ax = fig.add_subplot(1, n_to_show, i + 1)
-    ax.axis("off")
-    ax.set_title(input_labels[i])
-    fig.suptitle("Reconstructed digits")
-    ax.imshow(img, cmap="binary")
-fig.tight_layout()
-fig.savefig(os.path.join(currentDirectory, "_04_ReconstructedDigits.png"))
+            # forward + backward + optimize
+            optimizer.zero_grad()
+            outputs, mu, log_var = model(inputs)
+            loss = loss_function(outputs, inputs, mu, log_var)
+            loss.backward()
+            optimizer.step()
 
+            # # statistics after a batch
+            total_loss += loss.item()
 
-# ---------------------------------------------
-# Show training points in latent space
-# ---------------------------------------------
+        model.eval()
+        with torch.no_grad():
+            for i, data in enumerate(val_loader, 0):
+                inputs_val, _ = data
+                inputs_val = inputs_val.to(device)
+                outputs_val, mu, log_var = model(inputs_val)
+                loss_val = loss_function(outputs_val, inputs_val, mu, log_var)
+                total_loss_val += loss_val.item()
 
-n_to_show = 5000
-grid_size = 20
-figsize = 8
-example_idx = np.random.choice(range(len(train_data)), n_to_show)
-example_images = [train_data[i][0] for i in example_idx]
-example_labels = [train_data[i][1] for i in example_idx]
+        average_loss = total_loss / len(train_loader)
+        average_loss_val = total_loss_val / len(val_loader)
+        loss_v = np.append(loss_v, average_loss)
+        loss_val_v = np.append(loss_val_v, average_loss_val)
 
-example_batch = torch.stack(example_images).to(device)
-example_points = model.mean_layer(model.encoder(example_batch)).detach().cpu().numpy()
+        print(
+            "Epoch {:02d}: loss {:.4f} - val. loss {:.4f}".format(
+                epoch + 1, average_loss, average_loss_val
+            )
+        )
 
-plt.figure(figsize=(5, 5))
-plt.scatter(
-    example_points[:, 0],
-    example_points[:, 1],
-    cmap="tab10",
-    c=example_labels,
-    alpha=0.5,
-    s=2,
-)
-plt.colorbar(values=range(10), ticks=range(10))
-plt.tight_layout()
-plt.savefig(os.path.join(currentDirectory, "_04_LatentSpace.png"))
+    torch.save(model.state_dict(), os.path.join(currentDirectory, "_04_VAE.pth"))
 
-sys.exit(0)
+    # --------------------------------
+    # Plot loss
+    # --------------------------------
+
+    epochs = range(1, num_epochs + 1)
+    plt.figure()
+    plt.plot(epochs, loss_v, "b-o", label="Training ")
+    plt.plot(epochs, loss_val_v, "r-o", label="Validation ")
+    plt.title("Training and validation loss")
+    plt.xlabel("Epochs")
+    plt.legend()
+    plt.tight_layout()
+
+    plt.savefig(os.path.join(currentDirectory, "_04_VariationalAE.Loss.png"))
+
+    # ---------------------------------------------
+    # Show some original and reconstructed digits
+    # ---------------------------------------------
+
+    n_to_show = 10
+    input_idx = np.random.choice(range(len(val_data)), n_to_show)
+    input_images = [val_data[i][0] for i in input_idx]
+    input_labels = [val_data[i][1] for i in input_idx]
+
+    input_batch = torch.stack(input_images).to(device)
+    output_batch, _, _ = model(input_batch)
+
+    # print(input_labels)
+    # print(len(output_batch))
+
+    fig = plt.figure(figsize=(15, 2))
+    fig.subplots_adjust(hspace=0.1, wspace=0.4)
+    for i in range(n_to_show):
+        img = input_batch[i].cpu().reshape((28, 28))
+        ax = fig.add_subplot(1, n_to_show, i + 1)
+        ax.axis("off")
+        ax.set_title(input_labels[i])
+        fig.suptitle("Original digits")
+        ax.imshow(img, cmap="binary")
+    fig.tight_layout()
+    fig.savefig(os.path.join(currentDirectory, "_04_OriginalDigits.png"))
+
+    fig = plt.figure(figsize=(15, 2))
+    fig.subplots_adjust(hspace=0.4, wspace=0.4)
+    for i in range(n_to_show):
+        img = output_batch[i].detach().cpu().reshape((28, 28))
+        ax = fig.add_subplot(1, n_to_show, i + 1)
+        ax.axis("off")
+        ax.set_title(input_labels[i])
+        fig.suptitle("Reconstructed digits")
+        ax.imshow(img, cmap="binary")
+    fig.tight_layout()
+    fig.savefig(os.path.join(currentDirectory, "_04_ReconstructedDigits.png"))
+
+    # ---------------------------------------------
+    # Show training points in latent space
+    # ---------------------------------------------
+
+    n_to_show = 5000
+    grid_size = 20
+    figsize = 8
+    example_idx = np.random.choice(range(len(train_data)), n_to_show)
+    example_images = [train_data[i][0] for i in example_idx]
+    example_labels = [train_data[i][1] for i in example_idx]
+
+    example_batch = torch.stack(example_images).to(device)
+    example_points = (
+        model.mean_layer(model.encoder(example_batch)).detach().cpu().numpy()
+    )
+
+    plt.figure(figsize=(5, 5))
+    plt.scatter(
+        example_points[:, 0],
+        example_points[:, 1],
+        cmap="tab10",
+        c=example_labels,
+        alpha=0.5,
+        s=2,
+    )
+    plt.colorbar(values=range(10), ticks=range(10))
+    plt.tight_layout()
+    plt.savefig(os.path.join(currentDirectory, "_04_LatentSpace.png"))
+
+    sys.exit(0)

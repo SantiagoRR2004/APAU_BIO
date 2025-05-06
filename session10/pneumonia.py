@@ -149,6 +149,9 @@ class AE(torch.nn.Module):
         return decoded
 
 
+# Use the MNIST digits
+from _01_UndercompleteAE import AE
+
 modelAE = AE().to(device)
 
 ##################################################################################################################
@@ -209,6 +212,9 @@ class VAE(torch.nn.Module):
         x_hat = self.decode(z)
         return x_hat, mean, logvar
 
+
+# Use the MNIST digits
+from _04_VAE import VAE
 
 modelVAE = VAE().to(device)
 
@@ -283,7 +289,7 @@ for epoch in range(num_epochs):
 
         # forward + backward + optimize
         optimizerAE.zero_grad()
-        outputs = modelAE(inputs)
+        outputs = modelAE(inputs).view(-1, 1, 28, 28)
         loss = criterion(outputs, inputs)
         loss.backward()
         optimizerAE.step()
@@ -298,7 +304,7 @@ for epoch in range(num_epochs):
         for _, data in enumerate(val_loader_healty, 0):
             inputs_val, _ = data
             inputs_val = inputs_val.to(device)
-            outputs_val = modelAE(inputs_val)
+            outputs_val = modelAE(inputs_val).view(-1, 1, 28, 28)
             loss_val = criterion(outputs_val, inputs_val)
 
             # Statistics for healthy validation
@@ -319,7 +325,7 @@ for epoch in range(num_epochs):
         for _, data in enumerate(val_loader_pneumonia, 0):
             inputs_val, _ = data
             inputs_val = inputs_val.to(device)
-            outputs_val = modelAE(inputs_val)
+            outputs_val = modelAE(inputs_val).view(-1, 1, 28, 28)
             loss_val = criterion(outputs_val, inputs_val)
 
             # Statistics for pneumonia validation
@@ -413,6 +419,7 @@ for epoch in range(num_epochs):
         # forward + backward + optimize
         optimizerVAE.zero_grad()
         outputs, mean, logvar = modelVAE(inputs)
+        outputs = outputs.view(-1, 1, 28, 28)
         loss = loss_function_vae(outputs, inputs, mean, logvar)
         loss.backward()
         optimizerVAE.step()
@@ -428,6 +435,7 @@ for epoch in range(num_epochs):
             inputs_val, _ = data
             inputs_val = inputs_val.to(device)
             outputs_val, mean, logvar = modelVAE(inputs_val)
+            outputs_val = outputs_val.view(-1, 1, 28, 28)
             loss_val = loss_function_vae(outputs_val, inputs_val, mean, logvar)
 
             # Statistics for healthy validation
@@ -449,6 +457,7 @@ for epoch in range(num_epochs):
             inputs_val, _ = data
             inputs_val = inputs_val.to(device)
             outputs_val, mean, logvar = modelVAE(inputs_val)
+            outputs_val = outputs_val.view(-1, 1, 28, 28)
             loss_val = loss_function_vae(outputs_val, inputs_val, mean, logvar)
 
             # Statistics for pneumonia validation
