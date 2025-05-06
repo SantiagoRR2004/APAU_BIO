@@ -541,9 +541,12 @@ plt.grid()
 ##################################################################################################################
 # Plot the losses
 plt.figure()
-plt.plot(epochs, ae_loss_v, "b-o", label="Training")
-plt.plot(epochs, ae_loss_val_health_v, "g-o", label="Validation Healthy")
-plt.plot(epochs, ae_loss_val_anomaly_v, "r-o", label="Validation Pneumonia")
+plt.plot(epochs, ae_loss_v, "b-o", label="Training AE")
+plt.plot(epochs, vae_loss_v, "b--s", label="Training VAE")
+plt.plot(epochs, ae_loss_val_health_v, "g-o", label="Validation Healthy AE")
+plt.plot(epochs, vae_loss_val_health_v, "g--s", label="Validation Healthy VAE")
+plt.plot(epochs, ae_loss_val_anomaly_v, "r-o", label="Validation Pneumonia AE")
+plt.plot(epochs, vae_loss_val_anomaly_v, "r--s", label="Validation Pneumonia VAE")
 plt.title("Training and validation loss")
 plt.xlabel("Epochs")
 plt.ylabel("Loss")
@@ -554,22 +557,39 @@ plt.legend()
 ##################################################################################################################
 # Plot the distances
 plt.figure()
-plt.plot(epochs, ae_distances, "b-o", label="Training")
+plt.plot(epochs, ae_distances, "b-o", label="Training AE")
+plt.plot(epochs, vae_distances, "b--s", label="Training VAE")
 plt.plot(
     epochs,
     ae_val_healthy_distances,
     "g-o",
-    label="Validation Healthy",
+    label="Validation Healthy AE",
+)
+plt.plot(
+    epochs,
+    vae_val_healthy_distances,
+    "g--s",
+    label="Validation Healthy VAE",
 )
 plt.plot(
     epochs,
     ae_val_pneumonia_distances,
     "r-o",
-    label="Validation Pneumonia",
+    label="Validation Pneumonia AE",
+)
+plt.plot(
+    epochs,
+    vae_val_pneumonia_distances,
+    "r--s",
+    label="Validation Pneumonia VAE",
 )
 plt.title("Training and validation distances")
 plt.xlabel("Epochs")
 plt.ylabel("Distance")
 plt.legend()
+
+##################################################################################################################
+##################################################################################################################
+##################################################################################################################
 
 plt.show()
