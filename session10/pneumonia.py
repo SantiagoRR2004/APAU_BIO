@@ -257,6 +257,9 @@ vae_val_pneumonia_distances_Threshold = np.empty(0)
 # Epochs for plotting
 epochs = range(1, num_epochs + 1)
 
+# Labels for the roc
+labels = [0] * len(val_HealthyDataset) + [1] * len(val_PneumoniaDataset)
+
 ##################################################################################################################
 ##################################################################################################################
 ##################################################################################################################
@@ -370,18 +373,6 @@ for epoch in range(num_epochs):
             average_difference_val_anomaly,
         )
     )
-
-labels = [0] * len(ae_val_healthy_distances_Threshold) + [1] * len(
-    ae_val_pneumonia_distances_Threshold
-)
-scores = np.concatenate(
-    (ae_val_healthy_distances_Threshold, ae_val_pneumonia_distances_Threshold), axis=0
-)
-
-fpr, tpr, thresholds = roc_curve(labels, scores)
-j_scores = tpr - fpr
-best_threshold = thresholds[np.argmax(j_scores)]
-print("Best threshold:", best_threshold)
 
 torch.save(modelAE.state_dict(), os.path.join(currentDirectory, "PneumoniaAE.pth"))
 
@@ -512,21 +503,62 @@ for epoch in range(num_epochs):
         )
     )
 
+torch.save(modelVAE.state_dict(), os.path.join(currentDirectory, "PneumoniaVAE.pth"))
+
+
+##################################################################################################################
+##################################################################################################################
+##################################################################################################################
+# Calculate the roc curves
+
+scores_ae = np.concatenate(
+    (ae_val_healthy_distances_Threshold, ae_val_pneumonia_distances_Threshold), axis=0
+)
+fpr_ae, tpr_ae, thresholds_ae = roc_curve(labels, scores_ae)
+j_scores_ae = tpr_ae - fpr_ae
+best_threshold_ae = thresholds_ae[np.argmax(j_scores_ae)]
+print("Best threshold:", best_threshold_ae)
+
+scores_vae = np.concatenate(
+    (vae_val_healthy_distances_Threshold, vae_val_pneumonia_distances_Threshold), axis=0
+)
+fpr_vae, tpr_vae, thresholds_vae = roc_curve(labels, scores_vae)
+j_scores_vae = tpr_vae - fpr_vae
+best_threshold_vae = thresholds_vae[np.argmax(j_scores_vae)]
+print("Best threshold:", best_threshold_vae)
+
 
 ##################################################################################################################
 ##################################################################################################################
 ##################################################################################################################
 # Plotting the ROC Curve
-roc_auc = auc(fpr, tpr)
+roc_auc_ae = auc(fpr_ae, tpr_ae)
+roc_auc_vae = auc(fpr_vae, tpr_vae)
 plt.figure()
-plt.plot(fpr, tpr, color="blue", lw=2, label=f"ROC curve (AUC = {roc_auc:.2f})")
+plt.plot(
+    fpr_ae, tpr_ae, color="blue", lw=2, label=f"AE ROC curve (AUC = {roc_auc_ae:.2f})"
+)
+plt.plot(
+    fpr_vae,
+    tpr_vae,
+    color="orange",
+    lw=2,
+    label=f"VAE ROC curve (AUC = {roc_auc_vae:.2f})",
+)
 plt.plot([0, 1], [0, 1], color="gray", linestyle="--")  # Diagonal line
 plt.scatter(
-    fpr[np.argmax(tpr - fpr)],
-    tpr[np.argmax(tpr - fpr)],
+    fpr_ae[np.argmax(tpr_ae - fpr_ae)],
+    tpr_ae[np.argmax(tpr_ae - fpr_ae)],
     marker="o",
     color="red",
-    label="Best Threshold",
+    label="Best Threshold AE",
+)
+plt.scatter(
+    fpr_vae[np.argmax(tpr_vae - fpr_vae)],
+    tpr_vae[np.argmax(tpr_vae - fpr_vae)],
+    marker="s",
+    color="green",
+    label="Best Threshold VAE",
 )
 plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.05])
