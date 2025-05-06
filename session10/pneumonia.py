@@ -234,7 +234,7 @@ test_loader = DataLoader(test_dataset, batch_size, shuffle=False, num_workers=2)
 ##################################################################################################################
 ##################################################################################################################
 ##################################################################################################################
-# Lists to store for plotting
+# Lists to store for plotting the ae
 ae_loss_v = np.empty(0)
 ae_loss_val_health_v = np.empty(0)
 ae_loss_val_anomaly_v = np.empty(0)
@@ -243,6 +243,16 @@ ae_val_healthy_distances = np.empty(0)
 ae_val_pneumonia_distances = np.empty(0)
 ae_val_healthy_distances_Threshold = np.empty(0)
 ae_val_pneumonia_distances_Threshold = np.empty(0)
+
+# Lists to store for plotting the vae
+vae_loss_v = np.empty(0)
+vae_loss_val_health_v = np.empty(0)
+vae_loss_val_anomaly_v = np.empty(0)
+vae_distances = np.empty(0)
+vae_val_healthy_distances = np.empty(0)
+vae_val_pneumonia_distances = np.empty(0)
+vae_val_healthy_distances_Threshold = np.empty(0)
+vae_val_pneumonia_distances_Threshold = np.empty(0)
 
 # Epochs for plotting
 epochs = range(1, num_epochs + 1)
@@ -374,6 +384,134 @@ best_threshold = thresholds[np.argmax(j_scores)]
 print("Best threshold:", best_threshold)
 
 torch.save(modelAE.state_dict(), os.path.join(currentDirectory, "PneumoniaAE.pth"))
+
+##################################################################################################################
+##################################################################################################################
+##################################################################################################################
+# --------------------------------
+# VAE training
+# --------------------------------
+
+
+def loss_function_vae(recon_x, x, mu, log_var):
+    recon_loss = torch.nn.BCELoss()(recon_x, x)
+    # print(recon_loss)
+    # KL divergence
+    kl_loss = -0.5 * torch.mean(1 + log_var - mu.pow(2) - log_var.exp())
+    # print(recon_loss)
+    # print(kl_loss)
+    # sys.exit(0)
+    # Total loss: reconstruction + KL regularization
+    return recon_loss + 0.01 * kl_loss
+
+
+for epoch in range(num_epochs):
+    modelVAE.train()
+    total_loss = 0.0
+    total_loss_val_healthy = 0.0
+    total_loss_val_anomaly = 0.0
+    total_difference = 0.0
+    total_difference_val_healthy = 0.0
+    total_difference_val_anomaly = 0.0
+
+    for i, data in enumerate(train_loader, 0):
+        # get the inputs; data is a list of [inputs, labels]
+        inputs, _ = data
+        inputs = inputs.to(device)
+
+        # forward + backward + optimize
+        optimizerVAE.zero_grad()
+        outputs, mean, logvar = modelVAE(inputs)
+        loss = loss_function_vae(outputs, inputs, mean, logvar)
+        loss.backward()
+        optimizerVAE.step()
+
+        # # statistics after a batch
+        total_loss += loss.item()
+        total_difference += torch.sum(torch.abs(outputs - inputs)).item()
+
+    modelVAE.eval()
+    with torch.no_grad():
+        # Evaluamos con los de validación sanos para encontrar el umbral
+        for _, data in enumerate(val_loader_healty, 0):
+            inputs_val, _ = data
+            inputs_val = inputs_val.to(device)
+            outputs_val, mean, logvar = modelVAE(inputs_val)
+            loss_val = loss_function_vae(outputs_val, inputs_val, mean, logvar)
+
+            # Statistics for healthy validation
+            total_loss_val_healthy += loss_val.item()
+            total_difference_val_healthy += torch.sum(
+                torch.abs(outputs_val - inputs_val)
+            ).item()
+            # Distances for the threshold
+            if epoch == num_epochs - 1:
+                vae_val_healthy_distances_Threshold = np.append(
+                    vae_val_healthy_distances_Threshold,
+                    torch.sum(torch.abs(outputs_val - inputs_val), dim=(1, 2, 3))
+                    .cpu()
+                    .numpy(),
+                )
+
+        # Evaluamos con los de validación anómalos para encontrar el umbral
+        for _, data in enumerate(val_loader_pneumonia, 0):
+            inputs_val, _ = data
+            inputs_val = inputs_val.to(device)
+            outputs_val, mean, logvar = modelVAE(inputs_val)
+            loss_val = loss_function_vae(outputs_val, inputs_val, mean, logvar)
+
+            # Statistics for pneumonia validation
+            total_loss_val_anomaly += loss_val.item()
+            total_difference_val_anomaly += torch.sum(
+                torch.abs(outputs_val - inputs_val)
+            ).item()
+            # Distances for the threshold
+            if epoch == num_epochs - 1:
+                vae_val_pneumonia_distances_Threshold = np.append(
+                    vae_val_pneumonia_distances_Threshold,
+                    torch.sum(torch.abs(outputs_val - inputs_val), dim=(1, 2, 3))
+                    .cpu()
+                    .numpy(),
+                )
+
+    # Calculate the loss by averaging over the batches
+    average_loss = total_loss / len(train_loader)
+    average_loss_val_healthy = total_loss_val_healthy / len(val_loader_healty)
+    average_loss_val_anomaly = total_loss_val_anomaly / len(val_loader_pneumonia)
+
+    # Calculate the difference by averaging over each image
+    average_difference = total_difference / len(train_dataset)
+    average_difference_val_healthy = total_difference_val_healthy / len(
+        val_HealthyDataset
+    )
+    average_difference_val_anomaly = total_difference_val_anomaly / len(
+        val_PneumoniaDataset
+    )
+
+    # Store in the lists
+    vae_loss_v = np.append(vae_loss_v, average_loss)
+    vae_loss_val_health_v = np.append(vae_loss_val_health_v, average_loss_val_healthy)
+    vae_loss_val_anomaly_v = np.append(vae_loss_val_anomaly_v, average_loss_val_anomaly)
+    vae_distances = np.append(vae_distances, average_difference)
+    vae_val_healthy_distances = np.append(
+        vae_val_healthy_distances, average_difference_val_healthy
+    )
+    vae_val_pneumonia_distances = np.append(
+        vae_val_pneumonia_distances, average_difference_val_anomaly
+    )
+
+    print(
+        "Epoch {:02d}: loss {:.4f} - val. healthy loss {:.4f} - val. pneumonia loss {:.4f} - MAE {:.4f} - val. healthy MAE {:.4f} - val. pneumonia MAE {:.4f}".format(
+            epoch + 1,
+            average_loss,
+            average_loss_val_healthy,
+            average_loss_val_anomaly,
+            average_difference,
+            average_difference_val_healthy,
+            average_difference_val_anomaly,
+        )
+    )
+
 
 ##################################################################################################################
 ##################################################################################################################
