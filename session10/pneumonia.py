@@ -183,6 +183,8 @@ ae_loss_val_anomaly_v = np.empty(0)
 ae_distances = np.empty(0)
 ae_val_healthy_distances = np.empty(0)
 ae_val_pneumonia_distances = np.empty(0)
+ae_val_healthy_distances_Threshold = np.empty(0)
+ae_val_pneumonia_distances_Threshold = np.empty(0)
 
 for epoch in range(num_epochs):
     modelAE.train()
@@ -224,8 +226,8 @@ for epoch in range(num_epochs):
             ).item()
             # Distances for the threshold
             if epoch == num_epochs - 1:
-                ae_val_healthy_distances = np.append(
-                    ae_val_healthy_distances,
+                ae_val_healthy_distances_Threshold = np.append(
+                    ae_val_healthy_distances_Threshold,
                     torch.sum(torch.abs(outputs_val - inputs_val), dim=(1, 2, 3))
                     .cpu()
                     .numpy(),
@@ -245,8 +247,8 @@ for epoch in range(num_epochs):
             ).item()
             # Distances for the threshold
             if epoch == num_epochs - 1:
-                ae_val_pneumonia_distances = np.append(
-                    ae_val_pneumonia_distances,
+                ae_val_pneumonia_distances_Threshold = np.append(
+                    ae_val_pneumonia_distances_Threshold,
                     torch.sum(torch.abs(outputs_val - inputs_val), dim=(1, 2, 3))
                     .cpu()
                     .numpy(),
@@ -270,6 +272,7 @@ for epoch in range(num_epochs):
     ae_loss_v = np.append(ae_loss_v, average_loss)
     ae_loss_val_health_v = np.append(ae_loss_val_health_v, average_loss_val_healthy)
     ae_loss_val_anomaly_v = np.append(ae_loss_val_anomaly_v, average_loss_val_anomaly)
+    ae_distances = np.append(ae_distances, average_difference)
     ae_val_healthy_distances = np.append(
         ae_val_healthy_distances, average_difference_val_healthy
     )
@@ -289,8 +292,12 @@ for epoch in range(num_epochs):
         )
     )
 
-labels = [0] * len(ae_val_healthy_distances) + [1] * len(ae_val_pneumonia_distances)
-scores = np.concatenate((ae_val_healthy_distances, ae_val_pneumonia_distances), axis=0)
+labels = [0] * len(ae_val_healthy_distances_Threshold) + [1] * len(
+    ae_val_pneumonia_distances_Threshold
+)
+scores = np.concatenate(
+    (ae_val_healthy_distances_Threshold, ae_val_pneumonia_distances_Threshold), axis=0
+)
 
 fpr, tpr, thresholds = roc_curve(labels, scores)
 j_scores = tpr - fpr
@@ -330,8 +337,8 @@ plt.grid()
 # Plot the losses
 plt.figure()
 plt.plot(epochs, ae_loss_v, "b-o", label="Training")
-plt.plot(epochs, ae_loss_val_health_v, "r-o", label="Validation Healthy")
-plt.plot(epochs, ae_loss_val_anomaly_v, "g-o", label="Validation Pneumonia")
+plt.plot(epochs, ae_loss_val_health_v, "g-o", label="Validation Healthy")
+plt.plot(epochs, ae_loss_val_anomaly_v, "r-o", label="Validation Pneumonia")
 plt.title("Training and validation loss")
 plt.xlabel("Epochs")
 plt.ylabel("Loss")
@@ -340,6 +347,5 @@ plt.legend()
 ##################################################################################################################
 ##################################################################################################################
 ##################################################################################################################
-
 
 plt.show()
