@@ -347,5 +347,24 @@ plt.legend()
 ##################################################################################################################
 ##################################################################################################################
 ##################################################################################################################
+# Plot the distances
+plt.figure()
+plt.plot(epochs, ae_distances, "b-o", label="Training")
+plt.plot(
+    epochs,
+    ae_val_healthy_distances,
+    "g-o",
+    label="Validation Healthy",
+)
+plt.plot(
+    epochs,
+    ae_val_pneumonia_distances,
+    "r-o",
+    label="Validation Pneumonia",
+)
+plt.title("Training and validation distances")
+plt.xlabel("Epochs")
+plt.ylabel("Distance")
+plt.legend()
 
 plt.show()
