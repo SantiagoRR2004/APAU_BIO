@@ -59,7 +59,7 @@ class AE(torch.nn.Module):
 
 model = AE()
 model.load_state_dict(
-    torch.load(os.path.join(currentDirectory, "01.AE.pth"), weights_only=True)
+    torch.load(os.path.join(currentDirectory, "_01_AE.pth"), weights_only=True)
 )
 model.eval()
 
@@ -96,7 +96,7 @@ for i in range(10):
     fig.suptitle("Original digits")
     ax.imshow(img, cmap="binary")
 fig.tight_layout()
-fig.savefig(os.path.join(currentDirectory, "02.BestReconstr_input.png"))
+fig.savefig(os.path.join(currentDirectory, "_02_BestReconstr_input.png"))
 
 
 fig = plt.figure(figsize=(15, 2))
@@ -109,7 +109,7 @@ for i in range(10):
     fig.suptitle("Best reconstructed digits (undercomplete AE)")
     ax.imshow(img, cmap="binary")
 fig.tight_layout()
-fig.savefig(os.path.join(currentDirectory, "02.BestReconstr_output.png"))
+fig.savefig(os.path.join(currentDirectory, "_02_BestReconstr_output.png"))
 
 # ---------------------------------------------
 # Worst reconstructed digits
@@ -132,7 +132,7 @@ for i in range(n_to_show):
     fig.suptitle("Original digits")
     ax.imshow(img, cmap="binary")
 fig.tight_layout()
-fig.savefig(os.path.join(currentDirectory, "02.WorstReconstr_input.png"))
+fig.savefig(os.path.join(currentDirectory, "_02_WorstReconstr_input.png"))
 
 fig = plt.figure(figsize=(15, 2))
 fig.subplots_adjust(hspace=0.4, wspace=0.4)
@@ -144,4 +144,4 @@ for i in range(n_to_show):
     fig.suptitle("Worst reconstructed digits (undercomplete AE)")
     ax.imshow(img, cmap="binary")
 fig.tight_layout()
-fig.savefig(os.path.join(currentDirectory, "02.WorstReconstr_output.png"))
+fig.savefig(os.path.join(currentDirectory, "_02_WorstReconstr_output.png"))

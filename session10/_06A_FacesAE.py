@@ -36,15 +36,15 @@ fig, ax = plt.subplots(nrows=1, ncols=1)
 img_to_show = dataset[num][0].permute(1, 2, 0).numpy()
 ax.imshow(img_to_show)
 plt.tight_layout()
-plt.savefig("06.RandomFace.png")
+plt.savefig("_06_RandomFace.png")
 
 
 # --------------------------------
-# VAE definition
+# AE definition
 # --------------------------------
 
 
-class VAE(torch.nn.Module):
+class AE(torch.nn.Module):
     def __init__(self):
         super().__init__()
 
@@ -63,10 +63,8 @@ class VAE(torch.nn.Module):
             torch.nn.LeakyReLU(),
             torch.nn.MaxPool2d(kernel_size=2),
             torch.nn.Flatten(),
+            torch.nn.Linear(4096, 200),
         )
-
-        self.mean_layer = torch.nn.Linear(4096, 200)
-        self.logvar_layer = torch.nn.Linear(4096, 200)
 
         # Decoder 200 -> 4096 -> (64,8,8) -> (64,16,16) -> (64,32,32) -> (32,64,64) -> (3,128,128)
         self.decoder = torch.nn.Sequential(
@@ -90,33 +88,16 @@ class VAE(torch.nn.Module):
             torch.nn.Sigmoid(),
         )
 
-    def encode(self, x):
-        x = self.encoder(x)
-        mean, logvar = self.mean_layer(x), self.logvar_layer(x)
-        return mean, logvar
-
-    def reparameterization(self, mean, logvar):
-        std = torch.exp(0.5 * logvar)
-        epsilon = torch.randn_like(std).to(device)
-        z = mean + std * epsilon
-        return z
-
-    def decode(self, x):
-        return self.decoder(x)
-
     def forward(self, x):
-        mean, logvar = self.encode(x)
-        z = self.reparameterization(mean, logvar)
-        x_hat = self.decode(z)
-        return x_hat, mean, logvar
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        return decoded
 
 
-model = VAE().to(device)
+model = AE().to(device)
 print("\nENCODER:")
 print(model.encoder)
 total_params = sum(p.numel() for p in model.encoder.parameters())
-total_params += sum(p.numel() for p in model.mean_layer.parameters())
-total_params += sum(p.numel() for p in model.logvar_layer.parameters())
 print(f"Number of parameters in encoder: {total_params}")
 
 print("\nDECODER:")
@@ -126,20 +107,27 @@ print(f"Number of parameters in decoder: {total_params}")
 
 print()
 
+# test_output = model.encoder(dataset[0][0])
+# print(test_output.shape)
+# sys.exit(0)
+
 
 # --------------------------------
-# VAE training
+# AE training
 # --------------------------------
 
 
-def loss_function(recon_x, x, mu, log_var):
-    recon_loss = torch.sqrt(torch.nn.MSELoss()(recon_x, x))
-    # KL divergence
-    kl_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
-    # Total loss: reconstruction + KL regularization
-    return recon_loss + 1.0e-6 * kl_loss
+class RMSELoss(torch.nn.Module):
+    def __init__(self):
+        super(RMSELoss, self).__init__()
+        self.mse = torch.nn.MSELoss()
+
+    def forward(self, y_pred, y_true):
+        return torch.sqrt(self.mse(y_pred, y_true))
 
 
+criterion = RMSELoss()
+# criterion = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 num_epochs = 30
 
@@ -159,8 +147,8 @@ for epoch in range(num_epochs):
 
         # forward + backward + optimize
         optimizer.zero_grad()
-        outputs, mu, log_var = model(inputs)
-        loss = loss_function(outputs, inputs, mu, log_var)
+        outputs = model(inputs)
+        loss = criterion(outputs, inputs)
         loss.backward()
         optimizer.step()
 
@@ -170,4 +158,4 @@ for epoch in range(num_epochs):
     average_loss = total_loss / len(dataset_loader)
     print("] - loss {:.4f}".format(average_loss))
 
-torch.save(model.state_dict(), "/home/leandro/models/AutoEncoders/06.VAE_Faces.pth")
+torch.save(model.state_dict(), "/home/leandro/models/AutoEncoders/_06_AE_Faces.pth")

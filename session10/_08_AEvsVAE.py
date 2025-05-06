@@ -36,7 +36,7 @@ print("Length of dataset:", len(dataset), "images")
 # img_to_show = dataset[num][0].permute(1,2,0).numpy()
 # ax.imshow(img_to_show)
 # plt.tight_layout()
-# plt.savefig("06.RandomFace.png")
+# plt.savefig("_06_RandomFace.png")
 
 
 # --------------------------------
@@ -96,7 +96,7 @@ class AE(torch.nn.Module):
 
 model_AE = AE()
 model_AE.load_state_dict(
-    torch.load("/home/leandro/models/AutoEncoders/06.AE_Faces.pth", weights_only=True)
+    torch.load("/home/leandro/models/AutoEncoders/_06_AE_Faces.pth", weights_only=True)
 )
 model_AE.eval()
 
@@ -181,7 +181,7 @@ class VAE(torch.nn.Module):
 
 model_VAE = VAE()
 model_VAE.load_state_dict(
-    torch.load("/home/leandro/models/AutoEncoders/06.VAE_Faces.pth", weights_only=True)
+    torch.load("/home/leandro/models/AutoEncoders/_06_VAE_Faces.pth", weights_only=True)
 )
 model_VAE.eval()
 
@@ -221,7 +221,7 @@ for i in range(n_to_show):
     sub.axis("off")
     sub.imshow(img)
 
-fig.savefig("08.AE.orig.png")
+fig.savefig("_08_origAE.png")
 
 # --------------------------------
 # AE: 10 noisy images
@@ -249,7 +249,7 @@ for i in range(n_to_show):
     sub.axis("off")
     sub.imshow(img)
 
-fig.savefig("08.AE.noisy.png")
+fig.savefig("_08_noisyAE.png")
 
 
 # --------------------------------
@@ -268,7 +268,7 @@ for i in range(n_to_show):
     sub.axis("off")
     sub.imshow(img)
 
-fig.savefig("08.AE.purenoise.png")
+fig.savefig("_08_purenoiseAE.png")
 
 
 # --------------------------------
@@ -295,7 +295,7 @@ for i in range(n_to_show):
     sub.axis("off")
     sub.imshow(img)
 
-fig.savefig("08.VAE.orig.png")
+fig.savefig("_08_origVAE.png")
 
 
 # --------------------------------
@@ -324,7 +324,7 @@ for i in range(n_to_show):
     sub.axis("off")
     sub.imshow(img)
 
-fig.savefig("08.VAE.noisy.png")
+fig.savefig("_08_noisyVAE.png")
 
 
 # --------------------------------
@@ -343,7 +343,7 @@ for i in range(n_to_show):
     sub.axis("off")
     sub.imshow(img)
 
-fig.savefig("08.VAE.purenoise.png")
+fig.savefig("_08_purenoiseVAE.png")
 
 
 # --------------------------------
@@ -388,7 +388,7 @@ for i in range(n_to_show):
     sub.axis("off")
     sub.imshow(img)
 
-fig.savefig("08.VAE.morphing.png")
+fig.savefig("_08_morphingVAE.png")
 
 
 # --------------------------------
@@ -425,4 +425,4 @@ for i in range(0, 20):
     sub.axis("off")
     sub.imshow(img)
 
-fig.savefig("08.VAE.distort.png")
+fig.savefig("_08_distortVAE.png")

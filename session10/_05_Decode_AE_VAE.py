@@ -39,7 +39,7 @@ class AE(torch.nn.Module):
 
 modelAE = AE()
 modelAE.load_state_dict(
-    torch.load("/home/leandro/models/AutoEncoders/01.AE.pth", weights_only=True)
+    torch.load("/home/leandro/models/AutoEncoders/_01_AE.pth", weights_only=True)
 )
 modelAE.eval()
 
@@ -96,7 +96,7 @@ class VAE(torch.nn.Module):
 
 modelVAE = VAE()
 modelVAE.load_state_dict(
-    torch.load("/home/leandro/models/AutoEncoders/04.VAE.pth", weights_only=True)
+    torch.load("/home/leandro/models/AutoEncoders/_04_VAE.pth", weights_only=True)
 )
 modelVAE.eval()
 
@@ -147,5 +147,5 @@ def PlotLatentSpace(model, namefile, size, n_of_ticks, img_dim):
     plt.savefig(namefile)
 
 
-PlotLatentSpace(modelAE, "05.LatentSpaceAE.png", size=10, n_of_ticks=20, img_dim=28)
-PlotLatentSpace(modelVAE, "05.LatentSpaceVAE.png", size=2, n_of_ticks=20, img_dim=28)
+PlotLatentSpace(modelAE, "_05_LatentSpaceAE.png", size=10, n_of_ticks=20, img_dim=28)
+PlotLatentSpace(modelVAE, "_05_LatentSpaceVAE.png", size=2, n_of_ticks=20, img_dim=28)

@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
+
 
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
@@ -13,8 +15,6 @@ if torch.cuda.is_available():
 else:
     print("ERROR: no GPU available")
     sys.exit(0)
-
-currentDirectory = os.path.dirname(os.path.abspath(__file__))
 
 custom_transform = transforms.Compose(
     [transforms.ToTensor(), transforms.Lambda(lambda x: x.view(-1))]
@@ -47,25 +47,27 @@ val_loader = DataLoader(val_data, len(val_data), shuffle=False, num_workers=2)
 # ax.imshow(train_data[num][0].reshape((28,28)), cmap='binary')
 # ax.set_title("Digit: {}".format(train_data[num][1]))
 # plt.tight_layout()
-# plt.savefig("01.RandomDigit.png")
+# plt.savefig(os.path.join(currentDirectory, "_01_RandomDigit.png"))
 
 # --------------------------------
 # AE definition
 # --------------------------------
 
 
-class AE(torch.nn.Module):
+class VAE(torch.nn.Module):
     def __init__(self):
         super().__init__()
 
-        # Encoder 784 -> 256 -> 48 -> 2
+        # Encoder 784 -> 256 -> 48
         self.encoder = torch.nn.Sequential(
             torch.nn.Linear(784, 256),
             torch.nn.ReLU(),
             torch.nn.Linear(256, 48),
             torch.nn.ReLU(),
-            torch.nn.Linear(48, 2),
         )
+
+        self.mean_layer = torch.nn.Linear(48, 2)
+        self.logvar_layer = torch.nn.Linear(48, 2)
 
         # Decoder 2 -> 48 -> 256 -> 784
         self.decoder = torch.nn.Sequential(
@@ -77,31 +79,59 @@ class AE(torch.nn.Module):
             torch.nn.Sigmoid(),
         )
 
+    def encode(self, x):
+        x = self.encoder(x)
+        mean, logvar = self.mean_layer(x), self.logvar_layer(x)
+        return mean, logvar
+
+    def reparameterization(self, mean, logvar):
+        std = torch.exp(0.5 * logvar)
+        epsilon = torch.randn_like(std).to(device)
+        z = mean + std * epsilon
+        return z
+
+    def decode(self, x):
+        return self.decoder(x)
+
     def forward(self, x):
-        encoded = self.encoder(x)
-        decoded = self.decoder(encoded)
-        return decoded
+        mean, logvar = self.encode(x)
+        z = self.reparameterization(mean, logvar)
+        x_hat = self.decode(z)
+        return x_hat, mean, logvar
 
 
-model = AE().to(device)
+model = VAE().to(device)
 
 print("\nENCODER:")
 print(model.encoder)
-total_params = sum(p.numel() for p in model.encoder.parameters())
-print(f"Number of parameters: {total_params}")
+print(model.mean_layer)
+print(model.logvar_layer)
+
 
 print("\nDECODER:")
 print(model.decoder)
 total_params = sum(p.numel() for p in model.decoder.parameters())
 print(f"Number of parameters: {total_params}")
 
+
 # --------------------------------
 # AE training
 # --------------------------------
+def loss_function(recon_x, x, mu, log_var):
+    recon_loss = torch.nn.BCELoss()(recon_x, x)
+    # print(recon_loss)
+    # KL divergence
+    kl_loss = -0.5 * torch.mean(1 + log_var - mu.pow(2) - log_var.exp())
+    # print(recon_loss)
+    # print(kl_loss)
+    # sys.exit(0)
+    # Total loss: reconstruction + KL regularization
+    return recon_loss + 0.01 * kl_loss
 
-criterion = torch.nn.BCELoss()
-optimizer = torch.optim.RMSprop(model.parameters(), lr=0.001)
-num_epochs = 30
+
+# criterion = torch.nn.BCELoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+num_epochs = 10
 
 loss_v = np.empty(0)
 loss_val_v = np.empty(0)
@@ -117,8 +147,8 @@ for epoch in range(num_epochs):
 
         # forward + backward + optimize
         optimizer.zero_grad()
-        outputs = model(inputs)
-        loss = criterion(outputs, inputs)
+        outputs, mu, log_var = model(inputs)
+        loss = loss_function(outputs, inputs, mu, log_var)
         loss.backward()
         optimizer.step()
 
@@ -130,8 +160,8 @@ for epoch in range(num_epochs):
         for i, data in enumerate(val_loader, 0):
             inputs_val, _ = data
             inputs_val = inputs_val.to(device)
-            outputs_val = model(inputs_val)
-            loss_val = criterion(outputs_val, inputs_val)
+            outputs_val, mu, log_var = model(inputs_val)
+            loss_val = loss_function(outputs_val, inputs_val, mu, log_var)
             total_loss_val += loss_val.item()
 
     average_loss = total_loss / len(train_loader)
@@ -145,7 +175,9 @@ for epoch in range(num_epochs):
         )
     )
 
-torch.save(model.state_dict(), os.path.join(currentDirectory, "01.AE.pth"))
+
+torch.save(model.state_dict(), os.path.join(currentDirectory, "_04_VAE.pth"))
+
 
 # --------------------------------
 # Plot loss
@@ -160,7 +192,7 @@ plt.xlabel("Epochs")
 plt.legend()
 plt.tight_layout()
 
-plt.savefig(os.path.join(currentDirectory, "01.UndercompleteAE.Loss.png"))
+plt.savefig(os.path.join(currentDirectory, "_04_VariationalAE.Loss.png"))
 
 
 # ---------------------------------------------
@@ -173,7 +205,7 @@ input_images = [val_data[i][0] for i in input_idx]
 input_labels = [val_data[i][1] for i in input_idx]
 
 input_batch = torch.stack(input_images).to(device)
-output_batch = model(input_batch)
+output_batch, _, _ = model(input_batch)
 
 # print(input_labels)
 # print(len(output_batch))
@@ -188,7 +220,7 @@ for i in range(n_to_show):
     fig.suptitle("Original digits")
     ax.imshow(img, cmap="binary")
 fig.tight_layout()
-fig.savefig(os.path.join(currentDirectory, "01.OriginalDigits.png"))
+fig.savefig(os.path.join(currentDirectory, "_04_OriginalDigits.png"))
 
 
 fig = plt.figure(figsize=(15, 2))
@@ -201,7 +233,7 @@ for i in range(n_to_show):
     fig.suptitle("Reconstructed digits")
     ax.imshow(img, cmap="binary")
 fig.tight_layout()
-fig.savefig(os.path.join(currentDirectory, "01.ReconstructedDigits.png"))
+fig.savefig(os.path.join(currentDirectory, "_04_ReconstructedDigits.png"))
 
 
 # ---------------------------------------------
@@ -216,7 +248,7 @@ example_images = [train_data[i][0] for i in example_idx]
 example_labels = [train_data[i][1] for i in example_idx]
 
 example_batch = torch.stack(example_images).to(device)
-example_points = model.encoder(example_batch).detach().cpu().numpy()
+example_points = model.mean_layer(model.encoder(example_batch)).detach().cpu().numpy()
 
 plt.figure(figsize=(5, 5))
 plt.scatter(
@@ -229,4 +261,6 @@ plt.scatter(
 )
 plt.colorbar(values=range(10), ticks=range(10))
 plt.tight_layout()
-plt.savefig(os.path.join(currentDirectory, "01.LatentSpace.png"))
+plt.savefig(os.path.join(currentDirectory, "_04_LatentSpace.png"))
+
+sys.exit(0)
