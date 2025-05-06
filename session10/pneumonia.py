@@ -632,5 +632,83 @@ plt.legend()
 ##################################################################################################################
 ##################################################################################################################
 ##################################################################################################################
+# Run the models with the test set
+
+aeGuesses = np.empty(0)
+vaeGuesses = np.empty(0)
+
+modelAE.eval()
+modelVAE.eval()
+with torch.no_grad():
+    for _, data in enumerate(test_loader, 0):
+        inputs_test, _ = data
+        inputs_test = inputs_test.to(device)
+        outputs_test = modelAE(inputs_test).view(-1, 1, 28, 28)
+
+        # Add if they are healthy or pneumonia
+        errors = (
+            torch.sum(torch.abs(outputs_test - inputs_test), dim=(1, 2, 3))
+            .cpu()
+            .numpy()
+        )
+        predictions = (errors >= best_threshold_ae).astype(int)
+        aeGuesses = np.append(aeGuesses, predictions)
+
+        outputs_test, mean, logvar = modelVAE(inputs_test)
+        outputs_test = outputs_test.view(-1, 1, 28, 28)
+
+        # Add if they are healthy or pneumonia
+        errors = (
+            torch.sum(torch.abs(outputs_test - inputs_test), dim=(1, 2, 3))
+            .cpu()
+            .numpy()
+        )
+        predictions = (errors >= best_threshold_vae).astype(int)
+        vaeGuesses = np.append(vaeGuesses, predictions)
+
+# Show the confusion matrix
+from sklearn.metrics import confusion_matrix
+
+cm_ae = confusion_matrix(labels_test, aeGuesses)
+cm_vae = confusion_matrix(labels_test, vaeGuesses)
+
+plt.figure()
+plt.subplot(1, 2, 1)
+plt.imshow(cm_ae, interpolation="nearest", cmap=plt.cm.Blues)
+plt.title("Confusion matrix AE")
+plt.colorbar()
+plt.xticks(np.arange(2), ["Healthy", "Pneumonia"])
+plt.yticks(np.arange(2), ["Healthy", "Pneumonia"])
+plt.ylabel("True label")
+plt.xlabel("Predicted label")
+
+# Anotate the values
+for i in range(cm_ae.shape[0]):
+    for j in range(cm_ae.shape[1]):
+        plt.text(
+            j, i, format(cm_ae[i, j], "d"), ha="center", va="center", color="black"
+        )
+
+plt.subplot(1, 2, 2)
+plt.imshow(cm_vae, interpolation="nearest", cmap=plt.cm.Blues)
+plt.title("Confusion matrix VAE")
+plt.colorbar()
+plt.xticks(np.arange(2), ["Healthy", "Pneumonia"])
+plt.yticks(np.arange(2), ["Healthy", "Pneumonia"])
+plt.ylabel("True label")
+plt.xlabel("Predicted label")
+plt.tight_layout()
+
+# Anotate the values
+for i in range(cm_vae.shape[0]):
+    for j in range(cm_vae.shape[1]):
+        plt.text(
+            j, i, format(cm_vae[i, j], "d"), ha="center", va="center", color="black"
+        )
+
+##################################################################################################################
+##################################################################################################################
+##################################################################################################################
+
 
 plt.show()
