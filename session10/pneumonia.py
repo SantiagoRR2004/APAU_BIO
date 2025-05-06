@@ -177,10 +177,12 @@ test_loader = DataLoader(test_dataset, batch_size, shuffle=False, num_workers=2)
 # --------------------------------
 
 
-loss_v = np.empty(0)
-loss_val_v = np.empty(0)
-val_healthy_distances = np.empty(0)
-val_pneumonia_distances = np.empty(0)
+ae_loss_v = np.empty(0)
+ae_loss_val_health_v = np.empty(0)
+ae_loss_val_anomaly_v = np.empty(0)
+ae_distances = np.empty(0)
+ae_val_healthy_distances = np.empty(0)
+ae_val_pneumonia_distances = np.empty(0)
 
 for epoch in range(num_epochs):
     modelAE.train()
@@ -222,8 +224,8 @@ for epoch in range(num_epochs):
             ).item()
             # Distances for the threshold
             if epoch == num_epochs - 1:
-                val_healthy_distances = np.append(
-                    val_healthy_distances,
+                ae_val_healthy_distances = np.append(
+                    ae_val_healthy_distances,
                     torch.sum(torch.abs(outputs_val - inputs_val), dim=(1, 2, 3))
                     .cpu()
                     .numpy(),
@@ -243,8 +245,8 @@ for epoch in range(num_epochs):
             ).item()
             # Distances for the threshold
             if epoch == num_epochs - 1:
-                val_pneumonia_distances = np.append(
-                    val_pneumonia_distances,
+                ae_val_pneumonia_distances = np.append(
+                    ae_val_pneumonia_distances,
                     torch.sum(torch.abs(outputs_val - inputs_val), dim=(1, 2, 3))
                     .cpu()
                     .numpy(),
@@ -265,8 +267,15 @@ for epoch in range(num_epochs):
     )
 
     # Store in the lists
-    loss_v = np.append(loss_v, average_loss)
-    loss_val_v = np.append(loss_val_v, average_loss_val_healthy)
+    ae_loss_v = np.append(ae_loss_v, average_loss)
+    ae_loss_val_health_v = np.append(ae_loss_val_health_v, average_loss_val_healthy)
+    ae_loss_val_anomaly_v = np.append(ae_loss_val_anomaly_v, average_loss_val_anomaly)
+    ae_val_healthy_distances = np.append(
+        ae_val_healthy_distances, average_difference_val_healthy
+    )
+    ae_val_pneumonia_distances = np.append(
+        ae_val_pneumonia_distances, average_difference_val_anomaly
+    )
 
     print(
         "Epoch {:02d}: loss {:.4f} - val. healthy loss {:.4f} - val. pneumonia loss {:.4f} - MAE {:.4f} - val. healthy MAE {:.4f} - val. pneumonia MAE {:.4f}".format(
@@ -280,8 +289,8 @@ for epoch in range(num_epochs):
         )
     )
 
-labels = [0] * len(val_healthy_distances) + [1] * len(val_pneumonia_distances)
-scores = np.concatenate((val_healthy_distances, val_pneumonia_distances), axis=0)
+labels = [0] * len(ae_val_healthy_distances) + [1] * len(ae_val_pneumonia_distances)
+scores = np.concatenate((ae_val_healthy_distances, ae_val_pneumonia_distances), axis=0)
 
 fpr, tpr, thresholds = roc_curve(labels, scores)
 j_scores = tpr - fpr
@@ -290,7 +299,8 @@ print("Best threshold:", best_threshold)
 
 torch.save(modelAE.state_dict(), os.path.join(currentDirectory, "PneumoniaAE.pth"))
 
-
+# Epochs for plotting
+epochs = range(1, num_epochs + 1)
 ##################################################################################################################
 ##################################################################################################################
 ##################################################################################################################
@@ -313,6 +323,19 @@ plt.ylabel("True Positive Rate")
 plt.title("Receiver Operating Characteristic (ROC)")
 plt.legend(loc="lower right")
 plt.grid()
+
+##################################################################################################################
+##################################################################################################################
+##################################################################################################################
+# Plot the losses
+plt.figure()
+plt.plot(epochs, ae_loss_v, "b-o", label="Training")
+plt.plot(epochs, ae_loss_val_health_v, "r-o", label="Validation Healthy")
+plt.plot(epochs, ae_loss_val_anomaly_v, "g-o", label="Validation Pneumonia")
+plt.title("Training and validation loss")
+plt.xlabel("Epochs")
+plt.ylabel("Loss")
+plt.legend()
 
 ##################################################################################################################
 ##################################################################################################################
