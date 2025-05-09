@@ -710,5 +710,24 @@ for i in range(cm_vae.shape[0]):
 ##################################################################################################################
 ##################################################################################################################
 
+# plot disntance points, last batch with AE
+plt.plot(ae_val_healthy_distances_Threshold, "o", label="Normal")
+plt.plot(ae_val_pneumonia_distances_Threshold, "o", label="Pneumonia")
+plt.xlabel("Img")
+plt.ylabel("Disntance")
+plt.title("Distance AE")
+plt.legend()
+
+# plot disntance points, last batch with VAE
+plt.plot(vae_val_healthy_distances_Threshold, "o", label="Normal")
+plt.plot(vae_val_pneumonia_distances_Threshold, "o", label="Pneumonia")
+plt.xlabel("Img")
+plt.ylabel("Disntance")
+plt.title("Distance VAE")
+plt.legend()
+
+##################################################################################################################
+##################################################################################################################
+##################################################################################################################
 
 plt.show()
