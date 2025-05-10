@@ -185,6 +185,8 @@ class Classifier(nn.Module):
 
         self.net = self.getCNN()
 
+        self.class_names = []
+
     def forward(self, image):
         return self.net(image)
 
@@ -265,9 +267,8 @@ class Classifier(nn.Module):
         self.net.load_state_dict(torch.load(path, map_location=self.device))
         self.net.eval()
 
-    def test(self, test_loader):
+    def predict(self, test_loader):
 
-        correct_predictions_val = 0
         total_samples_val = 0
         inputs_val = []
         labels_val = []
@@ -285,16 +286,12 @@ class Classifier(nn.Module):
                 outputs_val.append(outputs)
                 _, predicted = torch.max(outputs, 1)
                 predicted_val.append(predicted)
-                correct_predictions_val += (predicted == labels).sum().item()
                 total_samples_val += labels.size(0)
 
         inputs_val = torch.cat(inputs_val, dim=0)
         labels_val = torch.cat(labels_val, dim=0)
         outputs_val = torch.cat(outputs_val, dim=0)
         predicted_val = torch.cat(predicted_val, dim=0)
-
-        accuracy_val = correct_predictions_val / total_samples_val
-        print("Test accuracy: {:.4f}".format(accuracy_val))
 
         # Set up the plot
         plt.ion()  # Turn on interactive mode
@@ -305,8 +302,7 @@ class Classifier(nn.Module):
             ax.clear()  # Clear previous plot
             self.plot_image(inputs_val[i])  # Pass ax to your plot_image function
             predicted_class = self.class_names[predicted_val[i].item()]
-            actual_class = self.class_names[labels_val[i].item()]
-            ax.set_title(f"Predicted: {predicted_class}, Actual: {actual_class}")
+            ax.set_title(f"Predicted: {predicted_class}")
 
             probs = F.softmax(outputs_val[i], dim=0)
 
@@ -360,6 +356,8 @@ test_data = datasets.FashionMNIST(
     root="./data", train=False, download=True, transform=transform
 )
 
+class_names = train_data.classes
+print(class_names)
 print(train_data)
 print(train_data.data.size())
 
@@ -479,6 +477,7 @@ def plot_images(epoch, generator, examples=10, dim=(1, 10), figsize=(10, 1)):
         )
         plt.axis("off")
     plt.tight_layout()
+    plt.savefig("samples/epoch_{:03d}.png".format(epoch))
 
 
 n_epoch = 200
@@ -509,12 +508,45 @@ for epoch in range(1, n_epoch + 1):
 
 plot_losses(D_losses, G_losses)
 
-# Save the model
+# save models:
 torch.save(G.state_dict(), "G.pth")
 torch.save(D.state_dict(), "D.pth")
 
-# Load the model
+# Load models:
 G.load_state_dict(torch.load("G.pth"))
 D.load_state_dict(torch.load("D.pth"))
 
 plt.show()
+
+classifier = Classifier()
+classifier.train(test_loader)  # Entrenar con datos de test
+classifier.save_model("Classifier.pth")
+
+num_samples = 5
+noise = torch.randn(num_samples, z_dim).to(device)
+fake_images = G(noise).detach().cpu()
+
+
+class GeneratedDataset(Dataset):
+    def __init__(self, images):
+        self.images = images
+        self.labels = torch.zeros(
+            images.size(0), dtype=torch.long
+        )  # Etiquetas dummy para las imágenes generadas
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, idx):
+        return self.images[idx], self.labels[idx]
+
+
+fake_images = fake_images.view(-1, 1, 28, 28)
+generated_dataset = GeneratedDataset(fake_images)
+generated_loader = DataLoader(generated_dataset, batch_size=128, shuffle=False)
+
+# load model Classifier
+classifier = Classifier()
+classifier.load_model("Classifier.pth")
+classifier.class_names = class_names
+classifier.predict(generated_loader)
