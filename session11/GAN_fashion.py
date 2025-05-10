@@ -516,3 +516,5 @@ torch.save(D.state_dict(), "D.pth")
 # Load the model
 G.load_state_dict(torch.load("G.pth"))
 D.load_state_dict(torch.load("D.pth"))
+
+plt.show()

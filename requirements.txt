@@ -18,3 +18,4 @@ flax
 gymnasium[mujoco]
 stable_baselines3
 medmnist
+torchsummary
