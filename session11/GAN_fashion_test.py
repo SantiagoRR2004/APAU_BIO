@@ -1,4 +1,5 @@
-from GAN_fashion import Classifier, Generator, Discriminator, GeneratedDataset
+from GAN_fashion import Classifier, Discriminator, GeneratedDataset
+from generatorSimple import Generator
 import torch
 import os
 from torch.utils.data import DataLoader
