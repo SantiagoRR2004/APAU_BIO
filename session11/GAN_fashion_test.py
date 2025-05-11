@@ -1,4 +1,4 @@
-from GAN_fashion import Classifier, Discriminator, GeneratedDataset
+from GAN_fashion import Classifier, GeneratedDataset
 from generatorSimple import Generator
 import torch
 import os
@@ -9,11 +9,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 G = Generator().to(device)
-D = Discriminator().to(device)
 
 # Load the model
 G.load_state_dict(torch.load(os.path.join(currentDirectory, "G.pth")))
-D.load_state_dict(torch.load(os.path.join(currentDirectory, "D.pth")))
 
 num_samples = 5
 noise = torch.randn(num_samples, 100).to(device)
