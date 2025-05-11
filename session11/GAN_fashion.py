@@ -22,7 +22,6 @@ import pandas as pd
 from torch.utils.data import Dataset, DataLoader
 from torchvision.utils import make_grid
 import matplotlib.patches as mpatches
-
 from torchsummary import summary
 
 # Device configuration
@@ -341,191 +340,6 @@ class Classifier(nn.Module):
 summary(Classifier().to(device), (1, 28, 28))
 print(Classifier())
 
-transform = transforms.Compose(
-    [
-        transforms.ToTensor(),
-        transforms.Normalize((0.5,), (0.5,)),  # Normalizes to [-1, 1]
-    ]
-)
-
-train_data = datasets.FashionMNIST(
-    root="./data", train=True, download=True, transform=transform
-)
-
-test_data = datasets.FashionMNIST(
-    root="./data", train=False, download=True, transform=transform
-)
-
-class_names = train_data.classes
-print(class_names)
-print(train_data)
-print(train_data.data.size())
-
-batch_size = 128
-
-train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
-test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
-
-dataiter = iter(train_loader)
-images, labels = next(dataiter)
-plt.figure(figsize=(4, 4))
-plt.axis("off")
-plt.title("Training Images")
-inverted_images = t_F.invert(images[0:48])
-plt.imshow(
-    np.transpose(
-        make_grid(inverted_images.to(device), padding=2, normalize=True).cpu(),
-        (1, 2, 0),
-    )
-)
-
-print("Shape of loading one batch:", images.shape)
-print("Total no. of batches present in trainloader:", len(train_loader))
-
-G = Generator().to(device)
-D = Discriminator().to(device)
-fashion_dim = train_data.data.size(1) * train_data.data.size(2)
-z_dim = 100
-print(fashion_dim)
-
-# loss
-criterion = nn.BCELoss()
-
-# optimizer
-lr = 0.0002
-G_optimizer = optim.Adam(G.parameters(), lr=lr)
-D_optimizer = optim.Adam(D.parameters(), lr=lr)
-
-
-def G_train(x):
-    # =======================Train the generator=======================#
-    G.zero_grad()
-
-    z = Variable(torch.randn(batch_size, z_dim).to(device))
-    y = Variable(torch.ones(batch_size, 1).to(device))
-
-    G_output = G(z)
-    D_output = D(G_output)
-    G_loss = criterion(D_output, y)
-
-    # gradient backprop & optimize ONLY G's parameters
-    G_loss.backward()
-    G_optimizer.step()
-
-    return G_loss.data.item()
-
-
-def D_train(x):
-    # =======================Train the discriminator=======================#
-    D.zero_grad()
-
-    # train discriminator on real
-    x_real, y_real = x.view(-1, fashion_dim).to(device), torch.ones(x.size(0), 1).to(
-        device
-    )
-    x_real, y_real = Variable(x_real), Variable(y_real)
-
-    D_output = D(x_real)
-    D_real_loss = criterion(D_output, y_real)
-    D_real_score = D_output
-
-    # train discriminator on fake
-    z = Variable(torch.randn(x.size(0), z_dim).to(device))
-    x_fake, y_fake = G(z), Variable(torch.zeros(x.size(0), 1).to(device))
-
-    D_output = D(x_fake)
-    D_fake_loss = criterion(D_output, y_fake)
-    D_fake_score = D_output
-
-    # gradient backprop & optimize ONLY D's parameters
-    D_loss = D_real_loss + D_fake_loss
-    D_loss.backward()
-    D_optimizer.step()
-
-    return D_loss.data.item()
-
-
-import os
-
-os.makedirs("samples", exist_ok=True)
-
-
-# Function to plot losses
-def plot_losses(d_losses, g_losses):
-    plt.figure(figsize=(10, 5))
-    plt.plot(d_losses, label="Discriminative loss")
-    plt.plot(g_losses, label="Generative loss")
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.legend()
-    plt.suptitle("Loss over Epochs")
-    plt.savefig("samples/losses.png")
-
-
-def plot_images(epoch, generator, examples=10, dim=(1, 10), figsize=(10, 1)):
-    noise = torch.randn(examples, z_dim, device=device)
-    generated_images = G(noise)
-    generated_images = generated_images.reshape(examples, 28, 28)
-
-    plt.figure(figsize=figsize)
-    for i in range(examples):
-        plt.subplot(dim[0], dim[1], i + 1)
-        plt.imshow(
-            generated_images[i].cpu().detach().numpy(),
-            interpolation="nearest",
-            cmap="gray_r",
-        )
-        plt.axis("off")
-    plt.tight_layout()
-    plt.savefig("samples/epoch_{:03d}.png".format(epoch))
-
-
-n_epoch = 200
-sample_interval = 10
-D_losses, G_losses = [], []
-for epoch in range(1, n_epoch + 1):
-    D_loss_epoch = 0.0
-    G_loss_epoch = 0.0
-    for batch_idx, (x, _) in enumerate(train_loader):
-        D_loss_epoch += D_train(x)
-        G_loss_epoch += G_train(x)
-    D_loss_epoch /= batch_idx + 1
-    G_loss_epoch /= batch_idx + 1
-    D_losses.append(D_loss_epoch)
-    G_losses.append(G_loss_epoch)
-
-    print(
-        "[%d/%d]: loss_d: %.3f, loss_g: %.3f"
-        % (
-            (epoch),
-            n_epoch,
-            torch.mean(torch.FloatTensor(D_losses)),
-            torch.mean(torch.FloatTensor(G_losses)),
-        )
-    )
-    if epoch % sample_interval == 0 or epoch == n_epoch:
-        plot_images(epoch, G)
-
-plot_losses(D_losses, G_losses)
-
-# save models:
-torch.save(G.state_dict(), "G.pth")
-torch.save(D.state_dict(), "D.pth")
-
-# Load models:
-G.load_state_dict(torch.load("G.pth"))
-D.load_state_dict(torch.load("D.pth"))
-
-plt.show()
-
-classifier = Classifier()
-classifier.train(test_loader)  # Entrenar con datos de test
-classifier.save_model("Classifier.pth")
-
-num_samples = 5
-noise = torch.randn(num_samples, z_dim).to(device)
-fake_images = G(noise).detach().cpu()
-
 
 class GeneratedDataset(Dataset):
     def __init__(self, images):
@@ -541,12 +355,192 @@ class GeneratedDataset(Dataset):
         return self.images[idx], self.labels[idx]
 
 
-fake_images = fake_images.view(-1, 1, 28, 28)
-generated_dataset = GeneratedDataset(fake_images)
-generated_loader = DataLoader(generated_dataset, batch_size=128, shuffle=False)
+if __name__ == "__main__":
+    transform = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize((0.5,), (0.5,)),  # Normalizes to [-1, 1]
+        ]
+    )
 
-# load model Classifier
-classifier = Classifier()
-classifier.load_model("Classifier.pth")
-classifier.class_names = class_names
-classifier.predict(generated_loader)
+    train_data = datasets.FashionMNIST(
+        root="./data", train=True, download=True, transform=transform
+    )
+
+    test_data = datasets.FashionMNIST(
+        root="./data", train=False, download=True, transform=transform
+    )
+
+    class_names = train_data.classes
+    print(class_names)
+    print(train_data)
+    print(train_data.data.size())
+
+    batch_size = 128
+
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
+
+    dataiter = iter(train_loader)
+    images, labels = next(dataiter)
+    plt.figure(figsize=(4, 4))
+    plt.axis("off")
+    plt.title("Training Images")
+    inverted_images = t_F.invert(images[0:48])
+    plt.imshow(
+        np.transpose(
+            make_grid(inverted_images.to(device), padding=2, normalize=True).cpu(),
+            (1, 2, 0),
+        )
+    )
+
+    print("Shape of loading one batch:", images.shape)
+    print("Total no. of batches present in trainloader:", len(train_loader))
+
+    G = Generator().to(device)
+    D = Discriminator().to(device)
+    fashion_dim = train_data.data.size(1) * train_data.data.size(2)
+    z_dim = 100
+    print(fashion_dim)
+
+    # loss
+    criterion = nn.BCELoss()
+
+    # optimizer
+    lr = 0.0002
+    G_optimizer = optim.Adam(G.parameters(), lr=lr)
+    D_optimizer = optim.Adam(D.parameters(), lr=lr)
+
+    def G_train(x):
+        # =======================Train the generator=======================#
+        G.zero_grad()
+
+        z = Variable(torch.randn(batch_size, z_dim).to(device))
+        y = Variable(torch.ones(batch_size, 1).to(device))
+
+        G_output = G(z)
+        D_output = D(G_output)
+        G_loss = criterion(D_output, y)
+
+        # gradient backprop & optimize ONLY G's parameters
+        G_loss.backward()
+        G_optimizer.step()
+
+        return G_loss.data.item()
+
+    def D_train(x):
+        # =======================Train the discriminator=======================#
+        D.zero_grad()
+
+        # train discriminator on real
+        x_real, y_real = x.view(-1, fashion_dim).to(device), torch.ones(
+            x.size(0), 1
+        ).to(device)
+        x_real, y_real = Variable(x_real), Variable(y_real)
+
+        D_output = D(x_real)
+        D_real_loss = criterion(D_output, y_real)
+        D_real_score = D_output
+
+        # train discriminator on fake
+        z = Variable(torch.randn(x.size(0), z_dim).to(device))
+        x_fake, y_fake = G(z), Variable(torch.zeros(x.size(0), 1).to(device))
+
+        D_output = D(x_fake)
+        D_fake_loss = criterion(D_output, y_fake)
+        D_fake_score = D_output
+
+        # gradient backprop & optimize ONLY D's parameters
+        D_loss = D_real_loss + D_fake_loss
+        D_loss.backward()
+        D_optimizer.step()
+
+        return D_loss.data.item()
+
+    import os
+
+    os.makedirs("samples", exist_ok=True)
+
+    # Function to plot losses
+    def plot_losses(d_losses, g_losses):
+        plt.figure(figsize=(10, 5))
+        plt.plot(d_losses, label="Discriminative loss")
+        plt.plot(g_losses, label="Generative loss")
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss")
+        plt.legend()
+        plt.suptitle("Loss over Epochs")
+        plt.savefig("samples/losses.png")
+
+    def plot_images(epoch, generator, examples=10, dim=(1, 10), figsize=(10, 1)):
+        noise = torch.randn(examples, z_dim, device=device)
+        generated_images = G(noise)
+        generated_images = generated_images.reshape(examples, 28, 28)
+
+        plt.figure(figsize=figsize)
+        for i in range(examples):
+            plt.subplot(dim[0], dim[1], i + 1)
+            plt.imshow(
+                generated_images[i].cpu().detach().numpy(),
+                interpolation="nearest",
+                cmap="gray_r",
+            )
+            plt.axis("off")
+        plt.tight_layout()
+        plt.savefig("samples/epoch_{:03d}.png".format(epoch))
+
+    n_epoch = 200
+    sample_interval = 10
+    D_losses, G_losses = [], []
+    for epoch in range(1, n_epoch + 1):
+        D_loss_epoch = 0.0
+        G_loss_epoch = 0.0
+        for batch_idx, (x, _) in enumerate(train_loader):
+            D_loss_epoch += D_train(x)
+            G_loss_epoch += G_train(x)
+        D_loss_epoch /= batch_idx + 1
+        G_loss_epoch /= batch_idx + 1
+        D_losses.append(D_loss_epoch)
+        G_losses.append(G_loss_epoch)
+
+        print(
+            "[%d/%d]: loss_d: %.3f, loss_g: %.3f"
+            % (
+                (epoch),
+                n_epoch,
+                torch.mean(torch.FloatTensor(D_losses)),
+                torch.mean(torch.FloatTensor(G_losses)),
+            )
+        )
+        if epoch % sample_interval == 0 or epoch == n_epoch:
+            plot_images(epoch, G)
+
+    plot_losses(D_losses, G_losses)
+
+    # save models:
+    torch.save(G.state_dict(), "G.pth")
+    torch.save(D.state_dict(), "D.pth")
+
+    # Load models:
+    G.load_state_dict(torch.load("G.pth"))
+    D.load_state_dict(torch.load("D.pth"))
+
+    plt.show()
+
+    classifier = Classifier()
+    classifier.train(test_loader)  # Entrenar con datos de test
+    classifier.save_model("Classifier.pth")
+
+    num_samples = 5
+    noise = torch.randn(num_samples, z_dim).to(device)
+    fake_images = G(noise).detach().cpu()
+
+    fake_images = fake_images.view(-1, 1, 28, 28)
+    generated_dataset = GeneratedDataset(fake_images)
+    generated_loader = DataLoader(generated_dataset, batch_size=128, shuffle=False)
+
+    # load model Classifier
+    classifier = Classifier()
+    classifier.load_model("Classifier.pth")
+    classifier.class_names = class_names
+    classifier.predict(generated_loader)
