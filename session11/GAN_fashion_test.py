@@ -1,15 +1,18 @@
 from GAN_fashion import Classifier, Generator, Discriminator, GeneratedDataset
 import torch
+import os
 from torch.utils.data import DataLoader
 
-Classifier = Classifier()
-G = Generator()
-D = Discriminator()
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
+G = Generator().to(device)
+D = Discriminator().to(device)
+
 # Load the model
-G.load_state_dict(torch.load("G.pth"))
-D.load_state_dict(torch.load("D.pth"))
+G.load_state_dict(torch.load(os.path.join(currentDirectory, "G.pth")))
+D.load_state_dict(torch.load(os.path.join(currentDirectory, "D.pth")))
 
 num_samples = 5
 noise = torch.randn(num_samples, 100).to(device)
@@ -22,7 +25,7 @@ generated_loader = DataLoader(generated_dataset, batch_size=128, shuffle=False)
 
 # load model Classifier
 classifier = Classifier()
-classifier.load_model("Classifier.pth")
+classifier.load_model(os.path.join(currentDirectory, "Classifier.pth"))
 classifier.class_names = [
     "T-shirt/top",
     "Trouser",
