@@ -36,21 +36,22 @@ class Classifier(nn.Module):
             torch.nn.Conv2d(1, 32, kernel_size=3),
             torch.nn.ReLU(),
             torch.nn.MaxPool2d(kernel_size=2),
+            torch.nn.Dropout(p=0.25),
             torch.nn.Conv2d(32, 64, kernel_size=3),
             torch.nn.ReLU(),
             torch.nn.MaxPool2d(kernel_size=2),
+            torch.nn.Dropout(p=0.25),
             torch.nn.Conv2d(64, 128, kernel_size=3),
             torch.nn.ReLU(),
             torch.nn.Flatten(),
+            torch.nn.Dropout(p=0.5),
             torch.nn.Linear(1152, 10),
-            torch.nn.Softmax(dim=1),
         ).to(self.device)
 
         return net
 
     def train(self, train_loader):
 
-        # loss_fn = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.RMSprop(self.net.parameters(), lr=0.001)
         criterion = torch.nn.CrossEntropyLoss()
 
@@ -102,7 +103,7 @@ class Classifier(nn.Module):
         image = image.cpu().numpy()
         # Transpose the dimensions to (height, width, channels)
         image = np.transpose(image, (1, 2, 0))
-        plt.imshow(image, cmap="gray" if self.nChannels == 1 else None)
+        plt.imshow(image, cmap="gray_r" if self.nChannels == 1 else None)
 
     def load_model(self, path: str = "Classifier.pth"):
         self.net.load_state_dict(torch.load(path, map_location=self.device))
