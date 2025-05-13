@@ -7,7 +7,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Generator(nn.Module):
 
-    def __init__(self, z_dim=10, im_chan=1, hidden_dim=64):
+    def __init__(self, z_dim=100, im_chan=1, hidden_dim=64):
         super(Generator, self).__init__()
 
         self.z_dim = z_dim
@@ -26,6 +26,8 @@ class Generator(nn.Module):
             self.get_generator_final_block(
                 hidden_dim, im_chan, kernel_size=4, stride=2
             ),
+            nn.Flatten(),
+            nn.Sigmoid(),
         )
 
     def get_generator_block(

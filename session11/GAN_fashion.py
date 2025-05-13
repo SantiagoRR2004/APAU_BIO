@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from torchvision.utils import make_grid
-from generatorSimple import Generator
+from generatorComplex import Generator
 from discriminatorComplex import Discriminator
 from classifier import Classifier
 
