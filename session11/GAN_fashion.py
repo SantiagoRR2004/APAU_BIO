@@ -19,7 +19,7 @@ import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from torchvision.utils import make_grid
 from generatorSimple import Generator
-from discriminatorSimple import Discriminator
+from discriminatorComplex import Discriminator
 from classifier import Classifier
 
 # Device configuration

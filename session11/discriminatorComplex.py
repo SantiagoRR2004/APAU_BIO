@@ -11,6 +11,7 @@ class Discriminator(nn.Module):
     def __init__(self, im_chan=1, hidden_dim=16):
         super(Discriminator, self).__init__()
         self.disc = nn.Sequential(
+            nn.Unflatten(1, (im_chan, 28, 28)),  # Add this line
             self.get_critic_block(im_chan, hidden_dim * 4, kernel_size=4, stride=2),
             self.get_critic_block(
                 hidden_dim * 4,
@@ -43,8 +44,10 @@ class Discriminator(nn.Module):
         )
 
     def forward(self, image):
-        return self.disc(image)
+        x = self.disc(image)
+        x = x.view(x.size(0), -1)  # Flatten to (batch_size, 1)
+        return torch.sigmoid(x)
 
 
-summary(Discriminator().to(device), (1, 28, 28))
+summary(Discriminator().to(device), (784,))
 print(Discriminator())
