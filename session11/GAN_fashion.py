@@ -206,12 +206,8 @@ if __name__ == "__main__":
     torch.save(G.state_dict(), "G.pth")
     torch.save(D.state_dict(), "D.pth")
 
-    # Load models:
-    G.load_state_dict(torch.load("G.pth"))
-    D.load_state_dict(torch.load("D.pth"))
-
-    plt.show()
-
     classifier = Classifier()
     classifier.train(test_loader)  # Entrenar con datos de test
     classifier.save_model("Classifier.pth")
+
+    plt.show()
