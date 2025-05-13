@@ -125,7 +125,6 @@ if __name__ == "__main__":
 
         D_output = D(x_real)
         D_real_loss = criterion(D_output, y_real)
-        D_real_score = D_output
 
         # train discriminator on fake
         z = Variable(torch.randn(x.size(0), z_dim).to(device))
@@ -133,7 +132,6 @@ if __name__ == "__main__":
 
         D_output = D(x_fake)
         D_fake_loss = criterion(D_output, y_fake)
-        D_fake_score = D_output
 
         # gradient backprop & optimize ONLY D's parameters
         D_loss = D_real_loss + D_fake_loss
@@ -174,7 +172,7 @@ if __name__ == "__main__":
         plt.tight_layout()
         plt.savefig("samples/epoch_{:03d}.png".format(epoch))
 
-    n_epoch = 200
+    n_epoch = 1
     sample_interval = 10
     D_losses, G_losses = [], []
     for epoch in range(1, n_epoch + 1):
