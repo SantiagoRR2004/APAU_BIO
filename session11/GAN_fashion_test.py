@@ -1,5 +1,5 @@
 from GAN_fashion import GeneratedDataset
-from generatorSimple import Generator
+from generatorComplex import Generator
 from classifier import Classifier
 import torch
 import os
