@@ -8,6 +8,7 @@ Original file is located at
 """
 
 # prerequisites
+import os
 import torch
 import torch.nn as nn
 import torchvision.transforms.functional as t_F
@@ -24,6 +25,7 @@ from classifier import Classifier
 
 # Device configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
 
 
 class GeneratedDataset(Dataset):
@@ -49,11 +51,17 @@ if __name__ == "__main__":
     )
 
     train_data = datasets.FashionMNIST(
-        root="./data", train=True, download=True, transform=transform
+        root=os.path.join(currentDirectory, "data"),
+        train=True,
+        download=True,
+        transform=transform,
     )
 
     test_data = datasets.FashionMNIST(
-        root="./data", train=False, download=True, transform=transform
+        root=os.path.join(currentDirectory, "data"),
+        train=False,
+        download=True,
+        transform=transform,
     )
 
     class_names = train_data.classes
@@ -140,9 +148,7 @@ if __name__ == "__main__":
 
         return D_loss.data.item()
 
-    import os
-
-    os.makedirs("samples", exist_ok=True)
+    os.makedirs(os.path.join(currentDirectory, "samples"), exist_ok=True)
 
     # Function to plot losses
     def plot_losses(d_losses, g_losses):
@@ -153,7 +159,7 @@ if __name__ == "__main__":
         plt.ylabel("Loss")
         plt.legend()
         plt.suptitle("Loss over Epochs")
-        plt.savefig("samples/losses.png")
+        plt.savefig(os.path.join(currentDirectory, "samples", "losses.png"))
 
     def plot_images(epoch, generator, examples=10, dim=(1, 10), figsize=(10, 1)):
         noise = torch.randn(examples, z_dim, device=device)
@@ -170,9 +176,11 @@ if __name__ == "__main__":
             )
             plt.axis("off")
         plt.tight_layout()
-        plt.savefig("samples/epoch_{:03d}.png".format(epoch))
+        plt.savefig(
+            os.path.join(currentDirectory, "samples", "epoch_{:03d}.png".format(epoch))
+        )
 
-    n_epoch = 1
+    n_epoch = 200
     sample_interval = 10
     D_losses, G_losses = [], []
     for epoch in range(1, n_epoch + 1):
@@ -201,11 +209,11 @@ if __name__ == "__main__":
     plot_losses(D_losses, G_losses)
 
     # save models:
-    torch.save(G.state_dict(), "G.pth")
-    torch.save(D.state_dict(), "D.pth")
+    torch.save(G.state_dict(), os.path.join(currentDirectory, "G.pth"))
+    torch.save(D.state_dict(), os.path.join(currentDirectory, "D.pth"))
 
     classifier = Classifier()
     classifier.train(test_loader)  # Entrenar con datos de test
-    classifier.save_model("Classifier.pth")
+    classifier.save_model(os.path.join(currentDirectory, "Classifier.pth"))
 
     plt.show()
