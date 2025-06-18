@@ -8,6 +8,10 @@ import matplotlib.pyplot as plt
 from collections import deque
 import os
 
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
+# Create the models directory if it doesn't exist
+os.makedirs(os.path.join(currentDirectory, "models"), exist_ok=True)
+
 
 class CustomLunarLanderEnv(LunarLander):
     def __init__(self, **kwargs):
@@ -49,10 +53,12 @@ class LunarLanderAgent:
         self.env = None
         self.model = None
         self.callback = None
+        self.fileName = os.path.join(
+            currentDirectory, "models", "dqn_custom_lunar_lander"
+        )
 
         # Create directory to store results if not exists
-        if not os.path.exists("results"):
-            os.makedirs("results")
+        os.makedirs(os.path.join(currentDirectory, "results"), exist_ok=True)
 
     def create_env(self, render_mode=None):
         # Create the custom environment
@@ -63,7 +69,12 @@ class LunarLanderAgent:
 
     def create_model(self):
         # Create the DQN model with TensorBoard logging
-        self.model = DQN("MlpPolicy", self.env, verbose=1, tensorboard_log="./logs/")
+        self.model = DQN(
+            "MlpPolicy",
+            self.env,
+            verbose=1,
+            tensorboard_log=os.path.join(currentDirectory, "logs"),
+        )
 
     def train(self, total_timesteps=100000):
         # Create the environment
@@ -75,14 +86,14 @@ class LunarLanderAgent:
         # Train the model
         self.model.learn(total_timesteps=total_timesteps, callback=self.callback)
         # Save the model
-        self.model.save("dqn_custom_lunar_lander")
+        self.model.save(self.fileName)
         # Close the environment
         self.env.close()
 
     def evaluate(self):
         # Load the model
         if self.model is None:
-            self.model = DQN.load("dqn_custom_lunar_lander")
+            self.model = DQN.load(self.fileName)
         # Create the environment with rendering
         self.env = self.create_env(render_mode="human")
         obs, info = self.env.reset()
@@ -106,11 +117,12 @@ class LunarLanderAgent:
             self.last_100_rewards = deque(maxlen=100)
 
             # Create directory to store results if not exists
-            if not os.path.exists("results"):
-                os.makedirs("results")
+            os.makedirs(os.path.join(currentDirectory, "results"), exist_ok=True)
 
             # Prepare the file for saving rewards
-            self.filepath = "results/lunarlander_rewards.csv"
+            self.filepath = os.path.join(
+                currentDirectory, "results", "lunarlander_rewards.csv"
+            )
             with open(self.filepath, "w") as f:
                 f.write("Episode,Reward,Length\n")  # Write header
 
@@ -151,7 +163,9 @@ class LunarLanderAgent:
                     self.ax.plot(self.episodes, self.episode_rewards)
 
                     # Save the plot to a PNG file
-                    plt.savefig(f"results/reward_plot.png")
+                    plt.savefig(
+                        os.path.join(currentDirectory, "results", "reward_plot.png")
+                    )
 
             return True
 

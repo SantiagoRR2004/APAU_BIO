@@ -8,6 +8,10 @@ from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.monitor import Monitor
 
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
+# Create the models directory if it doesn't exist
+os.makedirs(os.path.join(currentDirectory, "models"), exist_ok=True)
+
 
 class ActionBasedRewardWrapper(gym.RewardWrapper):
     """
@@ -51,8 +55,7 @@ class LunarLanderAgent:
         self.callback = None
 
         # Create directory to store results if not exists
-        if not os.path.exists("results"):
-            os.makedirs("results")
+        os.makedirs(os.path.join(currentDirectory, "results"), exist_ok=True)
 
     def create_env(self, render_mode=None):
         # Use the updated 'LunarLander-v3' environment
@@ -66,7 +69,10 @@ class LunarLanderAgent:
     def create_model(self):
         # Create the DQN model (MlpPolicy) with optional TensorBoard logging
         self.model = DQN(
-            policy="MlpPolicy", env=self.env, verbose=1, tensorboard_log="./logs/"
+            policy="MlpPolicy",
+            env=self.env,
+            verbose=1,
+            tensorboard_log=os.path.join(currentDirectory, "logs"),
         )
 
     def train(self, total_timesteps=100000):
@@ -80,14 +86,18 @@ class LunarLanderAgent:
         # Train the model
         self.model.learn(total_timesteps=total_timesteps, callback=self.callback)
         # Save the trained model
-        self.model.save("dqn_custom_lunar_lander")
+        self.model.save(
+            os.path.join(currentDirectory, "models", "dqn_custom_lunar_lander")
+        )
         print("Model saved to dqn_custom_lunar_lander.zip")
         self.env.close()
 
     def evaluate(self):
         # Load the model (if not already in memory)
         if self.model is None:
-            self.model = DQN.load("dqn_custom_lunar_lander")
+            self.model = DQN.load(
+                os.path.join(currentDirectory, "models", "dqn_custom_lunar_lander")
+            )
         # Create an environment that can render to the screen
         self.env = self.create_env(render_mode="human")
 
@@ -114,7 +124,9 @@ class LunarLanderAgent:
             self.last_100_rewards = deque(maxlen=100)
 
             # File for saving rewards
-            self.filepath = "results/lunarlander_rewards.csv"
+            self.filepath = os.path.join(
+                currentDirectory, "results", "lunarlander_rewards.csv"
+            )
             with open(self.filepath, "w") as f:
                 f.write("Episode,Reward,Length\n")
 
@@ -160,7 +172,9 @@ class LunarLanderAgent:
                     plt.pause(0.001)
 
                     # Save the current plot to a PNG file each episode
-                    plt.savefig("results/reward_plot.png")
+                    plt.savefig(
+                        os.path.join(currentDirectory, "results", "reward_plot.png")
+                    )
 
             return True  # Continue training
 

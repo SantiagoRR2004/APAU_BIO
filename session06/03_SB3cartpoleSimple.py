@@ -1,5 +1,6 @@
 import gymnasium as gym
 from stable_baselines3 import PPO
+import os
 
 # 1. Create the CartPole environment
 env = gym.make("CartPole-v1")
@@ -12,7 +13,10 @@ model = PPO("MlpPolicy", env, verbose=1)
 model.learn(total_timesteps=10000)
 
 # 4. Save the model
-model.save("ppo_cartpole")
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
+# Create the models directory if it doesn't exist
+os.makedirs(os.path.join(currentDirectory, "models"), exist_ok=True)
+model.save(os.path.join(currentDirectory, "models", "ppo_cartpole"))
 del model  # Remove model from memory
 
 del env  # Remove environment from memory

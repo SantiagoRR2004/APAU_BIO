@@ -53,11 +53,14 @@ class RewardTrackingCallback(BaseCallback):
         self.ax.set_ylabel("Reward")
 
         # Create directory to store results if not exists
-        if not os.path.exists("results"):
-            os.makedirs("results")
+        os.makedirs(os.path.join(currentDirectory, "results"), exist_ok=True)
 
         # Prepare the file for saving rewards (with env_name and run_number in the filename)
-        self.filepath = f"results/{self.env_name}_rewards_run_{self.run_number}.csv"
+        self.filepath = os.path.join(
+            currentDirectory,
+            "results",
+            f"{self.env_name}_rewards_run_{self.run_number}.csv",
+        )
         with open(self.filepath, "w") as f:
             f.write("Episode,Reward,Length\n")  # Write header
 
@@ -123,6 +126,12 @@ class RewardTrackingCallback(BaseCallback):
 ################################################################################
 train_mode = True  # Set to True to train a new model, False to load and evaluate
 
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
+# Create the models directory if it doesn't exist
+os.makedirs(os.path.join(currentDirectory, "models"), exist_ok=True)
+model_path = os.path.join(currentDirectory, "models", f"ppo_{env_name}_run_")
+
+
 if train_mode:
     # Create environment
     # render_mode="rgb_array": does not open a window, but we can see frames in memory
@@ -139,9 +148,8 @@ if train_mode:
         model.learn(total_timesteps=200_000, callback=callback)  # Stop early if solved
 
         # Step 4: Save the trained model
-        model_path = f"results/ppo_{env_name}_run_{run}"
-        model.save(model_path)
-        print(f"Model saved to {model_path}")
+        model.save(model_path + str(run))
+        print(f"Model saved to {model_path}{run}")
 
         if callback.solved:
             print(f"Training stopped early for run {run} as the problem was solved.\n")
@@ -149,9 +157,8 @@ if train_mode:
 else:
     # Step 5: Load and evaluate the model
     run_number = 1  # Change this to load a specific run
-    model_path = f"results/ppo_{env_name}_run_{run_number}"
-    print(f"Loading model from: {model_path}")
-    loaded_model = PPO.load(model_path)
+    print(f"Loading model from: {model_path}{run_number}")
+    loaded_model = PPO.load(model_path + str(run_number))
 
     # Step 6: Run the environment with the trained model, in a window
     env = gym.make(env_name, render_mode="human")

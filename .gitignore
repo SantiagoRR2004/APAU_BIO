@@ -5,3 +5,6 @@ __pycache__
 data
 animals10/
 **.pth
+logs/
+models/
+results/

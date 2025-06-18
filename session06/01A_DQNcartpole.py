@@ -8,6 +8,11 @@ import random
 from collections import deque
 import matplotlib.pyplot as plt
 import time
+import os
+
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
+# Create the models directory if it doesn't exist
+os.makedirs(os.path.join(currentDirectory, "models"), exist_ok=True)
 
 
 class DQN(nn.Module):
@@ -28,6 +33,7 @@ class Agent:
     def __init__(
         self, env_string, batch_size=64, render_mode=None, update_target_steps=100
     ):
+        self.fileName = os.path.join(currentDirectory, "models", "dqn_cartpole.pth")
         self.memory = deque(maxlen=100000)
         self.env = gym.make(env_string, render_mode=render_mode)
         self.input_size = self.env.observation_space.shape[0]
@@ -161,7 +167,7 @@ class Agent:
 
             if mean_score >= threshold and len(scores) == 100:
                 print(f"Ran {epoch} episodes. Solved after {epoch - 100} trials ✔")
-                torch.save(self.model.state_dict(), "dqn_cartpole.pth")
+                torch.save(self.model.state_dict(), self.fileName)
                 plt.ioff()
                 return self.avg_scores
 
@@ -171,12 +177,12 @@ class Agent:
                 )
 
         print(f"Did not solve after {epochs} episodes")
-        torch.save(self.model.state_dict(), "dqn_cartpole.pth")
+        torch.save(self.model.state_dict(), self.fileName)
         plt.ioff()
         return self.avg_scores
 
     def load_weights_and_visualize(self):
-        self.model.load_state_dict(torch.load("dqn_cartpole.pth"))
+        self.model.load_state_dict(torch.load(self.fileName))
         self.model.eval()
 
         for episode in range(5):

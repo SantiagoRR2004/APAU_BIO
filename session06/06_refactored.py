@@ -16,6 +16,10 @@ from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.monitor import Monitor
 
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
+# Create the models directory if it doesn't exist
+os.makedirs(os.path.join(currentDirectory, "models"), exist_ok=True)
+
 
 ###############################################################################
 # 1) Custom Environment: Subclassing LunarLander with a Fuel Penalty
@@ -57,7 +61,11 @@ class RewardTrackingCallback(BaseCallback):
     A custom callback to log and plot episode rewards during DQN training.
     """
 
-    def __init__(self, save_path="results/lunarlander_rewards.csv", verbose=0):
+    def __init__(
+        self,
+        save_path=os.path.join(currentDirectory, "results", "lunarlander_rewards.csv"),
+        verbose=0,
+    ):
         super().__init__(verbose)
         self.episode_rewards = []
         self.episode_lengths = []
@@ -67,8 +75,7 @@ class RewardTrackingCallback(BaseCallback):
 
         # File for saving rewards
         self.filepath = save_path
-        if not os.path.exists("results"):
-            os.makedirs("results")
+        os.makedirs(os.path.join(currentDirectory, "results"), exist_ok=True)
         with open(self.filepath, "w") as f:
             f.write("Episode,Reward,Length\n")
 
@@ -111,7 +118,9 @@ class RewardTrackingCallback(BaseCallback):
                 plt.pause(0.001)
 
                 # Save figure
-                plt.savefig("results/reward_plot.png")
+                plt.savefig(
+                    os.path.join(currentDirectory, "results", "reward_plot.png")
+                )
 
         return True
 
@@ -143,12 +152,17 @@ class DQNTrainer:
         from stable_baselines3 import DQN
 
         self.model = DQN(
-            policy="MlpPolicy", env=self.env, verbose=1, tensorboard_log="./logs/"
+            policy="MlpPolicy",
+            env=self.env,
+            verbose=1,
+            tensorboard_log=os.path.join(currentDirectory, "logs"),
         )
 
         callback = RewardTrackingCallback()
         self.model.learn(total_timesteps=self.total_timesteps, callback=callback)
-        self.model.save("dqn_custom_lunar_lander")
+        self.model.save(
+            os.path.join(currentDirectory, "models", "dqn_custom_lunar_lander")
+        )
         print("DQN model saved to dqn_custom_lunar_lander.zip")
         self.env.close()
 
@@ -160,7 +174,9 @@ class DQNTrainer:
         from stable_baselines3 import DQN
 
         if self.model is None:
-            self.model = DQN.load("dqn_custom_lunar_lander")
+            self.model = DQN.load(
+                os.path.join(currentDirectory, "models", "dqn_custom_lunar_lander")
+            )
 
         obs, info = self.env.reset()
         done = False
@@ -257,8 +273,7 @@ class REINFORCETrainer:
         self.optimizer = None
 
         # Logging
-        if not os.path.exists("results"):
-            os.makedirs("results")
+        os.makedirs(os.path.join(currentDirectory, "results"), exist_ok=True)
         self.rewards_log = []
         self.fig, self.ax = plt.subplots()
         plt.ion()
@@ -336,14 +351,19 @@ class REINFORCETrainer:
             self.ax.plot(range(len(iteration_rewards)), iteration_rewards)
             plt.draw()
             plt.pause(0.001)
-            plt.savefig("results/reinforce_reward_plot.png")
+            plt.savefig(
+                os.path.join(currentDirectory, "results", "reinforce_reward_plot.png")
+            )
 
         plt.ioff()
         plt.show()
         print("REINFORCE Training finished.")
 
         # Save final policy
-        torch.save(self.policy.state_dict(), "reinforce_lunar_lander.pth")
+        torch.save(
+            self.policy.state_dict(),
+            os.path.join(currentDirectory, "models", "reinforce_lunar_lander.pth"),
+        )
         print("Saved policy to reinforce_lunar_lander.pth")
 
         self.env.close()
@@ -355,7 +375,13 @@ class REINFORCETrainer:
         if self.policy is None:
             # Load from disk if needed
             self.policy = PolicyNet()
-            self.policy.load_state_dict(torch.load("reinforce_lunar_lander.pth"))
+            self.policy.load_state_dict(
+                torch.load(
+                    os.path.join(
+                        currentDirectory, "models", "reinforce_lunar_lander.pth"
+                    )
+                )
+            )
         self.env = self.create_env()
         self.env.render_mode = "human"
 

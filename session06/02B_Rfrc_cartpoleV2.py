@@ -201,7 +201,12 @@ def run_human_mode(env, policy_net):
 if __name__ == "__main__":
     train = True  # Set to False to load a model and run in human mode
     env_name = "CartPole-v1"
-    save_path = f"{env_name}_policy.pth"
+
+    currentDirectory = os.path.dirname(os.path.abspath(__file__))
+    # Create the models directory if it doesn't exist
+    os.makedirs(os.path.join(currentDirectory, "models"), exist_ok=True)
+
+    save_path = os.path.join(currentDirectory, "models", f"{env_name}_policy.pth")
 
     # Create environment
     env = gym.make(env_name, render_mode="human" if not train else None)

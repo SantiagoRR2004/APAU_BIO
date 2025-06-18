@@ -214,8 +214,12 @@ if __name__ == "__main__":
     action_size = env.action_space.n  # discrete actions
     policy_net = PolicyNetwork(state_size, action_size)
 
+    currentDirectory = os.path.dirname(os.path.abspath(__file__))
+    # Create the models directory if it doesn't exist
+    os.makedirs(os.path.join(currentDirectory, "models"), exist_ok=True)
+
     # Path to save/load the policy model
-    save_path = "frozenlake_policy.pth"
+    save_path = os.path.join(currentDirectory, "models", "frozenlake_policy.pth")
 
     if train:
         # We will train the REINFORCE agent
