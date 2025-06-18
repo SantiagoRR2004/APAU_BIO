@@ -2,6 +2,7 @@ import gymnasium as gym
 import DQNAgent
 import torch.nn as nn
 from collections import defaultdict
+import os
 
 
 class DQN(nn.Module):
@@ -36,6 +37,9 @@ env_ids = sorted(latest_envs)
 env_ids.remove("GymV21Environment-v0")
 env_ids.remove("GymV26Environment-v0")
 
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
+# Create the models directory if it doesn't exist
+os.makedirs(os.path.join(currentDirectory, "models"), exist_ok=True)
 
 # Print the list of environment IDs
 for env_id in env_ids:
@@ -54,7 +58,9 @@ for env_id in env_ids:
     DQNAgent.trainModel(
         env_id,
         dqnClass=DQN,
-        fileName=env_id.replace("/", "_"),
+        fileName=os.path.join(
+            currentDirectory, "models", f"{env_id.replace('/', '_')}_dqn.pth"
+        ),
         retrain=False,
         epochs=1000,
     )

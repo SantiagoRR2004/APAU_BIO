@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import torch.nn as nn
 import DQNAgent
+import os
 
 
 class DQN(nn.Module):
@@ -20,7 +21,14 @@ class DQN(nn.Module):
 # Usage
 train_mode = False
 
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
+# Create the models directory if it doesn't exist
+os.makedirs(os.path.join(currentDirectory, "models"), exist_ok=True)
+
 
 DQNAgent.trainModel(
-    "CartPole-v1", dqnClass=DQN, fileName="dqn_cartpole.pth", retrain=train_mode
+    "CartPole-v1",
+    dqnClass=DQN,
+    fileName=os.path.join(currentDirectory, "models", "dqn_cartpole.pth"),
+    retrain=train_mode,
 )
