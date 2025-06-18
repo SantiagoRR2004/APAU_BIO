@@ -156,10 +156,12 @@ def run_human_mode(env, actor_net):
 
 # Main Program
 if __name__ == "__main__":
+    currentDirectory = os.path.dirname(os.path.abspath(__file__))
+    os.makedirs(os.path.join(currentDirectory, "models"), exist_ok=True)
     # Settings
     train = True  # Set to False to load the model and run in human mode
     env_name = "CartPole-v1"  # Change to "FrozenLake-v1" for Frozen Lake
-    save_path = f"{env_name}_actor_critic.pth"
+    save_path = os.path.join(currentDirectory, "models", f"{env_name}_actor_critic.pth")
 
     # Initialize environment
     env = gym.make(env_name, render_mode="human" if not train else None)

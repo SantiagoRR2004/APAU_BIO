@@ -44,6 +44,7 @@ def worker_process(
     update_freq,
     actor_losses,
     critic_losses,
+    num_episodes,
 ):
     env = gym.make(env_name)
     local_actor = ActorNetwork(env.observation_space.shape[0], env.action_space.n)
@@ -55,9 +56,10 @@ def worker_process(
 
     state, _ = env.reset()
     done = False
+    finished_episodes = 0
     states, actions, rewards, log_probs = [], [], [], []
 
-    while True:
+    while finished_episodes < num_episodes:
         # Step through the environment
         state_tensor = torch.tensor(state, dtype=torch.float32)
         policy = local_actor(state_tensor)
@@ -90,7 +92,7 @@ def worker_process(
             returns = torch.tensor(returns, dtype=torch.float32)
 
             # Calculate advantages
-            states_tensor = torch.tensor(states, dtype=torch.float32)
+            states_tensor = torch.tensor(np.array(states), dtype=torch.float32)
             values = local_critic(states_tensor).squeeze(1)
             advantages = returns - values
 
@@ -132,6 +134,7 @@ def worker_process(
             if done:
                 state, _ = env.reset()
                 done = False
+                finished_episodes += 1
 
 
 # Main A3C Algorithm
@@ -178,6 +181,7 @@ def a3c(
                 update_freq,
                 actor_losses,
                 critic_losses,
+                num_episodes,
             ),
         )
         processes.append(process)
@@ -231,9 +235,12 @@ def run_human_mode(env_name, save_path):
 
 # Main Entry Point
 if __name__ == "__main__":
+    currentDirectory = os.path.dirname(os.path.abspath(__file__))
+    os.makedirs(os.path.join(currentDirectory, "models"), exist_ok=True)
+
     train = True  # Set to False for human mode
     env_name = "CartPole-v1"
-    save_path = f"{env_name}_a3c.pth"
+    save_path = os.path.join(currentDirectory, "models", f"{env_name}_a3c.pth")
 
     if train:
         num_workers = mp.cpu_count() - 1  # Use all available CPUs minus one
