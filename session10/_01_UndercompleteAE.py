@@ -83,7 +83,7 @@ if __name__ == "__main__":
     # ax.imshow(train_data[num][0].reshape((28,28)), cmap='binary')
     # ax.set_title("Digit: {}".format(train_data[num][1]))
     # plt.tight_layout()
-    # plt.savefig("_01_RandomDigit.png")
+    # plt.savefig(os.path.join(currentDirectory, "_01_RandomDigit.png"))
 
     model = AE().to(device)
 

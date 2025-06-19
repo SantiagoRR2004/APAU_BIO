@@ -4,9 +4,11 @@ from torch.utils.data import DataLoader
 import random, sys
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 
-DATASET_DIR = "/home/leandro/datasets/img_align_celeba"
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
+DATASET_DIR = os.path.join(currentDirectory, "img_align_celeba")
 INPUT_DIM = (128, 128, 3)
 # BATCH_SIZE = 512
 
@@ -96,7 +98,7 @@ class AE(torch.nn.Module):
 
 model_AE = AE()
 model_AE.load_state_dict(
-    torch.load("/home/leandro/models/AutoEncoders/_06_AE_Faces.pth", weights_only=True)
+    torch.load(os.path.join(currentDirectory, "_06_AE_Faces.pth"), weights_only=True)
 )
 model_AE.eval()
 
@@ -181,7 +183,7 @@ class VAE(torch.nn.Module):
 
 model_VAE = VAE()
 model_VAE.load_state_dict(
-    torch.load("/home/leandro/models/AutoEncoders/_06_VAE_Faces.pth", weights_only=True)
+    torch.load(os.path.join(currentDirectory, "_06_VAE_Faces.pth"), weights_only=True)
 )
 model_VAE.eval()
 
@@ -221,7 +223,7 @@ for i in range(n_to_show):
     sub.axis("off")
     sub.imshow(img)
 
-fig.savefig("_08_origAE.png")
+fig.savefig(os.path.join(currentDirectory, "_08_origAE.png"))
 
 # --------------------------------
 # AE: 10 noisy images
@@ -249,7 +251,7 @@ for i in range(n_to_show):
     sub.axis("off")
     sub.imshow(img)
 
-fig.savefig("_08_noisyAE.png")
+fig.savefig(os.path.join(currentDirectory, "_08_noisyAE.png"))
 
 
 # --------------------------------
@@ -268,7 +270,7 @@ for i in range(n_to_show):
     sub.axis("off")
     sub.imshow(img)
 
-fig.savefig("_08_purenoiseAE.png")
+fig.savefig(os.path.join(currentDirectory, "_08_purenoiseAE.png"))
 
 
 # --------------------------------
@@ -295,7 +297,7 @@ for i in range(n_to_show):
     sub.axis("off")
     sub.imshow(img)
 
-fig.savefig("_08_origVAE.png")
+fig.savefig(os.path.join(currentDirectory, "_08_origVAE.png"))
 
 
 # --------------------------------
@@ -324,7 +326,7 @@ for i in range(n_to_show):
     sub.axis("off")
     sub.imshow(img)
 
-fig.savefig("_08_noisyVAE.png")
+fig.savefig(os.path.join(currentDirectory, "_08_noisyVAE.png"))
 
 
 # --------------------------------
@@ -343,7 +345,7 @@ for i in range(n_to_show):
     sub.axis("off")
     sub.imshow(img)
 
-fig.savefig("_08_purenoiseVAE.png")
+fig.savefig(os.path.join(currentDirectory, "_08_purenoiseVAE.png"))
 
 
 # --------------------------------
@@ -388,7 +390,7 @@ for i in range(n_to_show):
     sub.axis("off")
     sub.imshow(img)
 
-fig.savefig("_08_morphingVAE.png")
+fig.savefig(os.path.join(currentDirectory, "_08_morphingVAE.png"))
 
 
 # --------------------------------
@@ -425,4 +427,4 @@ for i in range(0, 20):
     sub.axis("off")
     sub.imshow(img)
 
-fig.savefig("_08_distortVAE.png")
+fig.savefig(os.path.join(currentDirectory, "_08_distortVAE.png"))

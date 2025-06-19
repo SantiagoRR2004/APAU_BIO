@@ -4,9 +4,11 @@ from torch.utils.data import DataLoader
 import random, sys
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 
-DATASET_DIR = "/home/leandro/datasets/img_align_celeba"
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
+DATASET_DIR = os.path.join(currentDirectory, "img_align_celeba")
 INPUT_DIM = (128, 128, 3)
 BATCH_SIZE = 512
 
@@ -36,7 +38,7 @@ fig, ax = plt.subplots(nrows=1, ncols=1)
 img_to_show = dataset[num][0].permute(1, 2, 0).numpy()
 ax.imshow(img_to_show)
 plt.tight_layout()
-plt.savefig("_06_RandomFace.png")
+plt.savefig(os.path.join(currentDirectory, "_06_RandomFace.png"))
 
 
 # --------------------------------
@@ -170,4 +172,4 @@ for epoch in range(num_epochs):
     average_loss = total_loss / len(dataset_loader)
     print("] - loss {:.4f}".format(average_loss))
 
-torch.save(model.state_dict(), "/home/leandro/models/AutoEncoders/_06_VAE_Faces.pth")
+torch.save(model.state_dict(), os.path.join(currentDirectory, "_06_VAE_Faces.pth"))

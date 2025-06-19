@@ -1,6 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 
 # --------------------------------
@@ -37,9 +38,11 @@ class AE(torch.nn.Module):
         return decoded
 
 
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 modelAE = AE()
 modelAE.load_state_dict(
-    torch.load("/home/leandro/models/AutoEncoders/_01_AE.pth", weights_only=True)
+    torch.load(os.path.join(currentDirectory, "_01_AE.pth"), weights_only=True)
 )
 modelAE.eval()
 
@@ -96,7 +99,7 @@ class VAE(torch.nn.Module):
 
 modelVAE = VAE()
 modelVAE.load_state_dict(
-    torch.load("/home/leandro/models/AutoEncoders/_04_VAE.pth", weights_only=True)
+    torch.load(os.path.join(currentDirectory, "_04_VAE.pth"), weights_only=True)
 )
 modelVAE.eval()
 
@@ -147,5 +150,17 @@ def PlotLatentSpace(model, namefile, size, n_of_ticks, img_dim):
     plt.savefig(namefile)
 
 
-PlotLatentSpace(modelAE, "_05_LatentSpaceAE.png", size=10, n_of_ticks=20, img_dim=28)
-PlotLatentSpace(modelVAE, "_05_LatentSpaceVAE.png", size=2, n_of_ticks=20, img_dim=28)
+PlotLatentSpace(
+    modelAE,
+    os.path.join(currentDirectory, "_05_LatentSpaceAE.png"),
+    size=10,
+    n_of_ticks=20,
+    img_dim=28,
+)
+PlotLatentSpace(
+    modelVAE,
+    os.path.join(currentDirectory, "_05_LatentSpaceVAE.png"),
+    size=2,
+    n_of_ticks=20,
+    img_dim=28,
+)

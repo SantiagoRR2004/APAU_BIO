@@ -4,9 +4,11 @@ from torch.utils.data import DataLoader
 import random, sys
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 
-DATASET_DIR = "/home/leandro/datasets/img_align_celeba"
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
+DATASET_DIR = os.path.join(currentDirectory, "img_align_celeba")
 INPUT_DIM = (128, 128, 3)
 # BATCH_SIZE = 512
 
@@ -36,7 +38,7 @@ print("Length of dataset:", len(dataset), "images")
 # img_to_show = dataset[num][0].permute(1,2,0).numpy()
 # ax.imshow(img_to_show)
 # plt.tight_layout()
-# plt.savefig("_06_RandomFace.png")
+# plt.savefig(os.path.join(currentDirectory, "_06_RandomFace.png"))
 
 
 # --------------------------------
@@ -96,7 +98,7 @@ class AE(torch.nn.Module):
 
 model_AE = AE()
 model_AE.load_state_dict(
-    torch.load("/home/leandro/models/AutoEncoders/_06_AE_Faces.pth", weights_only=True)
+    torch.load(os.path.join(currentDirectory, "_06_AE_Faces.pth"), weights_only=True)
 )
 model_AE.eval()
 
@@ -181,7 +183,7 @@ class VAE(torch.nn.Module):
 
 model_VAE = VAE()
 model_VAE.load_state_dict(
-    torch.load("/home/leandro/models/AutoEncoders/_06_VAE_Faces.pth", weights_only=True)
+    torch.load(os.path.join(currentDirectory, "_06_VAE_Faces.pth"), weights_only=True)
 )
 model_VAE.eval()
 
@@ -201,21 +203,21 @@ fig, ax = plt.subplots(nrows=1, ncols=1)
 img_to_show = dataset[num][0].permute(1, 2, 0).numpy()
 ax.imshow(img_to_show)
 plt.tight_layout()
-plt.savefig("_07_RandomFace_orig.png")
+plt.savefig(os.path.join(currentDirectory, "_07_RandomFace_orig.png"))
 
 fig, ax = plt.subplots(nrows=1, ncols=1)
 img_out = torch.stack([dataset[num][0]])
 img_to_show = model_AE(img_out)[0].detach().permute(1, 2, 0).numpy()
 ax.imshow(img_to_show)
 plt.tight_layout()
-plt.savefig("_07_RandomFace_reconstr_AE.png")
+plt.savefig(os.path.join(currentDirectory, "_07_RandomFace_reconstr_AE.png"))
 
 fig, ax = plt.subplots(nrows=1, ncols=1)
 img_out = torch.stack([dataset[num][0]])
 img_to_show = model_VAE(img_out)[0][0].detach().permute(1, 2, 0).numpy()
 ax.imshow(img_to_show)
 plt.tight_layout()
-plt.savefig("_07_RandomFace_reconstr_VAE.png")
+plt.savefig(os.path.join(currentDirectory, "_07_RandomFace_reconstr_VAE.png"))
 
 
 # test_output = model.encoder(dataset[0][0])
