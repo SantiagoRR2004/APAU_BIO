@@ -5,6 +5,7 @@ import torch
 import numpy as np
 
 import sys
+import os
 
 print()
 print("------------------------------------")
@@ -193,13 +194,15 @@ import matplotlib.pyplot as plt
 
 num_epochs_stop = len(loss_val_v)
 epochs = range(1, num_epochs_stop + 1)
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
+
 plt.figure()
 plt.plot(epochs, loss_v, "b-o", label="Training ")
 plt.plot(epochs, loss_val_v, "r-o", label="Validation ")
 plt.title("Training and validation loss (early stopping)")
 plt.xlabel("Epochs")
 plt.legend()
-plt.savefig("03E.IMDB_earlystop.Loss.png")
+plt.savefig(os.path.join(currentDirectory, "03E.IMDB_earlystop.Loss.png"))
 
 accuracy_v = accuracy_v[0:num_epochs_stop]
 accuracy_val_v = accuracy_val_v[0:num_epochs_stop]
@@ -209,4 +212,4 @@ plt.plot(epochs, accuracy_val_v, "r-o", label="Validation ")
 plt.title("Training and validation accuracy (early stopping)")
 plt.xlabel("Epochs")
 plt.legend()
-plt.savefig("03E.IMDB_earlystop.Accuracy.png")
+plt.savefig(os.path.join(currentDirectory, "03E.IMDB_earlystop.Accuracy.png"))

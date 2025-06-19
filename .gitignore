@@ -4,6 +4,7 @@ __pycache__
 **.png
 data
 animals10/
+plane-helicopter/
 **.pth
 logs/
 models/

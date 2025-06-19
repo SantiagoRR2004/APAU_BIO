@@ -5,9 +5,14 @@ import numpy as np
 from PIL import Image
 import random
 import sys
+import os
+
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
 
 
-def CreateMosaic(inputs, filename="helicoptersvsplanes.png"):
+def CreateMosaic(
+    inputs, filename=os.path.join(currentDirectory, "helicoptersvsplanes.png")
+):
     selected_indices = random.sample(range(inputs.size(0)), 16)
     # print(selected_indices)
     to_pil = transforms.ToPILImage()
@@ -25,7 +30,8 @@ def CreateMosaic(inputs, filename="helicoptersvsplanes.png"):
     grid_image.save(filename)
 
 
-dataset_dir = "/home/leandro/datasets/plane-helicopter"
+# dataset_dir = "/home/leandro/datasets/plane-helicopter"
+dataset_dir = os.path.join(currentDirectory, "plane-helicopter")
 num_classes = 2
 img_dim = 180
 num_epochs = 50
@@ -153,7 +159,7 @@ plt.title("Training and validation loss")
 plt.xlabel("Epochs")
 plt.ylim((0, 2))
 plt.legend()
-plt.savefig("05A.Helicopters.vs.planes.Loss.png")
+plt.savefig(os.path.join(currentDirectory, "05A.Helicopters.vs.planes.Loss.png"))
 
 accuracy_v = accuracy_v[0:num_epochs_stop]
 accuracy_val_v = accuracy_val_v[0:num_epochs_stop]
@@ -163,4 +169,4 @@ plt.plot(epochs, accuracy_val_v, "r-o", label="Validation ")
 plt.title("Training and validation accuracy")
 plt.xlabel("Epochs")
 plt.legend()
-plt.savefig("05A.Helicopters.vs.planes.Accuracy.png")
+plt.savefig(os.path.join(currentDirectory, "05A.Helicopters.vs.planes.Accuracy.png"))

@@ -18,7 +18,7 @@ if __name__ == "__main__":
     train = False
     animalsClassificator = AnimalsClassificator()
     modelPath = os.path.join(
-        animalsClassificator.currentDir, "AnimalsClassificator.pth"
+        animalsClassificator.currentDir, "models", "AnimalsClassificator.pth"
     )
     if train or not os.path.exists(modelPath):
         animalsClassificator.train()

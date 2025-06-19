@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import random_split, DataLoader
 from torchvision import datasets, transforms
 import sys
+import os
 
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
@@ -15,7 +16,9 @@ custom_transform = transforms.Compose(
 )
 
 mnist_dataset = datasets.MNIST(
-    root="/tmp/data", download=True, transform=custom_transform
+    root=os.path.join(os.path.dirname(__file__), "tmp", "data"),
+    download=True,
+    transform=custom_transform,
 )
 print("Length of dataset:", len(mnist_dataset))
 print("Length of first vector in dataset: ", mnist_dataset[0][0].shape)

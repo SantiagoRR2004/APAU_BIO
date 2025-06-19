@@ -3,6 +3,7 @@ import torchvision.transforms as transforms
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 img_dim = 180
 
@@ -17,8 +18,12 @@ transform = transforms.Compose(
     ]
 )
 
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
+
 # Load your image
-img_path = "/home/leandro/datasets/plane-helicopter/passenger-plane/00000149.jpg"  # Replace with your image path
+img_path = os.path.join(
+    currentDirectory, "plane-helicopter", "passenger-plane", "00000149.jpg"
+)
 original_img = Image.open(img_path)
 
 # Number of transformations/mosaic size (3x3 grid)
@@ -39,7 +44,7 @@ def show_mosaic(imgs, rows, cols):
         axes[row, col].imshow(np.array(img))
         axes[row, col].axis("off")
     plt.tight_layout()
-    plt.savefig("dataaugmentation.png")
+    plt.savefig(os.path.join(currentDirectory, "dataaugmentation.png"))
 
 
 # Show the mosaic

@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
     train = False
     cowVsSheep = CowsVsSheepsBasic()
-    modelPath = os.path.join(cowVsSheep.currentDir, "CowVsSheep.pth")
+    modelPath = os.path.join(cowVsSheep.currentDir, "models", "CowVsSheep.pth")
     if train or not os.path.exists(modelPath):
         cowVsSheep.train()
         cowVsSheep.save_model(name=modelPath)

@@ -16,6 +16,8 @@ class CowsVsSheeps:
     nChannels = 3
     currentDir = os.path.dirname(os.path.abspath(__file__))
 
+    os.makedirs(os.path.join(currentDir, "models"), exist_ok=True)
+
     dataset_dir = os.path.join(currentDir, "animals10", "raw-img")
 
     def __init__(self):
@@ -277,7 +279,7 @@ class CowsVsSheeps:
 if __name__ == "__main__":
     train = False
     cowVsSheep = CowsVsSheeps()
-    modelPath = os.path.join(cowVsSheep.currentDir, "CowVsSheepLineal.pth")
+    modelPath = os.path.join(cowVsSheep.currentDir, "models", "CowVsSheepLineal.pth")
     if train or not os.path.exists(modelPath):
         cowVsSheep.train()
         cowVsSheep.save_model(name=modelPath)

@@ -5,6 +5,7 @@ import torch
 import numpy as np
 
 import sys
+import os
 
 print()
 print("------------------------------------")
@@ -180,6 +181,7 @@ for epoch in range(num_epochs):
 import matplotlib.pyplot as plt
 
 epochs = range(1, num_epochs + 1)
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
 
 plt.figure()
 plt.plot(epochs, loss_v, "b-o", label="Training ")
@@ -187,7 +189,7 @@ plt.plot(epochs, loss_val_v, "r-o", label="Validation ")
 plt.title("Training and validation loss (batch norm.)")
 plt.xlabel("Epochs")
 plt.legend()
-plt.savefig("03C.IMDB_bnorm.Loss.png")
+plt.savefig(os.path.join(currentDirectory, "03C.IMDB_bnorm.Loss.png"))
 
 plt.figure()
 plt.plot(epochs, accuracy_v, "b-o", label="Training ")
@@ -195,4 +197,4 @@ plt.plot(epochs, accuracy_val_v, "r-o", label="Validation ")
 plt.title("Training and validation accuracy (batch norm.)")
 plt.xlabel("Epochs")
 plt.legend()
-plt.savefig("03C.IMDB_bnorm.Accuracy.png")
+plt.savefig(os.path.join(currentDirectory, "03C.IMDB_bnorm.Accuracy.png"))
