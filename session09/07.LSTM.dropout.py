@@ -17,6 +17,7 @@ else:
 # Carga de datos
 # --------------------------------
 
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
 fname = kagglehub.dataset_download("stytch16/jena-climate-2009-2016")
 fname = os.path.join(fname, "jena_climate_2009_2016.csv")
 
@@ -60,7 +61,7 @@ print("Dimensión valores datos:", raw_data.shape)
 # axes_temp.plot(range(len(raw_data[:, 11:12])), raw_data[:, 11:12], color="brown")
 # axes_temp.set(ylabel='m/s', xlabel='data', title="Velocidad viento")
 # figure.tight_layout()
-# figure.savefig("JenaClimate.png")
+# figure.savefig(os.path.join(currentDirectory, "JenaClimate.png"))
 
 # --------------------------------
 # División dataset y normalización
@@ -242,7 +243,7 @@ plt.plot(epochs, loss_val_v, "r-o", label="Validation ")
 plt.title("Training and validation loss")
 plt.xlabel("Epochs")
 plt.legend()
-plt.savefig("07.LSTM.dropout.Loss.png")
+plt.savefig(os.path.join(currentDirectory, "07.LSTM.dropout.Loss.png"))
 
 plt.figure()
 plt.plot(epochs, mae_v, "b-o", label="Training ")
@@ -250,4 +251,4 @@ plt.plot(epochs, mae_val_v, "r-o", label="Validation ")
 plt.title("Training and validation MAE")
 plt.xlabel("Epochs")
 plt.legend()
-plt.savefig("07.LSTM.dropout.MAE.png")
+plt.savefig(os.path.join(currentDirectory, "07.LSTM.dropout.MAE.png"))

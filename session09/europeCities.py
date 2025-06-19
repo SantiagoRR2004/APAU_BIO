@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
 
-
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
 folder = kagglehub.dataset_download("orvile/european-cities-weather-prediction-dataset")
 fname = os.path.join(folder, "weather_prediction_dataset.csv")
 
@@ -219,7 +219,7 @@ for city in cities.keys():
 plt.title("MAE Training")
 plt.xlabel("Epoch")
 plt.ylabel("MAE")
-plt.savefig("EuropeCities.MAE.Training.png")
+plt.savefig(os.path.join(currentDirectory, "EuropeCities.MAE.Training.png"))
 
 # MAE for validation
 plt.figure()
@@ -239,7 +239,7 @@ for city in cities.keys():
 plt.title("MAE Validation")
 plt.xlabel("Epoch")
 plt.ylabel("MAE")
-plt.savefig("EuropeCities.MAE.Validation.png")
+plt.savefig(os.path.join(currentDirectory, "EuropeCities.MAE.Validation.png"))
 
 # Loss for training
 plt.figure()
@@ -258,7 +258,7 @@ for city in cities.keys():
 plt.title("Loss Training")
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
-plt.savefig("EuropeCities.Loss.Training.png")
+plt.savefig(os.path.join(currentDirectory, "EuropeCities.Loss.Training.png"))
 
 # Loss for validation
 plt.figure()
@@ -277,7 +277,7 @@ for city in cities.keys():
 plt.title("Loss Validation")
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
-plt.savefig("EuropeCities.Loss.Validation.png")
+plt.savefig(os.path.join(currentDirectory, "EuropeCities.Loss.Validation.png"))
 
 
 plt.show()

@@ -9,6 +9,7 @@ import kerasReplacement
 # Carga de datos
 # --------------------------------
 
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
 fname = kagglehub.dataset_download("stytch16/jena-climate-2009-2016")
 fname = os.path.join(fname, "jena_climate_2009_2016.csv")
 
@@ -53,7 +54,7 @@ axes_temp = figure.add_subplot(224)
 axes_temp.plot(range(len(raw_data[:, 11:12])), raw_data[:, 11:12], color="brown")
 axes_temp.set(ylabel="m/s", xlabel="data", title="Velocidad viento")
 figure.tight_layout()
-figure.savefig("JenaClimate.png")
+figure.savefig(os.path.join(currentDirectory, "JenaClimate.png"))
 
 # --------------------------------
 # División dataset y normalización
